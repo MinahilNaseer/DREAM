@@ -1,5 +1,6 @@
 import 'package:dream/screens/initialpage.dart';
 import 'package:dream/screens/loginpage.dart';
+import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/registerpage.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const InitialPage(),
+      home: MainMenu(),
     );
   }
 }
