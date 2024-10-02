@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
 import '../widgets/menu-widget.dart'; // Import the widget
+import '../widgets/bottomnavigation.dart'; // Import the bottom nav widget
 
-class MainMenu extends StatelessWidget {
+class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
+
+  @override
+  _MainMenuState createState() => _MainMenuState();
+}
+
+class _MainMenuState extends State<MainMenu> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Handle navigation based on selected index
+    if (index == 0) {
+      // Do nothing, we're already on the MainMenu
+    } else if (index == 1) {
+      // Navigate to Profile Page
+      Navigator.pushNamed(context, '/profile');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +83,7 @@ class MainMenu extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD3D3D3), // Soft grey for container
+                  color: Colors.white, // Soft grey for container
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
@@ -86,37 +108,48 @@ class MainMenu extends StatelessWidget {
                           color: Color(0xFF0D47A1),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 30),
                       // First level card
                       LevelCard(
                         level: "Level 1",
-                        title: "Travel newbie",
+                        title: "Detect Dyscalculia: ",
+                        subtitle: "Math Skill Challenges",
                         imageUrl: "assets/images/math-problem.png", // Local image asset
-                        color: Colors.pinkAccent,
+                        gradientColors: [Colors.pinkAccent, Colors.orangeAccent],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 40),
                       // Second level card
                       LevelCard(
                         level: "Level 2",
-                        title: "Continuing",
+                        title: "Detect Dysgraphia: ",
+                        subtitle: "Writing Assessment",
                         imageUrl: "assets/images/writing-girl.png", // Local image asset
-                        color: Colors.blueAccent,
+                        gradientColors: [Colors.blueAccent, Colors.cyanAccent],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 40),
                       // Third level card
                       LevelCard(
                         level: "Level 3",
-                        title: "Experienced",
+                        title: "Dyslexia Detection:",
+                        subtitle: "Interactive Game",
                         imageUrl: "assets/images/kids-playing-game.png", // Local image asset
-                        color: Colors.purpleAccent,
+                        gradientColors: [Colors.purpleAccent, Colors.deepPurpleAccent],
                       ),
                     ],
                   ),
                 ),
               ),
+              
             ),
+            
           ],
+          
         ),
+        
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex, // Pass the current index
+        onTap: _onItemTapped, // Handle the tab change
       ),
     );
   }
