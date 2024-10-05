@@ -1,4 +1,6 @@
 import 'package:dream/screens/initialpage.dart';
+import 'package:dream/screens/mainmenu.dart';
+import 'package:dream/screens/profilepage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -12,13 +14,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'DREAM APP',
       theme: ThemeData(
         scaffoldBackgroundColor: const Color.fromARGB(255, 240, 225, 225),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const InitialPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const InitialPage(), // Initial Page
+        '/mainmenu': (context) => const MainMenu(), // Main Menu
+        '/profile': (context) => const ProfilePage(), // Profile Page
+      },
     );
   }
 }
