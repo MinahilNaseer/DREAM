@@ -1,3 +1,4 @@
+import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/registerpage.dart';
 import 'package:flutter/material.dart';
 
@@ -120,7 +121,10 @@ class LoginPage extends StatelessWidget {
                                 ),
                               ),
                               onPressed: () {
-                                
+                                Navigator.push(
+                                  context,
+                                  _createRoute(const MainMenu()),
+                                  );
                               },
                               child: const Text(
                                 'LOG IN',
@@ -145,7 +149,7 @@ class LoginPage extends StatelessWidget {
                                 onTap: () => {
                                   Navigator.push(
                                     context,
-                                    _createRoute(),
+                                    _createRoute(const RegisterPage()),
                                     )
                                 },
                                 child:const Text(
@@ -176,9 +180,9 @@ class LoginPage extends StatelessWidget {
   }
 }
 
-Route _createRoute() {
+Route _createRoute(Widget page) {
     return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => const RegisterPage(),
+      pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(1.0, 0.0); 
         const end = Offset.zero; 
@@ -194,3 +198,4 @@ Route _createRoute() {
       },
     );
   }
+

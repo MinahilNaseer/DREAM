@@ -1,6 +1,4 @@
 import 'package:dream/screens/initialpage.dart';
-import 'package:dream/screens/loginpage.dart';
-import 'package:dream/screens/registerpage.dart';
 import 'package:flutter/material.dart';
 
 void main() {
