@@ -12,7 +12,7 @@ class GameMainScreen extends StatelessWidget {
             child: Container(
                 
               child: Image.asset(
-                'assets/images/mobile_game_initial_back.png',  
+                'assets/images/game_background.png',  
                 fit: BoxFit.fill,
                 
               ),

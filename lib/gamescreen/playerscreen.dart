@@ -14,36 +14,44 @@ class PlayerSelectionScreen extends StatelessWidget {
               fit: BoxFit.fill,
             ),
           ),
-          // Title "Player Selection"
+          // Cloud Sticker Image with "Player Selection" text inside it
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.1,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                'Player\nSelection',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cinzel(
-                  textStyle: TextStyle(
-                    fontSize: 48,  // Bigger font size
-                    fontWeight: FontWeight.bold,
-                    color: Colors.yellowAccent,  // Soft yellow/golden color
-                    letterSpacing: 2,  // Slight letter spacing
-                    shadows: [
-                      Shadow(
-                        blurRadius: 10.0,
-                        color: Colors.yellowAccent.withOpacity(0.8),  // Glow effect
-                        offset: Offset(0, 0),
-                      ),
-                      Shadow(
-                        blurRadius: 30.0,
-                        color: Colors.yellowAccent.withOpacity(0.5),  // Outer glow effect
-                        offset: Offset(0, 0),
-                      ),
-                    ],
+            top: MediaQuery.of(context).size.height * 0.1,  // Adjusted to center the cloud and text
+            
+            child: Stack(
+              alignment: Alignment.center,  // Aligning the text in the center of the cloud
+              children: [
+                Image.asset(
+                  'assets/images/cloud-sticker.png', 
+                  width: 400, // Your cloud sticker image
+                  height: 400,  // Increased the size to accommodate text
+                ),
+                // Title "Player Selection" inside the cloud image
+                Text(
+                  'Player\nSelection',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.cinzel(
+                    textStyle: TextStyle(
+                      fontSize: 40,  // Bigger font size
+                      fontWeight: FontWeight.bold,
+                      color: Colors.yellowAccent,  // Soft yellow/golden color
+                      letterSpacing: 2,  // Slight letter spacing
+                      shadows: [
+                        Shadow(
+                          blurRadius: 10.0,
+                          color: Colors.yellowAccent.withOpacity(0.8),  // Glow effect
+                          offset: Offset(0, 0),
+                        ),
+                        Shadow(
+                          blurRadius: 30.0,
+                          color: Colors.yellowAccent.withOpacity(0.5),  // Outer glow effect
+                          offset: Offset(0, 0),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
           // Player Selection Buttons
@@ -60,7 +68,7 @@ class PlayerSelectionScreen extends StatelessWidget {
                     // Add functionality for female player selection
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pinkAccent,
+                    backgroundColor: Colors.lightBlueAccent.withOpacity(0.8),  // Softer background color for princess
                     padding: const EdgeInsets.symmetric(
                         horizontal: 30, vertical: 20),
                     shape: RoundedRectangleBorder(
@@ -90,7 +98,7 @@ class PlayerSelectionScreen extends StatelessWidget {
                     // Add functionality for male player selection
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Colors.lightGreenAccent.withOpacity(0.8),  // Softer background color for knight
                     padding: const EdgeInsets.symmetric(
                         horizontal: 30, vertical: 20),
                     shape: RoundedRectangleBorder(
@@ -104,7 +112,7 @@ class PlayerSelectionScreen extends StatelessWidget {
                         height: 120,
                       ),
                       const Text(
-                        'Kinght',
+                        'Knight',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
