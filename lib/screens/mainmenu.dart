@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math'; 
-
+import '../screens/mainmenu.dart';
+import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
 
@@ -28,18 +29,17 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  setState(() {
+    _selectedIndex = index;
+  });
 
-    
-    if (index == 0) {
-      
-    } else if (index == 1) {
-      
-      Navigator.pushNamed(context, '/profile');
-    }
+  if (index == 0) {
+    // Handle the first tab (e.g., Home)
+  } else if (index == 1) {
+    // Navigate to the ProfilePage using the correct named route
+    Navigator.pushNamed(context, '/profile');
   }
+}
 
   @override
   void dispose() {
