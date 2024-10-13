@@ -5,10 +5,10 @@ class BottomNavBar extends StatelessWidget {
   final Function(int) onTap;
 
   const BottomNavBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +60,13 @@ class BottomNavBar extends StatelessWidget {
         Icon(
           icon,
           size: 30,
-          color: isSelected ? Color(0xFF0D47A1) : Colors.white70, // Active or inactive color
+          color: isSelected ? const Color(0xFF0D47A1) : Colors.white70, // Active or inactive color
         ),
         const SizedBox(width: 8), // Spacing between the icon and label
         Text(
           label,
           style: TextStyle(
-            color: isSelected ? Color(0xFF0D47A1) : Colors.white70, // Active or inactive color
+            color: isSelected ? const Color(0xFF0D47A1) : Colors.white70, // Active or inactive color
             fontSize: 16,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, // Bold for active label
           ),

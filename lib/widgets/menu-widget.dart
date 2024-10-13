@@ -8,13 +8,13 @@ class LevelCard extends StatelessWidget {
   final List<Color> gradientColors;
 
   const LevelCard({
-    Key? key,
+    super.key,
     required this.level,
     required this.title,
     required this.subtitle,
     required this.imageUrl,
     required this.gradientColors,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
