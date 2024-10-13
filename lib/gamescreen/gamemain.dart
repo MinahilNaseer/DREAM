@@ -12,7 +12,7 @@ class GameMainScreen extends StatelessWidget {
             child: Container(
                 
               child: Image.asset(
-                'assets/images/game_background.png',  
+                'assets/images/game_backgroundv1.png',  
                 fit: BoxFit.fill,
                 
               ),
@@ -79,7 +79,7 @@ class GameMainScreen extends StatelessWidget {
                 
                 ElevatedButton(
                   onPressed: () {
-                    
+                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
