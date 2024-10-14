@@ -1,16 +1,19 @@
 import 'package:dream/screens/initialpage.dart';
 import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/profilepage.dart';
+import 'package:dream/screens/registerpage.dart'; // Import RegisterPage
+import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
 import 'package:flutter/material.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,8 +28,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const InitialPage(), // Initial Page
         '/mainmenu': (context) => const MainMenu(), // Main Menu
         '/profile': (context) => const ProfilePage(), // Profile Page
+        '/register': (context) => const RegisterPage(), // Register Page
       },
     );
   }
 }
-
