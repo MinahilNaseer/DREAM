@@ -1,9 +1,12 @@
+import 'package:dream/game/gamemainscreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math'; 
 import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
+import 'package:flame/game.dart'; // Import Flame
+import '../game/scenicgame.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -161,7 +164,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  child: const SingleChildScrollView(
+                  child: SingleChildScrollView(
                     child: Column(
                       children: [
                         Text(
@@ -192,12 +195,20 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         ),
                         SizedBox(height: 30),
                         
-                        LevelCard(
-                          level: "Level 3",
-                          title: "Dyslexia Detection: ",
-                          subtitle: "Interactive Game",
-                          imageUrl: "assets/images/kids-playing-game.png", 
-                          gradientColors: [Colors.purpleAccent, Colors.deepPurpleAccent],
+                         GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => GameMainScreen()),
+                            );
+                          },
+                          child: LevelCard(
+                            level: "Level 3",
+                            title: "Dyslexia Detection: ",
+                            subtitle: "Interactive Game",
+                            imageUrl: "assets/images/kids-playing-game.png", 
+                            gradientColors: [Colors.purpleAccent, Colors.deepPurpleAccent],
+                          ),
                         ),
                       ],
                     ),
