@@ -248,30 +248,29 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    birthdateController.dispose();
-    relationController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-  void _signUp() async{
-    String name = nameController.text;
-    String birthdate = birthdateController.text;
-    String relation = relationController.text;
-    String email = emailController.text;
-    String password = passwordController.text;
+void _signUp() async {
+  String name = nameController.text;
+  String birthdate = birthdateController.text;
+  String relation = relationController.text;
+  String email = emailController.text;
+  String password = passwordController.text;
+  String gender = selectedGender ?? ''; // Ensure gender is not null
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-    if(user!=null)
-    {
-      print("User succesfully Registered");
-      Navigator.pushNamed(context, "/login"); 
-    }
-    else{
-      print("Some error occured");
-    }
+  User? user = await _auth.signUpWithEmailAndPassword(
+    email, 
+    password, 
+    name, 
+    birthdate, 
+    relation, 
+    gender
+  );
+
+  if (user != null) {
+    print("User successfully registered and data stored in Firestore.");
+    Navigator.pushNamed(context, "/login"); 
+  } else {
+    print("Some error occurred");
   }
+}
+
 }
