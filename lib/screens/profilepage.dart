@@ -66,6 +66,7 @@ class ProfilePage extends StatelessWidget {
                       title: "Edit Personal Information",
                       onTap: () {
                         // Handle edit personal information functionality
+                        Navigator.pushNamed(context, "/edit");
                       },
                     ),
                     const Divider(),
@@ -83,7 +84,7 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.help_outline,
                       title: "Help",
                       onTap: () {
-                        // Handle help functionality
+                        Navigator.pushNamed(context, "/help");
                       },
                     ),
                     const Divider(),

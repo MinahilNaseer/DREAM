@@ -18,6 +18,7 @@ class FirebaseAuthService {
           'relation': relation,
           'gender': gender,
           'email': email,
+          'password':password,
         });
       }
       return user;
