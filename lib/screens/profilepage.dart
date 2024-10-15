@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/listwidgetprofile.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -92,6 +92,8 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.logout,
                       title: "Logout",
                       onTap: () {
+                        FirebaseAuth.instance.signOut();
+                        Navigator.pushNamed(context, "/login");
                         // Handle logout functionality
                       },
                     ),
