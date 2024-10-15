@@ -170,8 +170,12 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-              Image.asset("assets/images/train.png")
+              //const SizedBox(height: 10),
+              Image.asset(
+                "assets/images/writing-dy.png",
+                height: 150,
+                width: 600,
+                )
             ],
           ),
         ),
