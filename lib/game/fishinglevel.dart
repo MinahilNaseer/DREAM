@@ -1,4 +1,3 @@
-import 'dart:math'; // Import this to generate random positions
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +33,7 @@ class Fishinglevel extends FlameGame {
     add(kidOnRock);
 
     // Create and add multiple fish
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 9; i++) {
       final fish = SpriteComponent()
         ..sprite = await loadSprite('fish2.png'); // Load fish image
       fishList.add(fish); // Add each fish to the list
@@ -66,15 +65,24 @@ class Fishinglevel extends FlameGame {
       ..size = Vector2(canvasSize.x * 0.5, canvasSize.y * 0.18) // Adjust the size of the kid on the rock
       ..position = Vector2(island.size.x * 0.47, island.position.y - kidOnRock.size.y * -0.5); // Place it on top of the island
 
-    // Generate random positions for multiple fish, ensuring they stay within the underwater area
-    final random = Random();
-    for (var fish in fishList) {
-      fish
+    // Set specific positions for the fish components within the underwater area
+    List<Vector2> fishPositions = [
+      Vector2(canvasSize.x * 0.1, underwater.position.y + canvasSize.y * 0.1),
+      Vector2(canvasSize.x * 0.3, underwater.position.y + canvasSize.y * 0.15),
+      Vector2(canvasSize.x * 0.5, underwater.position.y + canvasSize.y * 0.1),
+      Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.5),
+      Vector2(canvasSize.x * 0.2, underwater.position.y + canvasSize.y * 0.35),
+      Vector2(canvasSize.x * 0.6, underwater.position.y + canvasSize.y * 0.25),
+      Vector2(canvasSize.x * 0.4, underwater.position.y + canvasSize.y * 0.4),
+      Vector2(canvasSize.x * 0.1, underwater.position.y + canvasSize.y * 0.25),
+      Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.4),
+    ];
+
+    // Apply the positions to the fish
+    for (int i = 0; i < fishList.length; i++) {
+      fishList[i]
         ..size = Vector2(canvasSize.x * 0.2, canvasSize.y * 0.1) // Adjust the size of the fish
-        ..position = Vector2(
-          random.nextDouble() * canvasSize.x * 0.9,  // Random x position within 80% width of the screen
-          underwater.position.y + (random.nextDouble() * (canvasSize.y * 0.4))  // Random y position within the underwater area
-        );
+        ..position = fishPositions[i]; // Set the specific position for each fish
     }
   }
 }
