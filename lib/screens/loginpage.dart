@@ -1,9 +1,26 @@
 import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/registerpage.dart';
+import 'package:dream/u_auth/firebase_auth/firebase_auth_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+class _LoginPageState extends State<LoginPage> {
+
+  final FirebaseAuthService _auth = FirebaseAuthService();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+ @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +104,7 @@ class LoginPage extends StatelessWidget {
                           const SizedBox(height: 30), 
                           
                           TextFormField(
+                            controller: emailController,
                             decoration: InputDecoration(
                               labelText: 'Email',
                               prefixIcon: const Icon(Icons.email), 
@@ -98,6 +116,7 @@ class LoginPage extends StatelessWidget {
                           const SizedBox(height: 25), 
                           
                           TextFormField(
+                            controller: passwordController,
                             decoration: InputDecoration(
                               labelText: 'Password',
                               prefixIcon: const Icon(Icons.lock), 
@@ -120,12 +139,7 @@ class LoginPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  _createRoute(const MainMenu()),
-                                  );
-                              },
+                              onPressed: _logIn ,
                               child: const Text(
                                 'LOG IN',
                                 style: TextStyle(
@@ -177,6 +191,20 @@ class LoginPage extends StatelessWidget {
         ),
       ),
     );
+  }
+  void _logIn() async{
+   String email = emailController.text.trim();
+    String password = passwordController.text;
+
+    User? user = await _auth.signInWithEmailAndPassword(email, password);
+    if(user!=null)
+    {
+      print("User succesfully Logged In");
+      Navigator.pushNamed(context, "/mainmenu"); 
+    }
+    else{
+      print("Some error occured");
+    }
   }
 }
 

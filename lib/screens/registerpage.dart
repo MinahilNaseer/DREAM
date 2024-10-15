@@ -1,4 +1,6 @@
+import '../../u_auth/firebase_auth/firebase_auth_services.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -8,6 +10,8 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+
+  final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController birthdateController = TextEditingController();
   final TextEditingController relationController = TextEditingController();
@@ -16,6 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>(); // Key for form validation
 
   String? selectedGender; // Variable to store selected gender
+
 
   @override
   Widget build(BuildContext context) {
@@ -215,10 +220,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: () {
+                              onPressed: () async{
                                 if (_formKey.currentState!.validate()) {
                                   // If the form is valid, display a message
-                                  print('Registering...');
+                                  _signUp();
                                 }
                               },
                               child: const Text(
@@ -243,13 +248,29 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  @override
-  void dispose() {
-    nameController.dispose();
-    birthdateController.dispose();
-    relationController.dispose();
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
+void _signUp() async {
+  String name = nameController.text;
+  String birthdate = birthdateController.text;
+  String relation = relationController.text;
+  String email = emailController.text;
+  String password = passwordController.text;
+  String gender = selectedGender ?? ''; // Ensure gender is not null
+
+  User? user = await _auth.signUpWithEmailAndPassword(
+    email, 
+    password, 
+    name, 
+    birthdate, 
+    relation, 
+    gender
+  );
+
+  if (user != null) {
+    print("User successfully registered and data stored in Firestore.");
+    Navigator.pushNamed(context, "/login"); 
+  } else {
+    print("Some error occurred");
   }
+}
+
 }
