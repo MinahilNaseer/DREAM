@@ -268,7 +268,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if(user!=null)
     {
       print("User succesfully Registered");
-      Navigator.pushNamed(context, "/mainmenu"); 
+      Navigator.pushNamed(context, "/login"); 
     }
     else{
       print("Some error occured");
