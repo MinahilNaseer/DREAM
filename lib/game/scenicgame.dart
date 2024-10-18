@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flame/parallax.dart';
 import 'package:flame/game.dart';
+import 'package:flame/parallax.dart';
 import 'package:flame/input.dart';
-import 'package:flutter/material.dart';
 import '../game/fishinglevel.dart';  // Import the new scene
 
 class ScenicGame extends FlameGame with TapCallbacks {
@@ -12,8 +12,10 @@ class ScenicGame extends FlameGame with TapCallbacks {
   late SpriteComponent road1, road2;
   late SpriteComponent grass1, grass2;
   late SpriteComponent pond;
+  late SpriteComponent tapGif; // Declare the GIF component
 
   bool isMoving = false;
+  bool showPrompt = true; // Show the prompt initially
   final double speed = 100;
   bool hasPondPassed = false;
   bool isSceneSwitched = false;
@@ -73,7 +75,13 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..size = Vector2(180, 180)
       ..position = Vector2(10, size.y - size.y * 0.18 - 100);
     add(kidOnCycle);
-    print("Parallax, road, grass, and kid on cycle added.");
+
+    // Load the Tap GIF as a sprite
+    tapGif = SpriteComponent()
+      ..sprite = await loadSprite('Tap.gif')  // Ensure the GIF is in the assets folder
+      ..size = Vector2(100, 100)  // Adjust size as needed
+      ..position = Vector2(size.x * 0.7, size.y * 0.38);  // Position it at the bottom-right of the prompt
+    print("Parallax, road, grass, kid on cycle, and tap GIF added.");
   }
 
   Future<void> addPond() async {
@@ -141,8 +149,13 @@ class ScenicGame extends FlameGame with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    isMoving = true;  // Start movement when the screen is tapped
-    print("Screen tapped, starting movement.");
+    if (showPrompt) {
+      showPrompt = false;  // Hide the prompt after first tap
+      remove(tapGif);  // Remove the GIF when the prompt is closed
+    } else {
+      isMoving = true;  // Start movement when the screen is tapped
+      print("Screen tapped, starting movement.");
+    }
   }
 
   // Function to switch to the new scene
@@ -152,5 +165,51 @@ class ScenicGame extends FlameGame with TapCallbacks {
     final newScene = Fishinglevel();
     add(newScene);  // Add the new scene directly to the game
     print("Switched to the new scene.");
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    if (showPrompt) {
+      // Render the prompt if it's still visible
+      final paint = Paint()..color = Colors.brown;
+      final rect = Rect.fromLTWH(size.x * 0.1, size.y * 0.2, size.x * 0.8, size.y * 0.2);
+      final rrect = RRect.fromRectAndRadius(rect, Radius.circular(20)); // Rounded corners
+      canvas.drawRRect(rrect, paint);
+
+      // Render the text
+      final textStyle = TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold);
+      final textSpan = TextSpan(
+        text: "Tap anywhere to start your adventure!",
+        style: textStyle,
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout(minWidth: 0, maxWidth: size.x * 0.7);
+      textPainter.paint(canvas, Offset(size.x * 0.15, size.y * 0.25));
+
+      // Render the close button (X)
+      final closeButtonSize = 30.0;
+      final closeButtonRect = Rect.fromLTWH(size.x * 0.85, size.y * 0.2, closeButtonSize, closeButtonSize);
+      final closeButtonRRect = RRect.fromRectAndRadius(closeButtonRect, Radius.circular(5));
+      canvas.drawRRect(closeButtonRRect, Paint()..color = Colors.white);
+
+      final closeTextStyle = TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
+      final closeTextSpan = TextSpan(text: "X", style: closeTextStyle);
+      final closeTextPainter = TextPainter(
+        text: closeTextSpan,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      );
+      closeTextPainter.layout(minWidth: 0, maxWidth: closeButtonSize);
+      closeTextPainter.paint(canvas, Offset(size.x * 0.85, size.y * 0.2));
+
+      // Add the tap GIF to the game
+      add(tapGif);  // Ensure that the GIF is visible in the prompt
+    }
   }
 }

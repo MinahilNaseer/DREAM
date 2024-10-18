@@ -13,40 +13,64 @@ class _GameMainScreenState extends State<GameMainScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Image Background
           Positioned.fill(
             child: Image.asset(
-              'assets/play/game-background.jpg',  // Replace with your image path
-              fit: BoxFit.cover,  // Make sure the image fills the screen
+              'assets/play/game-background.jpg',
+              fit: BoxFit.fill,
             ),
           ),
-          
-          // Game Title Logo and Text
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.12,  // Adjusted for better visibility
-            left: MediaQuery.of(context).size.width * 0.25,
-            right: MediaQuery.of(context).size.width * 0.25,
+            top: MediaQuery.of(context).size.height * 0.05,
+            left: MediaQuery.of(context).size.width * 0.1,
+            right: MediaQuery.of(context).size.width * 0.1,
             child: Column(
               children: [
-                Text(
-                  'A Magical Journey to Find the Treasure',
-                  style: TextStyle(
-                    fontSize: 26,
-                    color: Color(0xFFFFAB91),
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                /*
                 Image.asset(
-                  'assets/icons/DREAM_Quest_logo.png',  // Your logo path
-                  height: 400,  // Adjust the size of the logo as needed
-                ),*/
+                  'assets/images/game_logo.png',
+                  height: 300,
+                  width: 300,
+                ),
               ],
             ),
           ),
-          
-          // Buttons Row (Start and Exit)
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.4,
+            left: MediaQuery.of(context).size.width * 0.1,
+            right: MediaQuery.of(context).size.width * 0.1,
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 24,
+                  color: const Color(0xFF0D47A1),
+                  fontWeight: FontWeight.w600,
+                  shadows: [
+                    Shadow(
+                      blurRadius: 5.0,
+                      color: Colors.black.withOpacity(0.5),
+                      offset: const Offset(2.0, 2.0),
+                    ),
+                  ],
+                ),
+                children: const [
+                  TextSpan(
+                    text: 'Get ready for a fun adventure! Tap ',
+                  ),
+                  TextSpan(
+                    text: 'START',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF4DB6AC),
+                    ),
+                  ),
+                  TextSpan(
+                    text:
+                        ' to begin your journey, solve puzzles, and find the hidden treasure!',
+                  ),
+                ],
+              ),
+            ),
+          ),
           Positioned(
             bottom: MediaQuery.of(context).size.height * 0.10,
             left: 0,
@@ -54,11 +78,10 @@ class _GameMainScreenState extends State<GameMainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Start Button
                 ElevatedButton(
                   onPressed: () {
-                    print("start button clicked");
-                    // Add functionality to start the game
+                    //print("start button clicked");
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -67,13 +90,13 @@ class _GameMainScreenState extends State<GameMainScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                    backgroundColor: Color(0xFF4DB6AC),  // Soft turquoise color matching the theme
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                    backgroundColor: const Color(0xFF4DB6AC),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'START',
                     style: TextStyle(
                       fontSize: 24,
@@ -82,15 +105,14 @@ class _GameMainScreenState extends State<GameMainScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 30),  // Space between the buttons
-                // Exit Button
+                SizedBox(width: 30),
                 ElevatedButton(
                   onPressed: () {
-                    // Add functionality to exit the game
+                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                    backgroundColor: Color(0xFFFFAB91),  // Soft coral color matching the logo's warm colors
+                    backgroundColor: Color(0xFFFFAB91),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
