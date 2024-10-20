@@ -7,6 +7,9 @@ class DyscalculiaLevel extends StatefulWidget {
 
 class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   int currentQuestionIndex = 0;
+  String? selectedOption;
+  // Initialize AudioCache to play from assets
+  Color selectedColor = Colors.transparent;
 
   // Basic addition and subtraction questions
   List<String> questions = [
@@ -18,12 +21,14 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   ];
 
   List<List<String>> options = [
-    ["4", "5", "6","2"],
-    ["4", "3", "5",'2'],
-    ["9", "10", "8","6"],
-    ["3", "2", "4","6"],
-    ["9", "10", "7","6"],
+    ["4", "5", "6", "2"],
+    ["4", "3", "5", "2"],
+    ["9", "10", "8", "6"],
+    ["3", "2", "4", "6"],
+    ["9", "10", "7", "6"],
   ];
+
+  List<String> correctAnswers = ["5", "4", "10", "3", "9"]; // Correct answers
 
   void _nextQuestion() {
     setState(() {
@@ -32,7 +37,33 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       } else {
         currentQuestionIndex = 0; // Reset or navigate to the next level/screen
       }
+      selectedOption = null; // Reset selected option for the next question
+      selectedColor = Colors.transparent; // Reset color
     });
+  }
+
+  Future<void> _checkAnswer(String answer) async {
+    if (answer == correctAnswers[currentQuestionIndex]) {
+      setState(() {
+        selectedColor = Colors.green; // Set color to green for correct answer
+      });
+    } else {
+      setState(() {
+        selectedColor = Colors.red; // Set color to red for incorrect answer
+      });
+    }
+  }
+
+  void _onContinue() {
+    if (selectedOption != null) {
+      // Check answer before moving on
+      _checkAnswer(selectedOption!);
+
+      // Show the selected color for 3 seconds
+      Future.delayed(Duration(seconds: 1), () {
+        _nextQuestion();
+      });
+    }
   }
 
   @override
@@ -43,62 +74,74 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
           'Dyscalculia Detection Level',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.purple, // Softer blue shade for header
+        backgroundColor: Colors.purple,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start, // Align to start
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(height: 100), // Add space at the top
-            // Display question directly with an empty box after '='
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   questions[currentQuestionIndex],
-                  textAlign: TextAlign.center, // Center align question text
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 40, // Larger font size for visibility
+                    fontSize: 40,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black, // Dark color for better readability
+                    color: Colors.black,
                   ),
                 ),
                 SizedBox(width: 10), // Space between '=' and the box
                 Container(
-                  width: 50, // Width of the empty box
-                  height: 40, // Height of the empty box
+                  width: 50,
+                  height: 40,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.purple, width: 2), // Border for the box
-                    borderRadius: BorderRadius.circular(5), // Rounded corners
+                    border: Border.all(color: Colors.purple, width: 2),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
               ],
             ),
-            SizedBox(height:150), // Space between question and options
-            // Options section as cards
-            Expanded( // Allow options to take the remaining space
+            SizedBox(height: 150), // Space between question and options
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start, // Align options to the start
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Two options per row
-                      childAspectRatio: 1.5, // Adjust aspect ratio for better layout
-                      crossAxisSpacing: 20, // Spacing between columns
-                      mainAxisSpacing: 20, // Spacing between rows
+                      childAspectRatio: 1.5,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
                     ),
-                    shrinkWrap: true, // Prevent overflow
-                    physics: NeverScrollableScrollPhysics(), // Disable scrolling
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
                     itemCount: options[currentQuestionIndex].length,
                     itemBuilder: (context, index) {
                       return CardOption(
                         text: options[currentQuestionIndex][index],
+                        isSelected: selectedOption == options[currentQuestionIndex][index],
+                        selectedColor: selectedColor,
                         onTap: () {
-                          _nextQuestion();
+                          setState(() {
+                            selectedOption = options[currentQuestionIndex][index];
+                          });
                         },
                       );
                     },
+                  ),
+                  SizedBox(height: 50), // Space between options and button
+                  ElevatedButton(
+                    onPressed: _onContinue,
+                    child: Text('Continue ->', style: TextStyle(
+                    fontSize:20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 236, 230, 230),
+                  )),
+                    style: ElevatedButton.styleFrom(backgroundColor:Colors.purple),
                   ),
                 ],
               ),
@@ -112,9 +155,11 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 class CardOption extends StatelessWidget {
   final String text;
+  final bool isSelected;
+  final Color selectedColor; // Accept the selected color
   final VoidCallback onTap;
 
-  const CardOption({required this.text, required this.onTap});
+  const CardOption({required this.text, required this.isSelected, required this.selectedColor, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -123,14 +168,14 @@ class CardOption extends StatelessWidget {
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.purple, width: 2), // Purple border
+          side: BorderSide(color: Colors.purple, width: 2),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Container(
           padding: EdgeInsets.all(20),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 210, 170, 218), // Light background for contrast
+            color: isSelected ? selectedColor : const Color.fromARGB(255, 210, 170, 218),
             borderRadius: BorderRadius.circular(15),
           ),
           child: Text(
