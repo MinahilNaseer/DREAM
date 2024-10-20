@@ -8,7 +8,6 @@ class DyscalculiaLevel extends StatefulWidget {
 class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   int currentQuestionIndex = 0;
   String? selectedOption;
-  // Initialize AudioCache to play from assets
   Color selectedColor = Colors.transparent;
 
   // Basic addition and subtraction questions
@@ -135,13 +134,29 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                   ),
                   SizedBox(height: 50), // Space between options and button
                   ElevatedButton(
-                    onPressed: _onContinue,
-                    child: Text('Continue ->', style: TextStyle(
-                    fontSize:20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 236, 230, 230),
-                  )),
-                    style: ElevatedButton.styleFrom(backgroundColor:Colors.purple),
+                    onPressed: selectedOption != null ? _onContinue : null, // Disable if no option selected
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: const Color.fromARGB(255, 236, 230, 230),
+                          ),
+                        ),
+                        SizedBox(width: 10), // Space between text and icon
+                        Icon(
+                          Icons.arrow_forward,
+                          color: const Color.fromARGB(255, 236, 230, 230),
+                        ),
+                      ],
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      disabledBackgroundColor: Colors.grey, // Change color when disabled
+                    ),
                   ),
                 ],
               ),
