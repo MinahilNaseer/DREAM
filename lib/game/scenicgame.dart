@@ -1,10 +1,12 @@
+import 'dart:ui' as ui; // Import dart:ui for Image
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flame/input.dart';
-import '../game/fishinglevel.dart';  // Import the new scene
+//import 'package:flame/images.dart'; // Import Flame image handling
+import '../game/fishinglevel.dart'; // Import the new scene
 
 class ScenicGame extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -12,7 +14,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
   late SpriteComponent road1, road2;
   late SpriteComponent grass1, grass2;
   late SpriteComponent pond;
-  late SpriteComponent tapGif; // Declare the GIF component
+  late ui.Image handIconImage; // Use the correct Image type from dart:ui
 
   bool isMoving = false;
   bool showPrompt = true; // Show the prompt initially
@@ -22,6 +24,12 @@ class ScenicGame extends FlameGame with TapCallbacks {
   late Timer pondTimer;
   bool pondAdded = false;
 
+  // Hand icon movement variables
+  double handIconOffset = 0; // Current offset
+  double handIconDirection = 1; // 1 for right, -1 for left
+  final double handIconMaxOffset = 5; // Maximum offset for oscillation
+  final double handIconSpeed = 0.05; // Speed of the oscillation
+
   @override
   Future<void> onLoad() async {
     // Load the parallax component for sky and mountains
@@ -29,7 +37,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
       [
         ParallaxImageData('landscape.jpg'),
       ],
-      baseVelocity: Vector2.zero(),  // No movement initially
+      baseVelocity: Vector2.zero(), // No movement initially
       velocityMultiplierDelta: Vector2(1.2, 1.0),
     );
     add(parallaxComponent);
@@ -76,12 +84,10 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..position = Vector2(10, size.y - size.y * 0.18 - 100);
     add(kidOnCycle);
 
-    // Load the Tap GIF as a sprite
-    tapGif = SpriteComponent()
-      ..sprite = await loadSprite('Tap.gif')  // Ensure the GIF is in the assets folder
-      ..size = Vector2(100, 100)  // Adjust size as needed
-      ..position = Vector2(size.x * 0.7, size.y * 0.38);  // Position it at the bottom-right of the prompt
-    print("Parallax, road, grass, kid on cycle, and tap GIF added.");
+    print("Parallax, road, grass, and kid on cycle added.");
+
+    // Load the hand icon
+    handIconImage = await images.load('hand-icon.png'); // Load the hand image
   }
 
   Future<void> addPond() async {
@@ -92,7 +98,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..position = Vector2(size.x + 50, size.y - size.y * 0.28 - 100);
     add(pond);
     pondAdded = true;
-    add(kidOnCycle);  // Add the kid again to ensure it's on top of the pond
+    add(kidOnCycle); // Add the kid again to ensure it's on top of the pond
     print("Pond added after 2 seconds, sliding onto the screen.");
   }
 
@@ -102,7 +108,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
 
     // Move components only if isMoving is true
     if (isMoving) {
-      pondTimer.update(dt);  // Continue pond timer updates when moving
+      pondTimer.update(dt); // Continue pond timer updates when moving
 
       // Move the road and grass continuously
       moveComponent(road1, road2, speed * dt);
@@ -119,22 +125,30 @@ class ScenicGame extends FlameGame with TapCallbacks {
         // Stop everything and switch to the new scene when the pond and kid are parallel
         if ((pond.position.x - kidOnCycle.position.x).abs() < 10) {
           print("Kid and pond are parallel. Stopping everything.");
-          isMoving = false;  // Stop all movements
-          parallaxComponent.parallax!.baseVelocity = Vector2.zero();  // Stop the parallax background
+          isMoving = false; // Stop all movements
+          parallaxComponent.parallax!.baseVelocity =
+              Vector2.zero(); // Stop the parallax background
 
-          switchToNewScene();  // Switch to the new scene
+          switchToNewScene(); // Switch to the new scene
         }
 
         if (pond.position.x + pond.size.x <= 0) {
           hasPondPassed = true;
-          remove(pond);  // Remove the pond from the game
+          remove(pond); // Remove the pond from the game
           print("Pond has moved off the screen and is removed.");
         }
       }
     }
+
+    // Update hand icon position for oscillation
+    handIconOffset += handIconDirection * handIconSpeed;
+    if (handIconOffset >= handIconMaxOffset || handIconOffset <= -handIconMaxOffset) {
+      handIconDirection *= -1; // Reverse direction when max offset is reached
+    }
   }
 
-  void moveComponent(SpriteComponent component1, SpriteComponent component2, double movementSpeed) {
+  void moveComponent(SpriteComponent component1, SpriteComponent component2,
+      double movementSpeed) {
     component1.position.x -= movementSpeed;
     component2.position.x -= movementSpeed;
 
@@ -150,20 +164,27 @@ class ScenicGame extends FlameGame with TapCallbacks {
   @override
   void onTapDown(TapDownEvent event) {
     if (showPrompt) {
-      showPrompt = false;  // Hide the prompt after first tap
-      remove(tapGif);  // Remove the GIF when the prompt is closed
+      showPrompt = false; // Hide the prompt after first tap
     } else {
-      isMoving = true;  // Start movement when the screen is tapped
+      isMoving = true; // Start movement when the screen is tapped
       print("Screen tapped, starting movement.");
     }
   }
 
   // Function to switch to the new scene
   void switchToNewScene() {
-    removeAll([road1, road2, grass1, grass2, kidOnCycle, pond, parallaxComponent]);  // Remove all components from ScenicGame
-    
+    removeAll([
+      road1,
+      road2,
+      grass1,
+      grass2,
+      kidOnCycle,
+      pond,
+      parallaxComponent
+    ]); // Remove all components from ScenicGame
+
     final newScene = Fishinglevel();
-    add(newScene);  // Add the new scene directly to the game
+    add(newScene); // Add the new scene directly to the game
     print("Switched to the new scene.");
   }
 
@@ -172,14 +193,18 @@ class ScenicGame extends FlameGame with TapCallbacks {
     super.render(canvas);
 
     if (showPrompt) {
-      // Render the prompt if it's still visible
-      final paint = Paint()..color = Colors.brown;
-      final rect = Rect.fromLTWH(size.x * 0.1, size.y * 0.2, size.x * 0.8, size.y * 0.2);
-      final rrect = RRect.fromRectAndRadius(rect, Radius.circular(20)); // Rounded corners
-      canvas.drawRRect(rrect, paint);
+      // Render the prompt with rounded corners
+      final paint = Paint()
+        ..color = const Color.fromARGB(255, 175, 116, 6).withOpacity(0.7);
+      final rect =
+          Rect.fromLTWH(size.x * 0.1, size.y * 0.2, size.x * 0.8, size.y * 0.2);
+      final rrect = RRect.fromRectAndRadius(
+          rect, Radius.circular(20)); // Create a rounded rectangle
+      canvas.drawRRect(rrect, paint); // Draw the rounded rectangle
 
       // Render the text
-      final textStyle = TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold);
+      final textStyle = TextStyle(
+          color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold);
       final textSpan = TextSpan(
         text: "Tap anywhere to start your adventure!",
         style: textStyle,
@@ -190,15 +215,36 @@ class ScenicGame extends FlameGame with TapCallbacks {
         textDirection: TextDirection.ltr,
       );
       textPainter.layout(minWidth: 0, maxWidth: size.x * 0.7);
-      textPainter.paint(canvas, Offset(size.x * 0.15, size.y * 0.25));
+      textPainter.paint(canvas, Offset(size.x * 0.15, size.y * 0.3));
 
-      // Render the close button (X)
-      final closeButtonSize = 30.0;
-      final closeButtonRect = Rect.fromLTWH(size.x * 0.85, size.y * 0.2, closeButtonSize, closeButtonSize);
-      final closeButtonRRect = RRect.fromRectAndRadius(closeButtonRect, Radius.circular(5));
-      canvas.drawRRect(closeButtonRRect, Paint()..color = Colors.white);
+      // Render the hand icon above the prompt
+      final handIconSize = 70; // Adjust size as needed
+      final handIconPosition = Offset(size.x * 0.5 - handIconSize / 2 + handIconOffset, size.y * 0.21); // Center the icon
+     
+      // Draw the hand icon image with adjusted size
+      final paintImage = Paint();
+      canvas.drawImageRect(
+        handIconImage,
+        Rect.fromLTWH(0, 0, handIconImage.width.toDouble(), handIconImage.height.toDouble()), // Source rect
+        Rect.fromLTWH(handIconPosition.dx, handIconPosition.dy, handIconSize.toDouble(), handIconSize.toDouble()), // Destination rect
+        paintImage,
+      );
 
-      final closeTextStyle = TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
+      // Render the close button (X) with circular background
+      final closeButtonSize = 40.0; // Diameter of the circular button
+      final closeButtonRect = Rect.fromLTWH(
+          size.x * 0.85, size.y * 0.2, closeButtonSize, closeButtonSize);
+      final closeButtonPaint = Paint()
+        ..color = Colors.white; // Background color
+      canvas.drawCircle(
+        Offset(closeButtonRect.center.dx, closeButtonRect.center.dy),
+        closeButtonSize / 2, // Radius of the circle
+        closeButtonPaint,
+      );
+
+      // Draw the "X" text
+      final closeTextStyle = TextStyle(
+          color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
       final closeTextSpan = TextSpan(text: "X", style: closeTextStyle);
       final closeTextPainter = TextPainter(
         text: closeTextSpan,
@@ -206,10 +252,15 @@ class ScenicGame extends FlameGame with TapCallbacks {
         textDirection: TextDirection.ltr,
       );
       closeTextPainter.layout(minWidth: 0, maxWidth: closeButtonSize);
-      closeTextPainter.paint(canvas, Offset(size.x * 0.85, size.y * 0.2));
 
-      // Add the tap GIF to the game
-      add(tapGif);  // Ensure that the GIF is visible in the prompt
+      // Center the "X" in the circular button
+      closeTextPainter.paint(
+        canvas,
+        Offset(
+          closeButtonRect.center.dx - closeTextPainter.width / 2,
+          closeButtonRect.center.dy - closeTextPainter.height / 2,
+        ),
+      );
     }
   }
 }
