@@ -105,19 +105,19 @@ class _GameMainScreenState extends State<GameMainScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 30),
+                const SizedBox(width: 30),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                    backgroundColor: Color(0xFFFFAB91),
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                    backgroundColor: const Color(0xFFFFAB91),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     'EXIT',
                     style: TextStyle(
                       fontSize: 24,

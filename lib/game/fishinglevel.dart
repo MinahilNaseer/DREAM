@@ -1,5 +1,3 @@
-import 'dart:math';
-import 'dart:ui' as ui; // Import dart:ui for Image
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -9,29 +7,8 @@ class Fishinglevel extends FlameGame {
   late SpriteComponent background;
   late SpriteComponent island;
   late SpriteComponent kidOnRock;
-  final List<SpriteComponent> fishList = [];
-
-  // List of words for kids
-  final List<String> words = [
-    "cat",
-    "dog",
-    "fish",
-    "tree",
-    "bird",
-    "star",
-    "moon",
-    "ball",
-    "car",
-    "book",
-    "house",
-    "toy",
-    "sun",
-    "rain",
-    "snow"
-  ];
-
-  final Random random = Random();
-  late List<String> selectedWords;
+  final List<SpriteComponent> fishList = []; 
+  late RectangleComponent rectangleBox;
 
   @override
   Future<void> onLoad() async {
@@ -42,46 +19,40 @@ class Fishinglevel extends FlameGame {
     underwater = SpriteComponent()
       ..sprite = await loadSprite('underground-water.jpg');
 
-    island = SpriteComponent()..sprite = await loadSprite('side-island.png');
+    island = SpriteComponent()..sprite = await loadSprite('side-island.png'); 
 
-    kidOnRock = SpriteComponent()..sprite = await loadSprite('boy-rod.png');
+    kidOnRock = SpriteComponent()..sprite = await loadSprite('boy-rod.png'); 
 
     add(background);
     add(underwater);
     add(island);
     add(kidOnRock);
 
-    // Randomly select words
-    selectedWords = [];
-    while (selectedWords.length < 8) {
-      String word = words[random.nextInt(words.length)];
-      if (selectedWords.where((w) => w == word).length < 2) {
-        selectedWords.add(word); // Add if it's not added twice
-      }
-    }
+    
+    rectangleBox = RectangleComponent()
+      ..size = Vector2(320, 150) 
+      ..position = Vector2(40, 60); 
 
-    // Select one word to add 4 times
-    String repeatedWord = selectedWords[random.nextInt(3)];
-    for (int i = 0; i < 4; i++) {
-      selectedWords.add(repeatedWord);
-    }
+    
+    add(rectangleBox);
 
-    // Create fish and add words
+    
+    final line1 = TextComponent(
+      text: "🐟 Tap the fish to help ",
+      position: Vector2(100, 60), 
+    );
+    add(line1);
+    final line2 = TextComponent(
+      text: "the boy catch them! 🎣",
+      position: Vector2(100, 80), 
+    );
+    add(line2);
+    
     for (int i = 0; i < 9; i++) {
-      final fish = SpriteComponent()..sprite = await loadSprite('fish2.png');
-      fishList.add(fish);
-      add(fish);
-
-      // Create a text component for the word
-      final textComponent = InteractiveTextComponent(
-        text: selectedWords[i],
-        position: Vector2(fish.position.x + (fish.size.x / 2) - 20,
-            fish.position.y - 40), // Centered above fish
-        onTap: () =>
-            print('Tapped on: ${selectedWords[i]}'), // Handle the tap event
-      );
-
-      add(textComponent); // Add the text component to the game
+      final fish = SpriteComponent()
+        ..sprite = await loadSprite('fish2.png'); 
+      fishList.add(fish); 
+      add(fish); 
     }
   }
 
@@ -90,21 +61,20 @@ class Fishinglevel extends FlameGame {
     super.onGameResize(canvasSize);
 
     background
-      ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)
-      ..position = Vector2(0, 0);
+      ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)  
+      ..position = Vector2(0, 0);  
 
     underwater
-      ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)
-      ..position = Vector2(0, canvasSize.y * 0.5);
+      ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)  
+      ..position = Vector2(0, canvasSize.y * 0.5);  
 
     island
-      ..size = Vector2(canvasSize.x * 0.7, canvasSize.y * 0.3)
-      ..position = Vector2(0, canvasSize.y * 0.44 - island.size.y / 2);
+      ..size = Vector2(canvasSize.x * 0.7, canvasSize.y * 0.3) 
+      ..position = Vector2(0, canvasSize.y * 0.44 - island.size.y / 2); 
 
     kidOnRock
-      ..size = Vector2(canvasSize.x * 0.5, canvasSize.y * 0.18)
-      ..position = Vector2(
-          island.size.x * 0.47, island.position.y - kidOnRock.size.y * -0.5);
+      ..size = Vector2(canvasSize.x * 0.5, canvasSize.y * 0.18) 
+      ..position = Vector2(island.size.x * 0.47, island.position.y - kidOnRock.size.y * -0.5); 
 
     List<Vector2> fishPositions = [
       Vector2(canvasSize.x * 0.17, underwater.position.y + canvasSize.y * 0.09),
@@ -115,29 +85,39 @@ class Fishinglevel extends FlameGame {
       Vector2(canvasSize.x * 0.6, underwater.position.y + canvasSize.y * 0.25),
       Vector2(canvasSize.x * 0.4, underwater.position.y + canvasSize.y * 0.4),
       Vector2(canvasSize.x * 0.09, underwater.position.y + canvasSize.y * 0.20),
-      Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.35),
+      Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.35), 
     ];
 
     for (int i = 0; i < fishList.length; i++) {
       fishList[i]
-        ..size = Vector2(canvasSize.x * 0.2, canvasSize.y * 0.1)
-        ..position = fishPositions[i];
+        ..size = Vector2(canvasSize.x * 0.2, canvasSize.y * 0.1) 
+        ..position = fishPositions[i]; 
     }
   }
 }
 
-// Interactive Text Component
-class InteractiveTextComponent extends PositionComponent {
+
+class RectangleComponent extends PositionComponent {
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    final paint = Paint()..color = const Color.fromARGB(255, 235, 235, 210); 
+    final radius = Radius.circular(10); 
+    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.x, size.y), radius); 
+    canvas.drawRRect(rrect, paint); 
+  }
+}
+
+
+class TextComponent extends PositionComponent {
   final String text;
   final TextPaint textRenderer;
-  final void Function() onTap;
 
-  InteractiveTextComponent({
+  TextComponent({
     required this.text,
     required Vector2 position,
-    required this.onTap,
   })  : textRenderer = TextPaint(
-          style: TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: Color.fromARGB(255, 0, 102, 204), fontSize: 27), 
         ),
         super() {
     this.position = position;
@@ -146,24 +126,7 @@ class InteractiveTextComponent extends PositionComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    // Render the text directly
-    textRenderer.render(canvas, text, position);
-    print(
-        'Rendered text: $text at position: $position'); // Debug: Log rendered text and position
-  }
-
-  @override
-  bool onTapDown(TapDownDetails details) {
-    final tapPosition = details.localPosition;
-    if (toRect().contains(tapPosition)) {
-      onTap(); // Call the tap handler
-      print('Tapped on text: $text'); // Debug: Log tapped text
-      return true; // Indicate that the tap was handled
-    }
-    return false; // Tap not handled
-  }
-
-  Rect toRect() {
+    
     final textPainter = TextPainter(
       text: TextSpan(
         text: text,
@@ -172,9 +135,12 @@ class InteractiveTextComponent extends PositionComponent {
       textDirection: TextDirection.ltr,
     );
 
-    textPainter.layout(); // Layout the text to calculate size
-    // Create a rectangle based on text size
-    return Rect.fromLTWH(
-        position.x, position.y, textPainter.width, textPainter.height);
+    textPainter.layout(); 
+
+    
+    final x = position.x + (size.x - textPainter.width) / 2;
+    final y = position.y + (size.y - textPainter.height) / 2;
+
+    textPainter.paint(canvas, Offset(x, y));
   }
 }
