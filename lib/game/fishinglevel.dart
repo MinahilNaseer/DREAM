@@ -1,6 +1,9 @@
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import './class/rectanglecomponent.dart' as custom_rect;
+import 'class/fishrectanglecomponent.dart';
+import './class/textcomponent.dart' as custom_text;
 import 'dart:math';
 
 class Fishinglevel extends FlameGame {
@@ -9,12 +12,15 @@ class Fishinglevel extends FlameGame {
   late SpriteComponent island;
   late SpriteComponent kidOnRock;
   final List<SpriteComponent> fishList = [];
-  late RectangleComponent rectangleBox; // Rectangle box for instructions
-  final List<RectangleComponent> fishRectangles = [];
-  //final String underwaterWord = "Swim";
-  //late TextComponent underwaterText ;
+  final Random random = Random(); 
+  late custom_rect.RectangleComponent rectangleBox; 
+  final List<FishRectangleComponent> fishRectangles = []; 
 
-  // To hold individual fish rectangles
+  
+  final List<String> wordList = [
+    "Cat", "Dog", "Sun", "Moon", "Ball", "Tree", "Car", "Boat", "Star", "Bird",
+    "Fish", "Cup", "House", "Milk", "Bike", "Book", "Sky", "Toy", "Cloud", "Hat"
+  ];
 
   @override
   Future<void> onLoad() async {
@@ -34,25 +40,25 @@ class Fishinglevel extends FlameGame {
     add(island);
     add(kidOnRock);
 
-    rectangleBox = RectangleComponent()
-      ..size = Vector2(320, 150) // Set the size of the rectangle
-      ..position = Vector2(40, 60); // Position the rectangle at the top
+    rectangleBox = custom_rect.RectangleComponent()
+      ..size = Vector2(320, 150) 
+      ..position = Vector2(40, 60); 
 
     add(rectangleBox);
 
-    // Create text component for the message
-    final line1 = TextComponent(
+    
+    final line1 = custom_text.TextComponent(
       text: "🐟 Tap the fish to help ",
       position: Vector2(100, 60),
     );
     add(line1);
-    final line2 = TextComponent(
+    final line2 = custom_text.TextComponent(
       text: "the boy catch them! 🎣",
       position: Vector2(100, 80),
     );
     add(line2);
 
-    // Create fish and rectangles
+    
     for (int i = 0; i < 9; i++) {
       final fish = SpriteComponent()..sprite = await loadSprite('fish2.png');
       fishList.add(fish);
@@ -93,81 +99,43 @@ class Fishinglevel extends FlameGame {
       Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.35),
     ];
 
-    // Position the fish and their respective rectangles
+    
+    final Set<String> selectedWords = {};
+    while (selectedWords.length < 3) {
+      selectedWords.add(wordList[random.nextInt(wordList.length)]);
+    }
+    final List<String> selectedWordList = selectedWords.toList();
+
+    
+    final List<String> finalWordList = [
+      selectedWordList[0], selectedWordList[0], 
+      selectedWordList[1], selectedWordList[1], selectedWordList[1],
+      selectedWordList[2], selectedWordList[2], selectedWordList[2], selectedWordList[2] 
+    ];
+
+    
+    finalWordList.shuffle();
+
+    
     for (int i = 0; i < fishList.length; i++) {
       fishList[i]
         ..size = Vector2(canvasSize.x * 0.2, canvasSize.y * 0.1)
         ..position = fishPositions[i];
 
-      final fishRectangle = RectangleComponent()
-        ..size = Vector2(55, 35) // Size for the rectangle
-        ..position = (fishPositions[i].clone() // Clone the position
-          ..x += fishList[i].size.x / 4 // Adjust the x position
-          ..y += fishList[i].size.y / 4); // Adjust the y position
-
-      fishRectangles.add(fishRectangle); // Add rectangle to list
-      add(fishRectangle);
-
-      final word = TextComponent(
-        text: "toy",
-        position: Vector2(103, 298),
+      
+      final fishRectangle = FishRectangleComponent(
+        word: finalWordList[i], 
+        position: fishPositions[i].clone(), 
+        size: Vector2(55, 35), 
       );
-      add(word);
+      fishRectangles.add(fishRectangle); 
+      add(fishRectangle); 
     }
-
-    // Ensure the text is centered
   }
 }
 
-// Custom component to render a rectangle with rounded corners
-class RectangleComponent extends PositionComponent {
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    final paint = Paint()
-      ..color = const Color.fromARGB(255, 235, 235, 210); // Rectangle color
-    final radius = Radius.circular(10); // Corner radius
-    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.x, size.y),
-        radius); // Create rounded rectangle
-    canvas.drawRRect(rrect, paint); // Draw the rectangle with rounded corners
-  }
-}
 
-// Component to render text
-class TextComponent extends PositionComponent {
-  final String text;
-  final TextPaint textRenderer;
 
-  TextComponent({
-    required this.text,
-    required Vector2 position,
-  })  : textRenderer = TextPaint(
-          style: TextStyle(
-              color: Color.fromARGB(255, 0, 102, 204),
-              fontSize: 27), // Dark blue color for text
-        ),
-        super() {
-    this.position = position;
-  }
 
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
 
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: textRenderer.style,
-      ),
-      textDirection: TextDirection.ltr,
-    );
 
-    textPainter.layout(); // Layout the text to calculate size
-
-    // Position the text to be centered in the rectangle
-    final x = position.x + (size.x - textPainter.width) / 2;
-    final y = position.y + (size.y - textPainter.height) / 2;
-
-    textPainter.paint(canvas, Offset(x, y));
-  }
-}
