@@ -16,7 +16,11 @@ class Fishinglevel extends FlameGame {
   late custom_rect.RectangleComponent rectangleBox; 
   final List<FishRectangleComponent> fishRectangles = []; 
 
-  
+  final List<String> selectedWords = []; // Track selected words
+  late String mostOccurringWord; // Store the most occurring word
+  int occurrences = 0; // Track occurrences of most occurring word
+  int correctSelections = 0; // Track correct selections of the most occurring word
+
   final List<String> wordList = [
     "Cat", "Dog", "Sun", "Moon", "Ball", "Tree", "Car", "Boat", "Star", "Bird",
     "Fish", "Cup", "House", "Milk", "Bike", "Book", "Sky", "Toy", "Cloud", "Hat"
@@ -27,12 +31,8 @@ class Fishinglevel extends FlameGame {
     await super.onLoad();
 
     background = SpriteComponent()..sprite = await loadSprite('sc.jpg');
-
-    underwater = SpriteComponent()
-      ..sprite = await loadSprite('underground-water.jpg');
-
+    underwater = SpriteComponent()..sprite = await loadSprite('underground-water.jpg');
     island = SpriteComponent()..sprite = await loadSprite('side-island.png');
-
     kidOnRock = SpriteComponent()..sprite = await loadSprite('boy-rod.png');
 
     add(background);
@@ -46,7 +46,6 @@ class Fishinglevel extends FlameGame {
 
     add(rectangleBox);
 
-    
     final line1 = custom_text.TextComponent(
       text: "🐟 Tap the fish to help ",
       position: Vector2(100, 60),
@@ -58,7 +57,6 @@ class Fishinglevel extends FlameGame {
     );
     add(line2);
 
-    
     for (int i = 0; i < 9; i++) {
       final fish = SpriteComponent()..sprite = await loadSprite('fish2.png');
       fishList.add(fish);
@@ -99,43 +97,53 @@ class Fishinglevel extends FlameGame {
       Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.35),
     ];
 
-    
-    final Set<String> selectedWords = {};
-    while (selectedWords.length < 3) {
-      selectedWords.add(wordList[random.nextInt(wordList.length)]);
+    // Randomly select 3 words
+    final Set<String> selectedWordsSet = {};
+    while (selectedWordsSet.length < 3) {
+      selectedWordsSet.add(wordList[random.nextInt(wordList.length)]);
     }
-    final List<String> selectedWordList = selectedWords.toList();
+    final List<String> selectedWordList = selectedWordsSet.toList();
 
-    
+    // Fixed appearance pattern: one word 4 times, one word 3 times, and one word 2 times
     final List<String> finalWordList = [
-      selectedWordList[0], selectedWordList[0], 
-      selectedWordList[1], selectedWordList[1], selectedWordList[1],
-      selectedWordList[2], selectedWordList[2], selectedWordList[2], selectedWordList[2] 
+      selectedWordList[0], selectedWordList[0], selectedWordList[0], selectedWordList[0], // 4 occurrences
+      selectedWordList[1], selectedWordList[1], selectedWordList[1], // 3 occurrences
+      selectedWordList[2], selectedWordList[2]  // 2 occurrences
     ];
 
-    
+    // Shuffle the final list to randomize the position
     finalWordList.shuffle();
+    mostOccurringWord = selectedWordList[0]; // The word appearing 4 times
+    occurrences = 4; // 4 occurrences of the most occurring word
 
-    
     for (int i = 0; i < fishList.length; i++) {
       fishList[i]
         ..size = Vector2(canvasSize.x * 0.2, canvasSize.y * 0.1)
         ..position = fishPositions[i];
 
-      
       final fishRectangle = FishRectangleComponent(
-        word: finalWordList[i], 
-        position: fishPositions[i].clone(), 
-        size: Vector2(55, 35), 
+        word: finalWordList[i],
+        position: fishPositions[i].clone(),
+        size: Vector2(55, 35),
+        onWordSelected: (selectedWord) {
+          selectedWords.add(selectedWord);
+          if (selectedWord == mostOccurringWord) {
+            correctSelections++;
+          }
+          checkIfUserCompleted(); // Check if user selected all occurrences
+        },
       );
-      fishRectangles.add(fishRectangle); 
-      add(fishRectangle); 
+      fishRectangles.add(fishRectangle);
+      add(fishRectangle);
+    }
+  }
+
+  // Check if the user selected all occurrences of the most occurring word
+  void checkIfUserCompleted() {
+    if (correctSelections == occurrences) {
+      print("Correct! You've selected all occurrences of the word: $mostOccurringWord");
+    } else if (selectedWords.length == 9) {
+      print("Not correct! You missed some occurrences of the most frequent word.");
     }
   }
 }
-
-
-
-
-
-
