@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class DyscalculiaLevel extends StatefulWidget {
@@ -10,31 +11,55 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   String? selectedOption;
   Color selectedColor = Colors.transparent;
 
-  // Basic addition and subtraction questions
-  List<String> questions = [
-    "3 + 2 =",
-    "5 - 1 =",
-    "4 + 6 =",
-    "10 - 7 =",
-    "8 + 1 =",
-  ];
+  // List to hold randomly generated questions and their correct answers
+  List<String> questions = [];
+  List<String> correctAnswers = [];
+  int totalCorrectAnswers = 0;
+  int totalTimeTaken = 0;
+  DateTime? startTime;
 
-  List<List<String>> options = [
-    ["4", "5", "6", "2"],
-    ["4", "3", "5", "2"],
-    ["9", "10", "8", "6"],
-    ["3", "2", "4", "6"],
-    ["9", "10", "7", "6"],
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _generateQuestions(); // Generate questions on initialization
+    startTime = DateTime.now(); // Start timing
+  }
 
-  List<String> correctAnswers = ["5", "4", "10", "3", "9"]; // Correct answers
+  void _generateQuestions() {
+    Random random = Random();
+    while (questions.length < 10) { // Ensure exactly 10 questions are generated
+      int num1 = random.nextInt(10); // Random number between 0 and 9
+      int num2 = random.nextInt(10); // Random number between 0 and 9
+
+      // Randomly decide whether to generate an addition or subtraction question
+      bool isAddition = random.nextBool();
+
+      // Generate question based on the operation
+      if (isAddition) {
+        if (num1 + num2 > 9 || num1 + num2 <= 0) {
+          continue; // Skip if sum is greater than 9 or less than or equal to 0
+        }
+        questions.add("$num1 + $num2 =");
+        correctAnswers.add((num1 + num2).toString()); // Calculate correct answer for addition
+      } else {
+        // For subtraction, ensure that num1 is greater than num2 to avoid negative results
+        if (num1 < num2) {
+          continue; // Skip if the first number is less than the second
+        }
+        questions.add("$num1 - $num2 =");
+        correctAnswers.add((num1 - num2).toString()); // Calculate correct answer for subtraction
+      }
+    }
+  }
 
   void _nextQuestion() {
     setState(() {
       if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
       } else {
-        currentQuestionIndex = 0; // Reset or navigate to the next level/screen
+        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds; // Calculate total time taken
+        _showResults(); // Show results when all questions are answered
+        return; // Exit the function to avoid resetting the index prematurely
       }
       selectedOption = null; // Reset selected option for the next question
       selectedColor = Colors.transparent; // Reset color
@@ -45,6 +70,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     if (answer == correctAnswers[currentQuestionIndex]) {
       setState(() {
         selectedColor = Colors.green; // Set color to green for correct answer
+        totalCorrectAnswers++; // Increment total correct answers
       });
     } else {
       setState(() {
@@ -53,12 +79,69 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     }
   }
 
+  void _showResults() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Quiz Results'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Total Correct Answers: $totalCorrectAnswers\n'
+                'Time Taken: $totalTimeTaken seconds\n'
+                'Thank you for participating!',
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20), // Space between text and button
+              ElevatedButton(
+                onPressed: () {
+                  _generateReport();
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Generate Report',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 10), // Space between text and icon
+                    Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple, // Purple background
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((_) {
+      // Navigate to /mainmenu when the dialog is dismissed
+      Navigator.of(context).pushReplacementNamed('/mainmenu');
+    });
+  }
+
+  // Placeholder function for generating a report
+  void _generateReport() {
+    // Implement your report generation logic here
+    print('Report generated!'); // Replace with actual report logic
+  }
+
   void _onContinue() {
     if (selectedOption != null) {
-      // Check answer before moving on
       _checkAnswer(selectedOption!);
 
-      // Show the selected color for 3 seconds
+      // Show the selected color for 1 second before moving to the next question
       Future.delayed(Duration(seconds: 1), () {
         _nextQuestion();
       });
@@ -118,15 +201,16 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                     ),
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: options[currentQuestionIndex].length,
+                    itemCount: 4, // Number of options
                     itemBuilder: (context, index) {
+                      String option = (int.parse(correctAnswers[currentQuestionIndex]) + (index - 2)).toString();
                       return CardOption(
-                        text: options[currentQuestionIndex][index],
-                        isSelected: selectedOption == options[currentQuestionIndex][index],
+                        text: option,
+                        isSelected: selectedOption == option,
                         selectedColor: selectedColor,
                         onTap: () {
                           setState(() {
-                            selectedOption = options[currentQuestionIndex][index];
+                            selectedOption = option;
                           });
                         },
                       );
@@ -174,7 +258,12 @@ class CardOption extends StatelessWidget {
   final Color selectedColor; // Accept the selected color
   final VoidCallback onTap;
 
-  const CardOption({required this.text, required this.isSelected, required this.selectedColor, required this.onTap});
+  const CardOption({
+    required this.text,
+    required this.isSelected,
+    required this.selectedColor,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -183,23 +272,14 @@ class CardOption extends StatelessWidget {
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.purple, width: 2),
-          borderRadius: BorderRadius.circular(15),
+          side: BorderSide(color: isSelected ? selectedColor : Colors.transparent, width: 2),
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Container(
-          padding: EdgeInsets.all(20),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? selectedColor : const Color.fromARGB(255, 210, 170, 218),
-            borderRadius: BorderRadius.circular(15),
-          ),
+        color: isSelected ? selectedColor : Colors.white,
+        child: Center(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
         ),
       ),
