@@ -1,30 +1,43 @@
+import 'package:dream/game/scenicgame.dart';
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import './class/rectanglecomponent.dart' as custom_rect;
 import 'class/fishrectanglecomponent.dart';
 import './class/textcomponent.dart' as custom_text;
+import './class/gamenavigator.dart';
 import 'dart:math';
 
-class Fishinglevel extends FlameGame {
+class Fishinglevel extends FlameGame with TapCallbacks {
+  final BuildContext context;
+
+  Fishinglevel(this.context); 
   late SpriteComponent underwater;
   late SpriteComponent background;
   late SpriteComponent island;
   late SpriteComponent kidOnRock;
   final List<SpriteComponent> fishList = [];
-  final Random random = Random(); 
-  late custom_rect.RectangleComponent rectangleBox; 
-  final List<FishRectangleComponent> fishRectangles = []; 
+  final Random random = Random();
+  late custom_rect.RectangleComponent rectangleBox;
+  final List<FishRectangleComponent> fishRectangles = [];
 
-  final List<String> selectedWords = []; // Track selected words
-  late String mostOccurringWord; // Store the most occurring word
-  int occurrences = 0; // Track occurrences of most occurring word
-  int correctSelections = 0; // Track correct selections of the most occurring word
+  final List<String> selectedWords = [];
+  late String mostOccurringWord;
+  int occurrences = 0;
+  int correctSelections = 0;
+  bool hasLoaded = false;
 
   final List<String> wordList = [
-    "Cat", "Dog", "Sun", "Moon", "Ball", "Tree", "Car", "Boat", "Star", "Bird",
-    "Fish", "Cup", "House", "Milk", "Bike", "Book", "Sky", "Toy", "Cloud", "Hat"
+    "saw", "was", "god", "dog", "straw", "warts", "live", "evil", "what",
+    "who", "why", "where", "there", "how", "one", "do", "has", "two",
+    "said", "come", "some", "the", "of", "a", "to", "is", "you", "was",
+    "are", "and", "it", "in", "at", "he", "she", "we", "by", "on", "up",
+    "no", "yes", "not", "pan", "nap", "bat", "tab", "lap", "pal", "tip",
+    "pit", "pot", "top"
   ];
+
+  bool showProceedButton = false; // Flag to control button visibility
 
   @override
   Future<void> onLoad() async {
@@ -41,8 +54,8 @@ class Fishinglevel extends FlameGame {
     add(kidOnRock);
 
     rectangleBox = custom_rect.RectangleComponent()
-      ..size = Vector2(320, 150) 
-      ..position = Vector2(40, 60); 
+      ..size = Vector2(320, 150)
+      ..position = Vector2(40, 60);
 
     add(rectangleBox);
 
@@ -62,11 +75,14 @@ class Fishinglevel extends FlameGame {
       fishList.add(fish);
       add(fish);
     }
+    hasLoaded = true;
   }
 
   @override
   void onGameResize(Vector2 canvasSize) {
     super.onGameResize(canvasSize);
+
+    if (!hasLoaded) return; // Only proceed if components have loaded
 
     background
       ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)
@@ -97,24 +113,22 @@ class Fishinglevel extends FlameGame {
       Vector2(canvasSize.x * 0.7, underwater.position.y + canvasSize.y * 0.35),
     ];
 
-    // Randomly select 3 words
     final Set<String> selectedWordsSet = {};
     while (selectedWordsSet.length < 3) {
       selectedWordsSet.add(wordList[random.nextInt(wordList.length)]);
     }
     final List<String> selectedWordList = selectedWordsSet.toList();
 
-    // Fixed appearance pattern: one word 4 times, one word 3 times, and one word 2 times
     final List<String> finalWordList = [
-      selectedWordList[0], selectedWordList[0], selectedWordList[0], selectedWordList[0], // 4 occurrences
-      selectedWordList[1], selectedWordList[1], selectedWordList[1], // 3 occurrences
-      selectedWordList[2], selectedWordList[2]  // 2 occurrences
+      selectedWordList[0], selectedWordList[0], selectedWordList[0], selectedWordList[0],
+      selectedWordList[1], selectedWordList[1],
+      selectedWordList[2], selectedWordList[2],
+      selectedWordList[0]
     ];
 
-    // Shuffle the final list to randomize the position
     finalWordList.shuffle();
-    mostOccurringWord = selectedWordList[0]; // The word appearing 4 times
-    occurrences = 4; // 4 occurrences of the most occurring word
+    mostOccurringWord = selectedWordList[0];
+    occurrences = 4;
 
     for (int i = 0; i < fishList.length; i++) {
       fishList[i]
@@ -122,28 +136,102 @@ class Fishinglevel extends FlameGame {
         ..position = fishPositions[i];
 
       final fishRectangle = FishRectangleComponent(
-        word: finalWordList[i],
-        position: fishPositions[i].clone(),
-        size: Vector2(55, 35),
-        onWordSelected: (selectedWord) {
-          selectedWords.add(selectedWord);
-          if (selectedWord == mostOccurringWord) {
-            correctSelections++;
-          }
-          checkIfUserCompleted(); // Check if user selected all occurrences
-        },
-      );
+  word: finalWordList[i],
+  position: fishPositions[i].clone(),
+  size: Vector2(55, 35),
+  onWordSelected: (selectedWord) {
+    selectedWords.add(selectedWord);
+    if (selectedWord == mostOccurringWord) {
+      correctSelections++;
+    }
+    checkIfUserCompleted(context); // Ensure context is passed here
+  },
+);
       fishRectangles.add(fishRectangle);
       add(fishRectangle);
     }
   }
 
-  // Check if the user selected all occurrences of the most occurring word
-  void checkIfUserCompleted() {
-    if (correctSelections == occurrences) {
-      print("Correct! You've selected all occurrences of the word: $mostOccurringWord");
-    } else if (selectedWords.length == 9) {
-      print("Not correct! You missed some occurrences of the most frequent word.");
-    }
+  void checkIfUserCompleted(BuildContext context) {
+  if (correctSelections == occurrences || selectedWords.length == 9) {
+    showProceedButton = true;
+    add(BlurOverlayComponent(size: size));
+    addProceedButton(context); // Pass the BuildContext here
   }
 }
+
+
+  void addProceedButton(BuildContext context) {
+  final proceedButton = ProceedButtonComponent(
+    context: context, // Pass context as a parameter
+    position: Vector2(size.x * 0.16, size.y * 0.55),
+    size: Vector2(280, 50),
+    game: this,
+  );
+  add(proceedButton);
+}
+
+
+}
+
+// Blur overlay component
+class BlurOverlayComponent extends PositionComponent {
+  BlurOverlayComponent({required Vector2 size}) : super(size: size);
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    Paint paint = Paint()..color = Colors.black.withOpacity(0.4); // Dim effect
+    canvas.drawRect(size.toRect(), paint);
+  }
+}
+
+class ProceedButtonComponent extends PositionComponent with TapCallbacks {
+  final BuildContext context;
+  final FlameGame game;
+  final String buttonText = "Proceed to Your Journey";
+
+  ProceedButtonComponent({
+    required this.context, // Accept context parameter
+    required Vector2 position,
+    required Vector2 size,
+    required this.game,
+  }) : super(position: position, size: size);
+
+  @override
+  bool onTapUp(TapUpEvent info) {
+    GameNavigator.switchToInitialScene(context, game); // Use context here
+    print("Navigating to Afterfishlevel screen...");
+    return true;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    Paint paint = Paint()..color = Color(0xFF8FB8A8);
+    RRect rrect = RRect.fromRectAndRadius(size.toRect(), Radius.circular(15));
+    canvas.drawRRect(rrect, paint);
+
+    // Centered text on the button
+    final textStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    );
+    final textSpan = TextSpan(text: buttonText, style: textStyle);
+    final textPainter = TextPainter(
+      text: textSpan,
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+
+    final textOffset = Offset(
+      (size.x - textPainter.width) / 2,
+      (size.y - textPainter.height) / 2,
+    );
+    textPainter.paint(canvas, textOffset);
+  }
+}
+
+
