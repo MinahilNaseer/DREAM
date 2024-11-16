@@ -5,6 +5,7 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
 import 'package:flame/timer.dart';
+import 'forestlevel.dart'; // Import ForestLevel class
 
 class Afterfishlevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -74,7 +75,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
       ..position = Vector2(70, size.y - size.y * 0.18 - 100); // Positioned in the middle
     add(kidOnCycle);
 
-    // Initialize the forest scene timer (5 seconds)
+    // Initialize the forest scene timer (3 seconds)
     forestSceneTimer = Timer(3.0, onTick: () async {
       // Add the forest scene (trees.png) if it doesn't exist yet
       if (forestScene == null) {
@@ -94,11 +95,10 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
   void update(double dt) {
     super.update(dt);
 
-    
-
     if (isMoving) {
       // Update the forest scene timer
       forestSceneTimer.update(dt);
+
       // Move the roads and grass
       moveComponent(road1, road2, speed * dt);
       moveComponent(road2, road1, speed * dt);
@@ -126,21 +126,8 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
         if ((forestScene!.position.x - kidOnCycle.position.x).abs() < 100) {
           isMoving = false; // Stop the movement
           parallaxComponent.parallax!.baseVelocity = Vector2.zero();
+          switchToNewScene(buildContext!); // Transition to the forest level
         }
-
-        // Remove the forest scene if it moves off-screen
-        if (forestScene!.position.x + forestScene!.size.x < 0) {
-          remove(forestScene!);
-          forestScene = null;
-        }
-      }
-
-      // Move the kid on cycle within the screen horizontally
-      //kidOnCycle.position.x += cycleSpeed * dt;
-
-      // Ensure the kid on cycle stays within screen bounds
-      if (kidOnCycle.position.x > size.x - kidOnCycle.size.x) {
-        kidOnCycle.position.x = size.x - kidOnCycle.size.x;
       }
     }
   }
@@ -156,6 +143,14 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     if (component2.position.x + component2.size.x <= 0) {
       component2.position.x = component1.position.x + component1.size.x - 30;
     }
+  }
+
+  void switchToNewScene(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GameWidget(game: ForestLevel()), // Switch to ForestLevel
+      ),
+    );
   }
 
   @override
