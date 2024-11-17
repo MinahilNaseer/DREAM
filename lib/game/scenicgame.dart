@@ -85,7 +85,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
     pond = SpriteComponent()
       ..sprite = await loadSprite('pond-fish.png')
       ..size = Vector2(220, 220)
-      ..position = Vector2(size.x + 50, size.y - size.y * 0.28 - 100);
+      ..position = Vector2(size.x + 100, size.y - size.y * 0.28 - 100);
     add(pond);
     pondAdded = true;
     add(kidOnCycle);
