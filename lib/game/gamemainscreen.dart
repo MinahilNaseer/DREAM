@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flame/game.dart';
 import '../game/scenicgame.dart';
 
@@ -8,6 +9,38 @@ class GameMainScreen extends StatefulWidget {
 }
 
 class _GameMainScreenState extends State<GameMainScreen> {
+  late FlutterTts _flutterTts;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTTS();
+    _playWelcomeMessage();
+  }
+
+  // Initialize TTS
+  void _initializeTTS() {
+    _flutterTts = FlutterTts();
+
+    // Configure TTS settings
+    _flutterTts.setLanguage("en-US"); // Set language
+    _flutterTts.setPitch(1.5); // Higher pitch for a child-like voice
+    _flutterTts.setSpeechRate(0.4); // Adjust speed for clarity
+  }
+
+  // Play the welcome message
+  void _playWelcomeMessage() async {
+    await _flutterTts.speak(
+      "Welcome to Dream Quest! Get ready for an amazing adventure! Tap start to begin your journey, solve puzzles, and find hidden treasures. Let the fun begin!",
+    );
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop(); // Stop TTS when leaving the screen
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,8 +113,6 @@ class _GameMainScreenState extends State<GameMainScreen> {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    //print("start button clicked");
-
                     Navigator.push(
                       context,
                       MaterialPageRoute(

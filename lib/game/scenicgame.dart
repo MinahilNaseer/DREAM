@@ -4,8 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/parallax.dart';
-import 'package:flame/input.dart';
-import './class/gamenavigator.dart'; // Import GameNavigator
+import 'package:flutter_tts/flutter_tts.dart';
 import '../game/fishinglevel.dart';
 
 class ScenicGame extends FlameGame with TapCallbacks {
@@ -14,23 +13,24 @@ class ScenicGame extends FlameGame with TapCallbacks {
   late SpriteComponent road1, road2;
   late SpriteComponent grass1, grass2;
   late SpriteComponent pond;
-  late ui.Image handIconImage;
+  late SpriteComponent molly; // Character Molly
 
   bool isMoving = false;
-  bool showPrompt = true;
   final double speed = 100;
   bool hasPondPassed = false;
   bool isSceneSwitched = false;
   late Timer pondTimer;
   bool pondAdded = false;
 
-  double handIconOffset = 0;
-  double handIconDirection = 1;
-  final double handIconMaxOffset = 5;
-  final double handIconSpeed = 0.05;
+  late FlutterTts _flutterTts;
+  String dialogueText = ""; // Text inside the dialogue box
+  bool isDialogueVisible = true;
+  Rect? dialogueBoxRect; // Dynamic dialogue box rectangle
 
   @override
   Future<void> onLoad() async {
+    _initializeTTS();
+
     parallaxComponent = await ParallaxComponent.load(
       [
         ParallaxImageData('landscape.jpg'),
@@ -44,7 +44,6 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..sprite = await loadSprite('horizontal-road.png')
       ..size = Vector2(size.x, size.y * 0.18)
       ..position = Vector2(-10, size.y - size.y * 0.18);
-
     road2 = SpriteComponent()
       ..sprite = await loadSprite('horizontal-road.png')
       ..size = Vector2(size.x, size.y * 0.18)
@@ -57,7 +56,6 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..sprite = await loadSprite('grass.png')
       ..size = Vector2(size.x, size.y * 0.09)
       ..position = Vector2(0, size.y - size.y * 0.09);
-
     grass2 = SpriteComponent()
       ..sprite = await loadSprite('grass.png')
       ..size = Vector2(size.x, size.y * 0.09)
@@ -66,69 +64,98 @@ class ScenicGame extends FlameGame with TapCallbacks {
     add(grass1);
     add(grass2);
 
-    pondTimer = Timer(2, onTick: () {
-      if (!pondAdded) {
-        addPond();
-      }
-    });
-
     kidOnCycle = SpriteComponent()
       ..sprite = await loadSprite('kid-cycle.png')
       ..size = Vector2(180, 180)
       ..position = Vector2(10, size.y - size.y * 0.18 - 100);
     add(kidOnCycle);
 
-    handIconImage = await images.load('hand-icon.png');
+    // Add Molly with a higher priority
+    molly = SpriteComponent()
+      ..sprite = await loadSprite('animated-waving-girl.png')
+      ..size = Vector2(150, 150)
+      ..position = Vector2(-5, size.y - size.y * 0.35 - 480)
+      ..priority = 10; // Ensure Molly is in front
+    add(molly);
+
+    pondTimer = Timer(2, onTick: () {
+      if (!pondAdded) {
+        addPond();
+      }
+    });
+
+    // Speak the first dialogue
+    // Speak the first dialogue
+    _speakDialogue(
+        "Hi there! I'm Molly! Are you ready for an amazing adventure? Just tap anywhere, and let's start exploring!");
+    dialogueText =
+        "Hi there! I'm Molly! Just tap anywhere, and let's start exploring!";
   }
 
   Future<void> addPond() async {
     pond = SpriteComponent()
       ..sprite = await loadSprite('pond-fish.png')
       ..size = Vector2(220, 220)
-      ..position = Vector2(size.x + 100, size.y - size.y * 0.28 - 100);
+      ..position = Vector2(size.x + 100, size.y - size.y * 0.28 + 20);
     add(pond);
     pondAdded = true;
-    add(kidOnCycle);
   }
 
   @override
-  void update(double dt) {
-    super.update(dt);
+void update(double dt) async {
+  super.update(dt);
 
-    if (isMoving) {
-      pondTimer.update(dt);
+  if (isMoving) {
+    pondTimer.update(dt);
 
-      moveComponent(road1, road2, speed * dt);
-      moveComponent(road2, road1, speed * dt);
-      moveComponent(grass1, grass2, speed * dt);
-      moveComponent(grass2, grass1, speed * dt);
+    // Move background elements
+    moveComponent(road1, road2, speed * dt);
+    moveComponent(road2, road1, speed * dt);
+    moveComponent(grass1, grass2, speed * dt);
+    moveComponent(grass2, grass1, speed * dt);
 
-      parallaxComponent.parallax!.baseVelocity = Vector2(speed, 0);
+    parallaxComponent.parallax!.baseVelocity = Vector2(speed, 0);
 
-      if (pondAdded && !hasPondPassed) {
-        pond.position.x -= speed * dt;
+    // Move the pond
+    if (pondAdded && !hasPondPassed) {
+      pond.position.x -= speed * dt;
 
-        if ((pond.position.x - kidOnCycle.position.x).abs() < 10) {
-          isMoving = false;
-          parallaxComponent.parallax!.baseVelocity = Vector2.zero();
+      // Change Molly's sprite and dialogue when the pond is near
+      if (pond.position.x < size.x - 300 && molly.sprite != null) {
+        molly.sprite = await loadSprite('animated-shocked-girl.png');
+        add(molly); // Change to new image of Molly
+        _speakDialogue("Watch out! There’s a pond ahead! Do you think we’ll see some fish?");
+        dialogueText = "Watch out! There’s a pond ahead! Do you think we’ll see some fish?";
+        molly.priority = 10; // Ensure Molly stays in front
+      }
 
-          switchToNewScene(buildContext!); // Switch to Fishinglevel
-        }
+      // Check if the kid on the cycle meets the pond
+      if ((pond.position.x - kidOnCycle.position.x).abs() < 130) {
+        isMoving = false;
+        parallaxComponent.parallax!.baseVelocity = Vector2.zero();
 
-        if (pond.position.x + pond.size.x <= 0) {
-          hasPondPassed = true;
-          remove(pond);
-        }
+        // Speak the stopping dialogue
+        _speakAndSwitch("Let's stop and see! Maybe there's something interesting!", buildContext!);
+      }
+
+      // Remove pond if it moves out of the screen
+      if (pond.position.x + pond.size.x <= 0) {
+        hasPondPassed = true;
+        remove(pond);
       }
     }
-
-    handIconOffset += handIconDirection * handIconSpeed;
-    if (handIconOffset >= handIconMaxOffset || handIconOffset <= -handIconMaxOffset) {
-      handIconDirection *= -1;
-    }
   }
+}
+Future<void> _speakAndSwitch(String text, BuildContext context) async {
+  await _flutterTts.speak(text); // Speak the provided text
+  await Future.delayed(Duration(seconds: text.length ~/ 10)); // Wait until the dialogue finishes
+  switchToNewScene(context); // Switch to the fishing level
+}
 
-  void moveComponent(SpriteComponent component1, SpriteComponent component2, double movementSpeed) {
+
+
+  void moveComponent(SpriteComponent component1, SpriteComponent component2,
+      double movementSpeed) {
     component1.position.x -= movementSpeed;
     component2.position.x -= movementSpeed;
 
@@ -140,68 +167,91 @@ class ScenicGame extends FlameGame with TapCallbacks {
       component2.position.x = component1.position.x + component1.size.x - 30;
     }
   }
-   void switchToNewScene(BuildContext context) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => GameWidget(game: Fishinglevel(context)),
-    ),
-  );
-}
 
-
-  @override
-  void onTapDown(TapDownEvent event) {
-    if (showPrompt) {
-      showPrompt = false;
-    } else {
-      isMoving = true;
-    }
+  void switchToNewScene(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GameWidget(game: Fishinglevel(context)),
+      ),
+    );
   }
 
- 
+  @override
+void onTapDown(TapDownEvent event) {
+  if (isDialogueVisible) {
+    isDialogueVisible = false; // Hide the dialogue box
+    _speakDialogue("Great! Now let's go! Watch out for the pond ahead.");
+    dialogueText = "Great! Now let's go! Watch out for the pond ahead.";
+
+    // Remove Molly sprite component
+    remove(molly);
+
+    // Start moving the scene
+    isMoving = true;
+  }
+}
+
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
 
-    if (showPrompt) {
+    if (isDialogueVisible) {
+      // Text Style - Dyslexic Friendly
+      final textStyle = TextStyle(
+        color: Colors.black, // High contrast against light background
+        fontSize: 22, // Larger font size for readability
+        fontWeight: FontWeight.w500, // Medium weight
+        fontFamily: 'Arial', // Dyslexia-friendly font (e.g., Arial or Verdana)
+      );
+
+      final textSpan = TextSpan(
+        text: dialogueText,
+        style: textStyle,
+      );
+
+      final textPainter = TextPainter(
+        text: textSpan,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      );
+
+      textPainter.layout(
+        minWidth: 0,
+        maxWidth: size.x * 0.6, // Width limited to 60% of the screen
+      );
+
+      final boxPadding = 15.0; // Increased padding for comfort
+      final boxWidth = textPainter.width + boxPadding * 2;
+      final boxHeight = textPainter.height + boxPadding * 2;
+      final boxX = size.x * 0.3; // Center-aligned box
+      final boxY = size.y * 0.1;
+
+      // Draw the Dialogue Box - Soothing Background Color
       final paint = Paint()
-        ..color = const Color.fromARGB(255, 175, 116, 6).withOpacity(0.7);
-      final rect = Rect.fromLTWH(size.x * 0.1, size.y * 0.2, size.x * 0.8, size.y * 0.2);
-      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(20));
+        ..color = Color(0xFFFAF3DD); // Soft cream background color
+      final rrect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(boxX, boxY, boxWidth, boxHeight),
+        Radius.circular(20), // Rounded corners for a friendly look
+      );
       canvas.drawRRect(rrect, paint);
 
-      final textStyle = TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold);
-      final textSpan = TextSpan(text: "Tap anywhere to start your adventure!", style: textStyle);
-      final textPainter = TextPainter(text: textSpan, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
-      textPainter.layout(minWidth: 0, maxWidth: size.x * 0.7);
-      textPainter.paint(canvas, Offset(size.x * 0.15, size.y * 0.3));
-
-      final handIconSize = 70;
-      final handIconPosition = Offset(size.x * 0.5 - handIconSize / 2 + handIconOffset, size.y * 0.21);
-
-      final paintImage = Paint();
-      canvas.drawImageRect(
-        handIconImage,
-        Rect.fromLTWH(0, 0, handIconImage.width.toDouble(), handIconImage.height.toDouble()),
-        Rect.fromLTWH(handIconPosition.dx, handIconPosition.dy, handIconSize.toDouble(), handIconSize.toDouble()),
-        paintImage,
-      );
-
-      final closeButtonSize = 40.0;
-      final closeButtonRect = Rect.fromLTWH(size.x * 0.85, size.y * 0.2, closeButtonSize, closeButtonSize);
-      final closeButtonPaint = Paint()..color = Colors.white;
-      canvas.drawCircle(Offset(closeButtonRect.center.dx, closeButtonRect.center.dy), closeButtonSize / 2, closeButtonPaint);
-
-      final closeTextStyle = TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
-      final closeTextSpan = TextSpan(text: "X", style: closeTextStyle);
-      final closeTextPainter = TextPainter(text: closeTextSpan, textAlign: TextAlign.center, textDirection: TextDirection.ltr);
-      closeTextPainter.layout(minWidth: 0, maxWidth: closeButtonSize);
-
-      closeTextPainter.paint(
+      // Draw the Text inside the Dialogue Box
+      textPainter.paint(
         canvas,
-        Offset(closeButtonRect.center.dx - closeTextPainter.width / 2, closeButtonRect.center.dy - closeTextPainter.height / 2),
+        Offset(boxX + boxPadding, boxY + boxPadding),
       );
     }
+  }
+
+  void _initializeTTS() {
+    _flutterTts = FlutterTts();
+    _flutterTts.setLanguage("en-US");
+    _flutterTts.setPitch(1.5); // Child-like pitch
+    _flutterTts.setSpeechRate(0.4); // Slow enough for kids
+  }
+
+  Future<void> _speakDialogue(String text) async {
+    await _flutterTts.speak(text);
   }
 }
