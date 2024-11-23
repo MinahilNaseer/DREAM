@@ -134,8 +134,8 @@ void update(double dt) async {
         isMoving = false;
         parallaxComponent.parallax!.baseVelocity = Vector2.zero();
 
-        // Speak the stopping dialogue
-        _speakAndSwitch("Let's stop and see! Maybe there's something interesting!", buildContext!);
+        // Stop and show Molly's "idea" expression with dialogue
+        showMollyWithDialogue("Let's stop and see! Maybe there's something interesting!");
       }
 
       // Remove pond if it moves out of the screen
@@ -146,11 +146,31 @@ void update(double dt) async {
     }
   }
 }
-Future<void> _speakAndSwitch(String text, BuildContext context) async {
-  await _flutterTts.speak(text); // Speak the provided text
-  await Future.delayed(Duration(seconds: text.length ~/ 10)); // Wait until the dialogue finishes
-  switchToNewScene(context); // Switch to the fishing level
+
+void showMollyWithDialogue(String text) async {
+  // Update Molly's sprite to the "idea" PNG
+  molly = SpriteComponent()
+    ..sprite = await loadSprite('girl-idea.png') // Load provided PNG
+    ..size = Vector2(150, 150)
+    ..position = Vector2(-10, size.y - size.y * 0.35 - 480) // Adjust position
+    ..priority = 10;
+
+  add(molly); // Add Molly to the scene
+
+  // Display the dialogue box
+  dialogueText = text;
+  isDialogueVisible = true;
+
+  // Speak the text
+  await _flutterTts.speak(text);
+
+  // Wait for the TTS to finish
+  await Future.delayed(Duration(seconds: text.length ~/ 10));
+
+  // Switch to the new scene after the dialogue
+  switchToNewScene(buildContext!);
 }
+
 
 
 
