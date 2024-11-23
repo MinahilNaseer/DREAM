@@ -13,7 +13,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
   late SpriteComponent road1, road2;
   late SpriteComponent grass1, grass2;
   late SpriteComponent pond;
-  late SpriteComponent molly; // Character Molly
+  late SpriteComponent molly;
 
   bool isMoving = false;
   final double speed = 100;
@@ -23,9 +23,9 @@ class ScenicGame extends FlameGame with TapCallbacks {
   bool pondAdded = false;
 
   late FlutterTts _flutterTts;
-  String dialogueText = ""; // Text inside the dialogue box
+  String dialogueText = "";
   bool isDialogueVisible = true;
-  Rect? dialogueBoxRect; // Dynamic dialogue box rectangle
+  Rect? dialogueBoxRect;
 
   @override
   Future<void> onLoad() async {
@@ -70,12 +70,11 @@ class ScenicGame extends FlameGame with TapCallbacks {
       ..position = Vector2(10, size.y - size.y * 0.18 - 100);
     add(kidOnCycle);
 
-    // Add Molly with a higher priority
     molly = SpriteComponent()
       ..sprite = await loadSprite('animated-waving-girl.png')
       ..size = Vector2(150, 150)
       ..position = Vector2(-5, size.y - size.y * 0.35 - 480)
-      ..priority = 10; // Ensure Molly is in front
+      ..priority = 10;
     add(molly);
 
     pondTimer = Timer(2, onTick: () {
@@ -84,8 +83,6 @@ class ScenicGame extends FlameGame with TapCallbacks {
       }
     });
 
-    // Speak the first dialogue
-    // Speak the first dialogue
     _speakDialogue(
         "Hi there! I'm Molly! Are you ready for an amazing adventure? Just tap anywhere, and let's start exploring!");
     dialogueText =
@@ -102,77 +99,66 @@ class ScenicGame extends FlameGame with TapCallbacks {
   }
 
   @override
-void update(double dt) async {
-  super.update(dt);
+  void update(double dt) async {
+    super.update(dt);
 
-  if (isMoving) {
-    pondTimer.update(dt);
+    if (isMoving) {
+      pondTimer.update(dt);
 
-    // Move background elements
-    moveComponent(road1, road2, speed * dt);
-    moveComponent(road2, road1, speed * dt);
-    moveComponent(grass1, grass2, speed * dt);
-    moveComponent(grass2, grass1, speed * dt);
+      moveComponent(road1, road2, speed * dt);
+      moveComponent(road2, road1, speed * dt);
+      moveComponent(grass1, grass2, speed * dt);
+      moveComponent(grass2, grass1, speed * dt);
 
-    parallaxComponent.parallax!.baseVelocity = Vector2(speed, 0);
+      parallaxComponent.parallax!.baseVelocity = Vector2(speed, 0);
 
-    // Move the pond
-    if (pondAdded && !hasPondPassed) {
-      pond.position.x -= speed * dt;
+      if (pondAdded && !hasPondPassed) {
+        pond.position.x -= speed * dt;
 
-      // Change Molly's sprite and dialogue when the pond is near
-      if (pond.position.x < size.x - 300 && molly.sprite != null) {
-        molly.sprite = await loadSprite('animated-shocked-girl.png');
-        add(molly); // Change to new image of Molly
-        _speakDialogue("Watch out! There’s a pond ahead! Do you think we’ll see some fish?");
-        dialogueText = "Watch out! There’s a pond ahead! Do you think we’ll see some fish?";
-        molly.priority = 10; // Ensure Molly stays in front
-      }
+        if (pond.position.x < size.x - 300 && molly.sprite != null) {
+          molly.sprite = await loadSprite('animated-shocked-girl.png');
+          add(molly);
+          _speakDialogue(
+              "Watch out! There’s a pond ahead! Do you think we’ll see some fish?");
+          dialogueText =
+              "Watch out! There’s a pond ahead! Do you think we’ll see some fish?";
+          molly.priority = 10;
+        }
 
-      // Check if the kid on the cycle meets the pond
-      if ((pond.position.x - kidOnCycle.position.x).abs() < 130) {
-        isMoving = false;
-        parallaxComponent.parallax!.baseVelocity = Vector2.zero();
+        if ((pond.position.x - kidOnCycle.position.x).abs() < 130) {
+          isMoving = false;
+          parallaxComponent.parallax!.baseVelocity = Vector2.zero();
 
-        // Stop and show Molly's "idea" expression with dialogue
-        showMollyWithDialogue("Let's stop and see! Maybe there's something interesting!");
-      }
+          showMollyWithDialogue(
+              "Let's stop and see! Maybe there's something interesting!");
+        }
 
-      // Remove pond if it moves out of the screen
-      if (pond.position.x + pond.size.x <= 0) {
-        hasPondPassed = true;
-        remove(pond);
+        if (pond.position.x + pond.size.x <= 0) {
+          hasPondPassed = true;
+          remove(pond);
+        }
       }
     }
   }
-}
 
-void showMollyWithDialogue(String text) async {
-  // Update Molly's sprite to the "idea" PNG
-  molly = SpriteComponent()
-    ..sprite = await loadSprite('girl-idea.png') // Load provided PNG
-    ..size = Vector2(150, 150)
-    ..position = Vector2(-10, size.y - size.y * 0.35 - 480) // Adjust position
-    ..priority = 10;
+  void showMollyWithDialogue(String text) async {
+    molly = SpriteComponent()
+      ..sprite = await loadSprite('girl-idea.png')
+      ..size = Vector2(150, 150)
+      ..position = Vector2(-10, size.y - size.y * 0.35 - 480)
+      ..priority = 10;
 
-  add(molly); // Add Molly to the scene
+    add(molly);
 
-  // Display the dialogue box
-  dialogueText = text;
-  isDialogueVisible = true;
+    dialogueText = text;
+    isDialogueVisible = true;
 
-  // Speak the text
-  await _flutterTts.speak(text);
+    await _flutterTts.speak(text);
 
-  // Wait for the TTS to finish
-  await Future.delayed(Duration(seconds: text.length ~/ 10));
+    await Future.delayed(Duration(seconds: text.length ~/ 10));
 
-  // Switch to the new scene after the dialogue
-  switchToNewScene(buildContext!);
-}
-
-
-
+    switchToNewScene(buildContext!);
+  }
 
   void moveComponent(SpriteComponent component1, SpriteComponent component2,
       double movementSpeed) {
@@ -197,32 +183,28 @@ void showMollyWithDialogue(String text) async {
   }
 
   @override
-void onTapDown(TapDownEvent event) {
-  if (isDialogueVisible) {
-    isDialogueVisible = false; // Hide the dialogue box
-    _speakDialogue("Great! Now let's go! Watch out for the pond ahead.");
-    dialogueText = "Great! Now let's go! Watch out for the pond ahead.";
+  void onTapDown(TapDownEvent event) {
+    if (isDialogueVisible) {
+      isDialogueVisible = false;
+      _speakDialogue("Great! Now let's go! Watch out for the pond ahead.");
+      dialogueText = "Great! Now let's go! Watch out for the pond ahead.";
 
-    // Remove Molly sprite component
-    remove(molly);
+      remove(molly);
 
-    // Start moving the scene
-    isMoving = true;
+      isMoving = true;
+    }
   }
-}
-
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
 
     if (isDialogueVisible) {
-      // Text Style - Dyslexic Friendly
       final textStyle = TextStyle(
-        color: Colors.black, // High contrast against light background
-        fontSize: 22, // Larger font size for readability
-        fontWeight: FontWeight.w500, // Medium weight
-        fontFamily: 'Arial', // Dyslexia-friendly font (e.g., Arial or Verdana)
+        color: Colors.black,
+        fontSize: 22,
+        fontWeight: FontWeight.w500,
+        fontFamily: 'Arial',
       );
 
       final textSpan = TextSpan(
@@ -238,25 +220,22 @@ void onTapDown(TapDownEvent event) {
 
       textPainter.layout(
         minWidth: 0,
-        maxWidth: size.x * 0.6, // Width limited to 60% of the screen
+        maxWidth: size.x * 0.6,
       );
 
-      final boxPadding = 15.0; // Increased padding for comfort
+      final boxPadding = 15.0;
       final boxWidth = textPainter.width + boxPadding * 2;
       final boxHeight = textPainter.height + boxPadding * 2;
-      final boxX = size.x * 0.3; // Center-aligned box
+      final boxX = size.x * 0.3;
       final boxY = size.y * 0.1;
 
-      // Draw the Dialogue Box - Soothing Background Color
-      final paint = Paint()
-        ..color = Color(0xFFFAF3DD); // Soft cream background color
+      final paint = Paint()..color = Color(0xFFFAF3DD);
       final rrect = RRect.fromRectAndRadius(
         Rect.fromLTWH(boxX, boxY, boxWidth, boxHeight),
-        Radius.circular(20), // Rounded corners for a friendly look
+        Radius.circular(20),
       );
       canvas.drawRRect(rrect, paint);
 
-      // Draw the Text inside the Dialogue Box
       textPainter.paint(
         canvas,
         Offset(boxX + boxPadding, boxY + boxPadding),
@@ -267,8 +246,8 @@ void onTapDown(TapDownEvent event) {
   void _initializeTTS() {
     _flutterTts = FlutterTts();
     _flutterTts.setLanguage("en-US");
-    _flutterTts.setPitch(1.5); // Child-like pitch
-    _flutterTts.setSpeechRate(0.4); // Slow enough for kids
+    _flutterTts.setPitch(1.5);
+    _flutterTts.setSpeechRate(0.4);
   }
 
   Future<void> _speakDialogue(String text) async {

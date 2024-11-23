@@ -51,7 +51,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
     
   ];
 
-  bool showProceedButton = false; // Flag to control button visibility
+  bool showProceedButton = false; 
 
   @override
 Future<void> onLoad() async {
@@ -72,13 +72,13 @@ Future<void> onLoad() async {
   add(island);
   add(kidOnRock);
 
-  // Add Molly's sprite
+  
   molly
     ..size = Vector2(150, 150)
-    ..position = Vector2(10, size.y * 0.1); // Position Molly to the left of the dialogue box
+    ..position = Vector2(10, size.y * 0.1); 
   add(molly);
 
-   // Add the dialogue box
+   
     dialogueBox = DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
@@ -98,8 +98,8 @@ Future<void> onLoad() async {
  void _initializeTTS() {
     _flutterTts = FlutterTts();
     _flutterTts.setLanguage("en-US");
-    _flutterTts.setPitch(1.5); // Child-like pitch
-    _flutterTts.setSpeechRate(0.4); // Slow enough for kids
+    _flutterTts.setPitch(1.5); 
+    _flutterTts.setSpeechRate(0.4); 
   }
 
   Future<void> _narrateStory() async {
@@ -114,7 +114,7 @@ Future<void> onLoad() async {
   void onGameResize(Vector2 canvasSize) {
     super.onGameResize(canvasSize);
 
-    if (!hasLoaded) return; // Only proceed if components have loaded
+    if (!hasLoaded) return; 
 
     background
       ..size = Vector2(canvasSize.x, canvasSize.y * 0.5)
@@ -167,7 +167,7 @@ Future<void> onLoad() async {
     mostOccurringWord = selectedWordList[0];
     occurrences = 4;
 
-     // Update dialogue box text with the most occurring word highlighted
+     
   dialogueBox.updateText(
     "🐟 Tap the fish with the matching word: $mostOccurringWord",
     newHighlightWord: mostOccurringWord,
@@ -187,7 +187,7 @@ Future<void> onLoad() async {
           if (selectedWord == mostOccurringWord) {
             correctSelections++;
           }
-          checkIfUserCompleted(context); // Ensure context is passed here
+          checkIfUserCompleted(context); 
         },
       );
       fishRectangles.add(fishRectangle);
@@ -199,12 +199,12 @@ Future<void> onLoad() async {
   if (correctSelections == occurrences || selectedWords.length == 9) {
     final blurOverlay = BlurOverlayComponent(size: size);
     add(blurOverlay);
-    // Show the congratulatory dialogue box
-    // Add the girl-with-fish sprite
+    
+    
         final girlWithFish = SpriteComponent()
-          ..sprite = await loadSprite('girl-with-fish.png') // Replace with your girl-with-fish asset
+          ..sprite = await loadSprite('girl-with-fish.png') 
           ..size = Vector2(150, 150)
-          ..position = Vector2(size.x * 0.1, size.y * 0.4); // Centered position
+          ..position = Vector2(size.x * 0.1, size.y * 0.4); 
         add(girlWithFish);
 
     final congratsDialogueBox = CongratsDialogueBoxComponent(
@@ -214,42 +214,42 @@ Future<void> onLoad() async {
     );
     add(congratsDialogueBox);
 
-    // Play the narration
+    
     await _flutterTts.speak(
         "Congratulations! You helped your friend capture all the fish. As a thank-you, your friend has a gift for you!");
 
     await Future.delayed(const Duration(seconds: 8));
 
-    // Declare the giftBox variable here
+    
     late GiftBoxComponent giftBox;
 
-    // Add the gift box component
+    
     giftBox = GiftBoxComponent(
-      sprite: await loadSprite('gift-box.png'), // Replace with your gift box asset
+      sprite: await loadSprite('gift-box.png'), 
       size: Vector2(200, 200),
       position: Vector2(size.x * 0.2, size.y * 0.5),
       onGiftOpened: () async {
-        remove(giftBox); // Remove the gift box
+        remove(giftBox); 
 
-        // Add the friendship badge
+        
         final friendshipBadge = SpriteComponent()
-          ..sprite = await loadSprite('friendship-badge.png') // Replace with your badge asset
+          ..sprite = await loadSprite('friendship-badge.png') 
           ..size = Vector2(150, 150)
           ..position = Vector2(size.x * 0.2, size.y * 0.5);
         add(friendshipBadge);
 
-        // Wait for 3 seconds before removing the badge
+        
         await Future.delayed(const Duration(seconds: 3));
         remove(friendshipBadge);
 
-        // Update Molly to hold the fish
+        
         molly.sprite = await loadSprite('girl-with-fish.png');
-        // Update the dialogue box to include the hyperlink
+        
         congratsDialogueBox.updateText(
           newText: "Congratulations! You helped your friend capture all the fish.",
           newHyperlinkText: "Next level",
           newHyperlinkCallback: () {
-            GameNavigator.switchToInitialScene(context, this); // Navigate to the next screen
+            GameNavigator.switchToInitialScene(context, this); 
           },
         );
       },
@@ -260,14 +260,14 @@ Future<void> onLoad() async {
 }
 }
 
-// Blur overlay component
+
 class BlurOverlayComponent extends PositionComponent {
   BlurOverlayComponent({required Vector2 size}) : super(size: size);
 
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    Paint paint = Paint()..color = Colors.black.withOpacity(0.4); // Dim effect
+    Paint paint = Paint()..color = Colors.black.withOpacity(0.4); 
     canvas.drawRect(size.toRect(), paint);
   }
 }
@@ -284,14 +284,14 @@ class GiftBoxComponent extends SpriteComponent with TapCallbacks {
 
   @override
   bool onTapUp(TapUpEvent event) {
-    onGiftOpened(); // Call the function when the gift is tapped
+    onGiftOpened(); 
     return true;
   }
 }
 
 class DialogueBoxComponent extends PositionComponent {
   String text;
-  String? highlightWord; // Word to highlight
+  String? highlightWord; 
 
   DialogueBoxComponent({
     required Vector2 position,
@@ -304,34 +304,34 @@ class DialogueBoxComponent extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // Draw the rounded rectangle for the dialogue box
-    final paint = Paint()..color = const Color(0xFFFAF3DD); // Cream background color
+    
+    final paint = Paint()..color = const Color(0xFFFAF3DD); 
     final rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20), // Rounded corners
+      Radius.circular(20), 
     );
     canvas.drawRRect(rrect, paint);
 
-    // Prepare the text with the highlight
+    
     final defaultTextStyle = TextStyle(
-      color: Colors.black, // Default text color
-      fontSize: 22, // Font size
-      fontWeight: FontWeight.w500, // Medium weight
-      fontFamily: 'Arial', // Dyslexia-friendly font
+      color: Colors.black, 
+      fontSize: 22, 
+      fontWeight: FontWeight.w500, 
+      fontFamily: 'Arial', 
     );
 
     final highlightedTextStyle = TextStyle(
-      color: Color(0xFF008080), // Dyslexia-friendly teal color
-      fontSize: 22, // Font size
-      fontWeight: FontWeight.w700, // Slightly bolder for emphasis
-      fontFamily: 'Arial', // Dyslexia-friendly font
+      color: Color(0xFF008080), 
+      fontSize: 22, 
+      fontWeight: FontWeight.w700, 
+      fontFamily: 'Arial', 
     );
 
     final spans = <TextSpan>[];
     text.split(' ').forEach((word) {
       spans.add(
         TextSpan(
-          text: word + ' ', // Include a space after each word
+          text: word + ' ', 
           style: word == highlightWord ? highlightedTextStyle : defaultTextStyle,
         ),
       );
@@ -345,7 +345,7 @@ class DialogueBoxComponent extends PositionComponent {
 
     textPainter.layout(
       minWidth: 0,
-      maxWidth: size.x * 0.9, // Fit within the box
+      maxWidth: size.x * 0.9, 
     );
 
     final textOffset = Offset(
@@ -356,7 +356,7 @@ class DialogueBoxComponent extends PositionComponent {
     textPainter.paint(canvas, textOffset);
   }
 
-  // Method to update the text and highlight word in the dialogue box
+  
   void updateText(String newText, {String? newHighlightWord}) {
     text = newText;
     highlightWord = newHighlightWord;
@@ -364,9 +364,9 @@ class DialogueBoxComponent extends PositionComponent {
 }
 class CongratsDialogueBoxComponent extends PositionComponent with TapCallbacks {
   String text;
-  String? highlightWord; // Word to highlight
-  String? hyperlinkText; // Text for the hyperlink
-  VoidCallback? onHyperlinkTap; // Callback for hyperlink tap
+  String? highlightWord; 
+  String? hyperlinkText; 
+  VoidCallback? onHyperlinkTap; 
 
   CongratsDialogueBoxComponent({
     required Vector2 position,
@@ -381,38 +381,38 @@ class CongratsDialogueBoxComponent extends PositionComponent with TapCallbacks {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // Draw the rounded rectangle for the dialogue box
-    final paint = Paint()..color = const Color(0xFFFAF3DD); // Cream background color
+    
+    final paint = Paint()..color = const Color(0xFFFAF3DD); 
     final rrect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20), // Rounded corners
+      Radius.circular(20), 
     );
     canvas.drawRRect(rrect, paint);
 
-    // Prepare the text with the highlight
+    
     final defaultTextStyle = TextStyle(
-      color: Colors.black, // Default text color
-      fontSize: 22, // Font size
-      fontWeight: FontWeight.w500, // Medium weight
-      fontFamily: 'Arial', // Dyslexia-friendly font
+      color: Colors.black, 
+      fontSize: 22, 
+      fontWeight: FontWeight.w500, 
+      fontFamily: 'Arial', 
     );
 
     final hyperlinkTextStyle = TextStyle(
-      color: Colors.blue, // Hyperlink color
-      fontSize: 15, // Font size
-      fontWeight: FontWeight.w500, // Medium weight
+      color: Colors.blue, 
+      fontSize: 15, 
+      fontWeight: FontWeight.w500, 
       fontFamily: 'Arial',
-      decoration: TextDecoration.underline, // Underline for hyperlink
+      decoration: TextDecoration.underline, 
     );
 
     final spans = <TextSpan>[
-      TextSpan(text: text + '\n', style: defaultTextStyle), // Main text
+      TextSpan(text: text + '\n', style: defaultTextStyle), 
       if (hyperlinkText != null)
         TextSpan(
           text: hyperlinkText,
           style: hyperlinkTextStyle,
           recognizer: TapGestureRecognizer()..onTap = onHyperlinkTap,
-        ), // Hyperlink text
+        ), 
     ];
 
     final textPainter = TextPainter(
@@ -423,7 +423,7 @@ class CongratsDialogueBoxComponent extends PositionComponent with TapCallbacks {
 
     textPainter.layout(
       minWidth: 0,
-      maxWidth: size.x * 0.9, // Fit within the box
+      maxWidth: size.x * 0.9, 
     );
 
     final textOffset = Offset(
@@ -436,11 +436,11 @@ class CongratsDialogueBoxComponent extends PositionComponent with TapCallbacks {
 
   @override
   bool onTapUp(TapUpEvent event) {
-    if (onHyperlinkTap != null) onHyperlinkTap!(); // Trigger hyperlink tap callback
+    if (onHyperlinkTap != null) onHyperlinkTap!(); 
     return true;
   }
 
-  // Method to update the text, hyperlink, and highlight word
+  
   void updateText({
     String? newText,
     String? newHighlightWord,
