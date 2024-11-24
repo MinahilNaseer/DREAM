@@ -37,7 +37,7 @@ class ForestLevel extends FlameGame {
     // Load the forest level background
     background = SpriteComponent()
       ..sprite = await loadSprite(
-          'forest-animal-bg1.jpg') // Replace with the uploaded image name
+          'forest-background.jpeg') // Replace with the uploaded image name
       ..size = size // Full-screen background
       ..position = Vector2.zero(); // Positioned at the top-left corner
     add(background);
