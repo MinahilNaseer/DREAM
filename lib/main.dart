@@ -2,6 +2,7 @@ import 'package:dream/screens/initialpage.dart';
 import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/profilepage.dart';
 import 'package:flutter/material.dart';
+import 'package:dream/screens/dyscalculia.dart';
 
 void main() {
   runApp(const MyApp());

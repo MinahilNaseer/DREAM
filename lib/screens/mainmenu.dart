@@ -21,7 +21,6 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     
     _controller = AnimationController(
       duration: const Duration(seconds: 10),
@@ -32,17 +31,17 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-  setState(() {
-    _selectedIndex = index;
-  });
+    setState(() {
+      _selectedIndex = index;
+    });
 
-  if (index == 0) {
-    // Handle the first tab (e.g., Home)
-  } else if (index == 1) {
-    // Navigate to the ProfilePage using the correct named route
-    Navigator.pushNamed(context, '/profile');
+    if (index == 0) {
+      // Handle the first tab (e.g., Home)
+    } else if (index == 1) {
+      // Navigate to the ProfilePage using the correct named route
+      Navigator.pushNamed(context, '/profile');
+    }
   }
-}
 
   @override
   void dispose() {
@@ -56,23 +55,19 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
       body: SafeArea(
         child: Column(
           children: [
-            
             Stack(
               children: [
-                
                 Positioned.fill(
                   child: AnimatedBuilder(
                     animation: _controller,
                     builder: (context, child) {
                       return Stack(
                         children: [
-                          
                           Positioned(
                             left: _controller.value * MediaQuery.of(context).size.width * 0.7,
                             top: 50 + sin(_controller.value * 2 * pi) * 20,
                             child: Icon(Icons.edit, color: Colors.blueAccent.withOpacity(0.2), size: 40),
                           ),
-                          
                           Positioned(
                             right: _controller.value * MediaQuery.of(context).size.width * 0.5,
                             top: 100 + cos(_controller.value * 2 * pi) * 30,
@@ -107,16 +102,15 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 Text(
-                              "DREAM!", 
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0D47A1),
-                              ),
-                            ),
+                                  "DREAM!", 
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0D47A1),
+                                  ),
+                                ),
                               ],
                             ),
-                            
                             SizedBox(height: 4),
                             Text(
                               "Let's start to detect learning challenges.", 
@@ -129,7 +123,6 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         ),
                       ),
                       const SizedBox(height: 36),
-                      
                       Image.asset(
                         'assets/icons/icon_app.png', 
                         height: 140,
@@ -141,7 +134,6 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -167,7 +159,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           "Main Menu",
                           style: TextStyle(
                             fontSize: 20,
@@ -175,26 +167,36 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             color: Color(0xFF0D47A1),
                           ),
                         ),
-                        SizedBox(height: 30),
+                        const SizedBox(height: 30),
                         
-                        LevelCard(
-                          level: "Level 1",
-                          title: "Detect Dyscalculia: ",
-                          subtitle: "Math Skill Challenges",
-                          imageUrl: "assets/images/math-problem.png", 
-                          gradientColors: [Colors.pinkAccent, Colors.orangeAccent],
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/dyscalculia'); // Navigate to Dyscalculia level
+                          },
+                          child: LevelCard(
+                            level: "Level 1",
+                            title: "Detect Dyscalculia: ",
+                            subtitle: "Math Skill Challenges",
+                            imageUrl: "assets/images/math-problem.png", 
+                            gradientColors: [Colors.pinkAccent, Colors.orangeAccent],
+                          ),
                         ),
-                        SizedBox(height: 30),
+                        const SizedBox(height: 30),
                         
-                        LevelCard(
-                          level: "Level 2",
-                          title: "Detect Dysgraphia: ",
-                          subtitle: "Writing Assessment",
-                          imageUrl: "assets/images/writing-girl.png", 
-                          gradientColors: [Colors.blueAccent, Colors.cyanAccent],
+                        GestureDetector(
+                          onTap: () {
+                            // Navigate to Dysgraphia level
+                            Navigator.pushNamed(context, '/dysgraphia');
+                          },
+                          child: LevelCard(
+                            level: "Level 2",
+                            title: "Detect Dysgraphia: ",
+                            subtitle: "Writing Assessment",
+                            imageUrl: "assets/images/writing-girl.png", 
+                            gradientColors: [Colors.blueAccent, Colors.cyanAccent],
+                          ),
                         ),
-                        SizedBox(height: 30),
-                        
+                        const SizedBox(height: 30),
                          GestureDetector(
                           onTap: () {
                             Navigator.push(
