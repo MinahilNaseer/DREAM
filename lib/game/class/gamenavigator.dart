@@ -12,4 +12,5 @@ class GameNavigator {
       MaterialPageRoute(builder: (_) => GameWidget(game: Afterfishlevel())),
     );
   }
+  
 }

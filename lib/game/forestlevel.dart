@@ -1,16 +1,40 @@
 import 'dart:io';
+import 'package:dream/game/afterfishlevel.dart';
+import 'package:dream/game/afterforestlevel.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flame/events.dart';
 import 'dart:math';
 
 class ForestLevel extends FlameGame {
-  late SpriteComponent background; // Background image component
-  late RoundedRectangleComponent bottomRectangle; // Rounded rectangle component
-  final AudioPlayer audioPlayer = AudioPlayer(); // Audio player instance
+  late SpriteComponent background;
+  late RoundedRectangleComponent bottomRectangle;
+  final AudioPlayer audioPlayer = AudioPlayer();
   Duration? totalDuration;
+  late DialogueBoxComponent dialogueBox;
+  late SpriteComponent molly;
+  late FlutterTts tts;
+  SpriteComponent? animalImage;
+  bool isGameStarted = false;
+  bool firstAttemptMade = false;
+  String? firstAttemptAnimal;
+  int retryCount = 0;
+  final List<Map<String, dynamic>> roundData = [];
+
+  final Map<String, String> animalImageMap = {
+    'Cat': 'cat.png',
+    'Cow': 'cow.png',
+    'Dog': 'dog.png',
+    'Goat': 'goat.png',
+    'Horse': 'horse.png',
+    'Lion': 'lion.png',
+    'Pig': 'pig.png',
+    'Rooster': 'rooster.png',
+    'Sheep': 'sheep.png',
+  };
 
   final List<String> animalNames = [
     'Frog',
@@ -30,83 +54,102 @@ class ForestLevel extends FlameGame {
     'Owl'
   ];
   final Random random = Random();
+  String? correctAnimal;
   AnimalRectangle? selectedRectangle;
 
   @override
   Future<void> onLoad() async {
-    // Load the forest level background
+    tts = FlutterTts();
+    tts.setLanguage("en-US");
+    tts.setPitch(1.5);
+    tts.setSpeechRate(0.4);
+
     background = SpriteComponent()
-      ..sprite = await loadSprite(
-          'forest-background.jpeg') // Replace with the uploaded image name
-      ..size = size // Full-screen background
-      ..position = Vector2.zero(); // Positioned at the top-left corner
+      ..sprite = await loadSprite('forest-background.jpeg')
+      ..size = size
+      ..position = Vector2.zero();
     add(background);
 
-    // Add a custom rounded rectangle at the bottom of the screen
     bottomRectangle = RoundedRectangleComponent(
-      position: Vector2(20, size.y - 260), // Padding from the bottom and sides
-      size: Vector2(
-          size.x - 40, 240), // Adjusted height to accommodate larger components
-      color:
-          const Color(0xFFADD8E6).withOpacity(0.7), // Light blue with opacity
-      borderRadius: 25, // Rounded corners with a radius of 25 pixels
+      position: Vector2(20, size.y - 210),
+      size: Vector2(size.x - 40, 190),
+      color: const Color(0xFFADD8E6).withOpacity(0.7),
+      borderRadius: 25,
     );
     add(bottomRectangle);
 
-    // Select a random audio file
+    molly = SpriteComponent()
+      ..sprite = await loadSprite('animated-waving-girl.png')
+      ..size = Vector2(150, 150)
+      ..position = Vector2(10, 50);
+    add(molly);
+
+    dialogueBox = DialogueBoxComponent(
+      position: Vector2(130, 70),
+      size: Vector2(size.x - 150, 120),
+      text:
+          "Listen to the sounds and tap the correct name to reveal them. Let's start!",
+    );
+    add(dialogueBox);
+
+    await tts.speak(
+        "The animals here are shy. Listen to the sounds and tap the correct name to reveal them. The animal will make its sound only once. Let's start!");
+
+    tts.setCompletionHandler(() async {
+      if (!isGameStarted) {
+        isGameStarted = true;
+        await Future.delayed(Duration(seconds: 2));
+        startGame();
+      }
+    });
+  }
+
+  Future<void> startGame() async {
     final audioFiles = [
-      'Cow-1.mp3','Cow-2.mp3',
-      'Dog-1.mp3','Dog-2.mp3',
-      'Cat-1.mp3','Cat-2.mp3','Cat-3.mp3',
-      'Sheep-1.mp3',
-      'Lion-1.mp3',
+      'Cat-1.mp3',
+      'Cow-1.mp3',
+      'Dog-1.mp3',
       'Goat-1.mp3',
-      'Horse-1.mp3','Horse-2.mp3',
+      'Horse-1.mp3',
+      'Lion-1.mp3',
       'Pig-1.mp3',
-      'Rooster-1.mp3','Rooster-2.mp3'
+      'Rooster-1.mp3',
+      'Sheep-1.mp3',
     ];
     final selectedAudio = audioFiles[random.nextInt(audioFiles.length)];
-    final audioName =
-        selectedAudio.split('-')[0]; // Get the first part of the name
+    correctAnimal = selectedAudio.split('-')[0];
 
-    // Load the selected audio and set total duration
     try {
-      await audioPlayer.setAsset(
-          'assets/audio/$selectedAudio'); // Replace with your sound file
-      totalDuration =
-          await audioPlayer.load(); // Get the total duration of the audio
+      await audioPlayer.setAsset('assets/audio/$selectedAudio');
+      totalDuration = await audioPlayer.load();
     } catch (error) {
       print('Error loading audio: $error');
     }
 
-    // Add an audio player UI component with reduced size
-    add(AudioPlayerUI(
-      position: Vector2(40, size.y - 230), // Positioned higher
-      size: Vector2(size.x - 80, 60), // Reduced height for the audio player
-      audioPlayer: audioPlayer,
-      totalDuration: totalDuration ?? Duration.zero,
-    ));
+    await audioPlayer.play();
 
-    // Prepare 5 unique animal names, including the name derived from the audio
-    final selectedNames = <String>{
-      audioName
-    }; // Start with the name from the audio
+    final selectedNames = <String>{correctAnimal!};
     while (selectedNames.length < 5) {
       selectedNames.add(animalNames[random.nextInt(animalNames.length)]);
     }
     final selectedNamesList = selectedNames.toList()..shuffle();
 
-    // Add animal name rectangles below the audio player, inside the rounded rectangle
-    final double rectangleWidth =
-        (size.x - 100) / 3; // Space for three rectangles in the first row
-    // Adjusted height for the rectangles
-    final double rectangleHeight = 40; // Increased rectangle height
-    final double firstRowY =
-        size.y - 160; // Adjusted position for the first row
-    final double secondRowY =
-        size.y - 100; // Adjusted position for the second row
+    addAnimalRectangles(selectedNamesList);
+  }
 
-// First row: 3 rectangles
+  void removeAnimalImage() {
+    if (animalImage != null && animalImage!.parent != null) {
+      remove(animalImage!);
+      animalImage = null;
+    }
+  }
+
+  void addAnimalRectangles(List<String> selectedNamesList) {
+    final double rectangleWidth = (size.x - 100) / 3;
+    final double rectangleHeight = 40;
+    final double firstRowY = size.y - 160;
+    final double secondRowY = size.y - 100;
+
     for (int i = 0; i < 3; i++) {
       add(AnimalRectangle(
         position: Vector2(30 + i * (rectangleWidth + 15), firstRowY),
@@ -116,7 +159,6 @@ class ForestLevel extends FlameGame {
       ));
     }
 
-// Second row: 2 rectangles
     for (int i = 0; i < 2; i++) {
       add(AnimalRectangle(
         position: Vector2(70 + i * (rectangleWidth + 20), secondRowY),
@@ -127,29 +169,76 @@ class ForestLevel extends FlameGame {
     }
   }
 
-  void onRectangleTap(AnimalRectangle rectangle) {
-    // Unselect the currently selected rectangle, if any
+  void onRectangleTap(AnimalRectangle rectangle) async {
+    if (!firstAttemptMade) {
+      firstAttemptMade = true;
+      firstAttemptAnimal = rectangle.text; // Save first attempt
+    }
+    retryCount++;
     if (selectedRectangle != null && selectedRectangle != rectangle) {
       selectedRectangle!.unselect();
     }
 
-    // Select the new rectangle
     selectedRectangle = rectangle;
     rectangle.select();
+
+    if (rectangle.text == correctAnimal) {
+      roundData.add({
+        'correctAnimal': correctAnimal,
+        'firstAttempt': firstAttemptAnimal,
+        'retryCount': retryCount,
+      });
+      debugPrint('Round Data: $roundData');
+      
+      retryCount = 0; // Reset for next round
+      firstAttemptMade = false;
+      showAnimalImage(correctAnimal!);
+      await tts.speak("Congratulations! You found the $correctAnimal!");
+      onTaskCompleted();
+    } else {
+      removeAnimalImage();
+      await tts.speak("Try again! That's not the right animal.");
+    }
+  }
+  void onTaskCompleted() async {
+  // Inform the player about the task completion
+  await tts.speak("Great job! Let's continue our journey.");
+
+  // Wait for 3 seconds before transitioning
+  Future.delayed(const Duration(seconds: 3), () {
+    Navigator.of(buildContext!).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => GameWidget(game: Afterforestlevel()),
+      ),
+    );
+  });
+}
+
+
+  void showAnimalImage(String animalName) async {
+    final animalPath = animalImageMap[animalName];
+    if (animalPath != null) {
+      removeAnimalImage();
+
+      animalImage = SpriteComponent()
+        ..sprite = await Sprite.load(animalPath)
+        ..size = Vector2(150, 150)
+        ..position = Vector2(size.x / 2 - 75, size.y - 420);
+      add(animalImage!);
+    }
   }
 
   @override
   void onRemove() {
     super.onRemove();
-    audioPlayer
-        .dispose(); // Dispose of the audio player when the game is removed
+    audioPlayer.dispose();
   }
 }
 
 class AnimalRectangle extends PositionComponent with TapCallbacks {
   final String text;
-  final Function(AnimalRectangle) onTapCallback; // Callback for when tapped
-  bool isSelected = false; // State to track selection
+  final Function(AnimalRectangle) onTapCallback;
+  bool isSelected = false;
   late RoundedRectangleComponent background;
   late TextComponent textComponent;
 
@@ -162,16 +251,14 @@ class AnimalRectangle extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    // Add rectangle background with rounded corners
     background = RoundedRectangleComponent(
       position: Vector2.zero(),
       size: size,
-      color: const Color(0xFF90EE90).withOpacity(0.8), // Light green background
-      borderRadius: 15, // Rounded corners
+      color: const Color(0xFF90EE90).withOpacity(0.8),
+      borderRadius: 15,
     );
     add(background);
 
-    // Add text component
     textComponent = TextComponent(
       text: text,
       textRenderer: TextPaint(
@@ -182,8 +269,8 @@ class AnimalRectangle extends PositionComponent with TapCallbacks {
         ),
       ),
       position: Vector2(
-        size.x / 2 - text.length * 4.5, // Center horizontally
-        size.y / 4, // Adjusted vertical centering for increased height
+        size.x / 2 - text.length * 4.5,
+        size.y / 4,
       ),
     );
     add(textComponent);
@@ -192,12 +279,10 @@ class AnimalRectangle extends PositionComponent with TapCallbacks {
   void select() {
     isSelected = true;
 
-    // Change background and text color for selection
-    background.paint.color =
-        const Color(0xFF007BFF).withOpacity(0.8); // Blue background
+    background.paint.color = const Color(0xFF007BFF).withOpacity(0.8);
     textComponent.textRenderer = TextPaint(
       style: TextStyle(
-        color: Colors.white, // White text
+        color: Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
@@ -207,12 +292,10 @@ class AnimalRectangle extends PositionComponent with TapCallbacks {
   void unselect() {
     isSelected = false;
 
-    // Reset background and text color
-    background.paint.color =
-        const Color(0xFF90EE90).withOpacity(0.8); // Default green
+    background.paint.color = const Color(0xFF90EE90).withOpacity(0.8);
     textComponent.textRenderer = TextPaint(
       style: TextStyle(
-        color: Colors.black, // Black text
+        color: Colors.black,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
@@ -221,7 +304,7 @@ class AnimalRectangle extends PositionComponent with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    onTapCallback(this); // Notify parent of the tap
+    onTapCallback(this);
   }
 }
 
@@ -239,17 +322,15 @@ class AudioPlayerUI extends PositionComponent with TapCallbacks {
 
   @override
   Future<void> onLoad() async {
-    // Listen for audio position updates
     audioPlayer.positionStream.listen((position) {
       currentDuration = position;
     });
 
-    // Listen for the audio completion and reset to zero
     audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        audioPlayer.seek(Duration.zero); // Reset to the start
-        audioPlayer.stop(); // Ensure the playback stops
-        currentDuration = Duration.zero; // Reset the current duration
+        audioPlayer.seek(Duration.zero);
+        audioPlayer.stop();
+        currentDuration = Duration.zero;
       }
     });
   }
@@ -258,39 +339,32 @@ class AudioPlayerUI extends PositionComponent with TapCallbacks {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // Draw the background for the audio player
     final Paint backgroundPaint = Paint()
-      ..color =
-          const Color(0xFFE6E6FA).withOpacity(0.9); // Lavender with opacity
+      ..color = const Color(0xFFE6E6FA).withOpacity(0.9);
     final RRect backgroundRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y - 20), // Adjusted to the reduced size
+      Rect.fromLTWH(0, 0, size.x, size.y - 20),
       Radius.circular(15),
     );
     canvas.drawRRect(backgroundRect, backgroundPaint);
 
-    final double buttonSize = 25; // Reduced circle size
-    final double sliderHeight = 8; // Reduced slider height
-    final double circleVerticalOffset =
-        size.y / 4; // Align with slider vertically
+    final double buttonSize = 25;
+    final double sliderHeight = 8;
+    final double circleVerticalOffset = size.y / 4;
     final Paint playButtonPaint = Paint()..color = Colors.green;
 
-    // Draw a circular play button
     canvas.drawCircle(
-      Offset(30,
-          circleVerticalOffset), // Adjusted to align with the slider progress
+      Offset(30, circleVerticalOffset),
       buttonSize / 2,
       playButtonPaint,
     );
 
-    // Draw a play triangle icon (properly centered inside the circle)
     final path = Path()
-      ..moveTo(25, circleVerticalOffset - 8) // Top point of the triangle
-      ..lineTo(35, circleVerticalOffset) // Right point of the triangle
-      ..lineTo(25, circleVerticalOffset + 8) // Bottom point of the triangle
+      ..moveTo(25, circleVerticalOffset - 8)
+      ..lineTo(35, circleVerticalOffset)
+      ..lineTo(25, circleVerticalOffset + 8)
       ..close();
     canvas.drawPath(path, Paint()..color = Colors.white);
 
-    // Draw the slider background
     final Paint sliderBackgroundPaint = Paint()
       ..color = Colors.grey.withOpacity(0.4);
     canvas.drawRect(
@@ -299,7 +373,6 @@ class AudioPlayerUI extends PositionComponent with TapCallbacks {
       sliderBackgroundPaint,
     );
 
-    // Draw the slider progress
     final Paint sliderProgressPaint = Paint()..color = Colors.green;
     double progress = totalDuration.inMilliseconds > 0
         ? (currentDuration.inMilliseconds / totalDuration.inMilliseconds) *
@@ -311,13 +384,11 @@ class AudioPlayerUI extends PositionComponent with TapCallbacks {
       sliderProgressPaint,
     );
 
-    // Draw the current duration text
     final textPainter = TextPainter(
       text: TextSpan(
         text:
             '${formatDuration(currentDuration)} / ${formatDuration(totalDuration)}',
-        style: const TextStyle(
-            color: Colors.black, fontSize: 14), // Slightly larger text
+        style: const TextStyle(color: Colors.black, fontSize: 14),
       ),
       textDirection: TextDirection.ltr,
     );
@@ -334,7 +405,6 @@ class AudioPlayerUI extends PositionComponent with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    // Toggle play and pause on tap
     if (audioPlayer.playing) {
       audioPlayer.pause();
     } else {
@@ -364,5 +434,51 @@ class RoundedRectangleComponent extends PositionComponent {
     final rect = Rect.fromLTWH(0, 0, size.x, size.y);
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
     canvas.drawRRect(rrect, paint);
+  }
+}
+class DialogueBoxComponent extends PositionComponent {
+  String text;
+
+  DialogueBoxComponent({
+    required Vector2 position,
+    required Vector2 size,
+    required this.text,
+  }) : super(position: position, size: size);
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    final paint = Paint()..color = const Color(0xFFFAF3DD);
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.x, size.y),
+      Radius.circular(20),
+    );
+    canvas.drawRRect(rrect, paint);
+
+    final textStyle = TextStyle(
+      color: Colors.black,
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      fontFamily: 'Arial',
+    );
+
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: textStyle),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout(
+      minWidth: 0,
+      maxWidth: size.x * 0.9,
+    );
+
+    final textOffset = Offset(
+      (size.x - textPainter.width) / 2,
+      (size.y - textPainter.height) / 2,
+    );
+
+    textPainter.paint(canvas, textOffset);
   }
 }
