@@ -172,7 +172,7 @@ class ForestLevel extends FlameGame {
   void onRectangleTap(AnimalRectangle rectangle) async {
     if (!firstAttemptMade) {
       firstAttemptMade = true;
-      firstAttemptAnimal = rectangle.text; // Save first attempt
+      firstAttemptAnimal = rectangle.text; 
     }
     retryCount++;
     if (selectedRectangle != null && selectedRectangle != rectangle) {
@@ -190,7 +190,7 @@ class ForestLevel extends FlameGame {
       });
       debugPrint('Round Data: $roundData');
       
-      retryCount = 0; // Reset for next round
+      retryCount = 0; 
       firstAttemptMade = false;
       showAnimalImage(correctAnimal!);
       await tts.speak("Congratulations! You found the $correctAnimal!");
@@ -201,10 +201,10 @@ class ForestLevel extends FlameGame {
     }
   }
   void onTaskCompleted() async {
-  // Inform the player about the task completion
+  
   await tts.speak("Great job! Let's continue our journey.");
 
-  // Wait for 3 seconds before transitioning
+  
   Future.delayed(const Duration(seconds: 3), () {
     Navigator.of(buildContext!).pushReplacement(
       MaterialPageRoute(

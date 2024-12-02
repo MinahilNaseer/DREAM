@@ -8,28 +8,29 @@ import 'package:flame/timer.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'forestlevel.dart';
+import 'dart:math';
 
-class Afterfishlevel extends FlameGame with TapCallbacks {
+class Aftermaplevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
   late SpriteComponent grass1, grass2;
-  late SpriteComponent pond;
-  SpriteComponent? forestScene;
-
+  late SpriteComponent forest;
+  late SpriteComponent mapScrool;
   late SpriteComponent molly;
   late DialogueBoxComponent dialogueBox;
-  late TextComponent forestTitle;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  SpriteComponent? gate;
 
   late FlutterTts _flutterTts;
 
   bool isMoving = false;
   final double speed = 100;
   final double cycleSpeed = 70;
-  bool isPondRemoved = false;
-  late Timer forestSceneTimer;
-  bool isAudioPlayed = false;
+  bool isForestRemoved = false;
+  late Timer gateTimer;
+  
+  bool isDialogueBoxDisplayed = false;
+  bool isMollyDisplayed = false;
 
   @override
   Future<void> onLoad() async {
@@ -70,11 +71,11 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     add(grass1);
     add(grass2);
 
-    pond = SpriteComponent()
-      ..sprite = await loadSprite('pond-fish.png')
-      ..size = Vector2(220, 220)
-      ..position = Vector2(size.x - 500, size.y - size.y * 0.28 + 20);
-    add(pond);
+    mapScrool = SpriteComponent()
+      ..sprite = await loadSprite('map-scroll.png')
+      ..size = Vector2(280, 280)
+      ..position = Vector2(size.x - 560, size.y - size.y * 0.28 - 30);
+    add(mapScrool);
 
     kidOnCycle = SpriteComponent()
       ..sprite = await loadSprite('kid-cycle.png')
@@ -91,44 +92,25 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     dialogueBox = DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
-      text: "Let's continue the journey! Tap on the screen to start moving.",
+      text: "Let's go find the treasure! Tap on the screen to start moving.",
     );
     add(dialogueBox);
 
     await _flutterTts.speak(
-        "Let's continue the journey! Tap on the screen to start moving.");
+        "Let's go find the treasure! Tap on the screen to start moving.");
 
-    forestSceneTimer = Timer(3.0, onTick: () async {
-      if (forestScene == null) {
-        forestScene = SpriteComponent()
-          ..sprite = await loadSprite('trees-scene.png')
-          ..size = Vector2(350, 350)
-          ..position = Vector2(size.x + 50, size.y - size.y * 0.28 - 70);
-        add(forestScene!);
-        forestTitle = TextComponent(
-          text: "Whispering\nForest",
-          position: Vector2(
-              forestScene!.position.x + forestScene!.size.x / 3 + 50,
-              forestScene!.position.y - 100),
-          textRenderer: TextPaint(
-            style: const TextStyle(
-              color: ui.Color.fromARGB(255, 163, 170, 62),
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-        add(forestTitle);
-
-        if (!isAudioPlayed) {
-          await _audioPlayer
-              .play(AssetSource('audio/forest-wind-and-birds.mp3'));
-          isAudioPlayed = true;
-        }
+    gateTimer = Timer(3.0, onTick: () async {
+      if (gate == null) {
+        gate = SpriteComponent()
+          ..sprite = await loadSprite('sideways-gate.png')
+          ..size = Vector2(100, 100)
+          ..position = Vector2(size.x + 50, size.y - size.y * 0.28 + 100);
+        add(gate!);
       }
     });
 
-    forestSceneTimer.start();
+    gateTimer.start();
+    
   }
 
   Future<void> _initializeTTS() async {
@@ -145,65 +127,23 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     if (isMoving) {
       if (molly.parent != null) remove(molly);
       if (dialogueBox.parent != null) remove(dialogueBox);
-
-      forestSceneTimer.update(dt);
-
+      gateTimer.update(dt);
       moveComponent(road1, road2, speed * dt);
       moveComponent(road2, road1, speed * dt);
       moveComponent(grass1, grass2, speed * dt);
       moveComponent(grass2, grass1, speed * dt);
-
       parallaxComponent.parallax!.baseVelocity = Vector2(speed, 0);
+      if (!isForestRemoved) {
+        forest.position.x -= speed * dt;
 
-      if (!isPondRemoved) {
-        pond.position.x -= speed * dt;
-
-        if (pond.position.x + pond.size.x < 0) {
-          if (pond.parent != null) remove(pond);
-          isPondRemoved = true;
-
-          await _flutterTts.speak(
-              "Watch out! There’s a mysterious forest ahead. Do you hear the whispers?");
-        }
-      }
-
-      if (forestScene != null) {
-        forestScene!.position.x -= speed * dt;
-
-        if (forestTitle != null) {
-          forestTitle.position.x =
-              forestScene!.position.x + forestScene!.size.x / 2 - 140;
-        }
-
-        if ((forestScene!.position.x - kidOnCycle.position.x).abs() < 100) {
-          isMoving = false;
-          parallaxComponent.parallax!.baseVelocity = Vector2.zero();
-
-          molly.sprite = await loadSprite('girl-idea.png');
-          molly.position = Vector2(10, size.y * 0.1);
-          add(molly);
-
-          dialogueBox = DialogueBoxComponent(
-            position: Vector2(size.x * 0.35, size.y * 0.1),
-            size: Vector2(size.x * 0.6, size.y * 0.15),
-            text: "We’ve made it to the Whispering Forest!",
-          );
-          add(dialogueBox);
-
-          await _flutterTts.speak(
-              "We’ve made it to the Whispering Forest! Let's see what's stopping us from crossing the forest");
-
-          
-          Future.delayed(const Duration(seconds: 6), () async {
-            isAudioPlayed = false;
-            await _audioPlayer.stop();
-            await _flutterTts.stop(); 
-            switchToNewScene(buildContext!);
-          });
+        if (forest.position.x + forest.size.x < 0) {
+          if (forest.parent != null) remove(forest);
+          isForestRemoved = true;
         }
       }
     }
   }
+
 
   void moveComponent(SpriteComponent component1, SpriteComponent component2,
       double movementSpeed) {
@@ -218,7 +158,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     }
   }
 
-  void switchToNewScene(BuildContext context) {
+  void switchToAfterMapLevel(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => GameWidget(game: ForestLevel()),
