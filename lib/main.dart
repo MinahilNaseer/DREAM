@@ -23,10 +23,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const InitialPage(), // Initial Page
-        '/mainmenu': (context) => const MainMenu(), // Main Menu
-        '/profile': (context) => const ProfilePage(), // Profile Page
-        '/dyscalculia':(context)=>DyscalculiaLevel()
+        '/': (context) => const InitialPage(), 
+        '/mainmenu': (context) => const MainMenu(), 
+        '/profile': (context) => const ProfilePage(), 
       },
     );
   }

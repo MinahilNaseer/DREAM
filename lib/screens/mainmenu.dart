@@ -1,9 +1,12 @@
+import 'package:dream/game/gamemainscreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math'; 
 import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
+import 'package:flame/game.dart'; // Import Flame
+import '../game/scenicgame.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -194,11 +197,12 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        
-                        GestureDetector(
+                         GestureDetector(
                           onTap: () {
-                            // Navigate to Dyslexia level
-                            Navigator.pushNamed(context, '/dyslexia');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => GameMainScreen()),
+                            );
                           },
                           child: LevelCard(
                             level: "Level 3",
