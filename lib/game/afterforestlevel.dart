@@ -8,8 +8,11 @@ import 'package:flame/parallax.dart';
 import 'package:flame/timer.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dream/game/class/dialogueboxcomponent.dart' as speechbox;
 import 'forestlevel.dart';
 import 'dart:math';
+import 'package:dream/game/class/strokeroundreccompforest.dart' as recforest;
+import 'package:dream/game/class/draggableblocks.dart' as draggableblocks;
 
 class Afterforestlevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -19,7 +22,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   late SpriteComponent forest;
   SpriteComponent? mapScrool;
   late SpriteComponent molly;
-  late DialogueBoxComponent dialogueBox;
+  late speechbox.DialogueBoxComponent dialogueBox;
   late FlutterTts _flutterTts;
   bool isMoving = false;
   final double speed = 100;
@@ -29,11 +32,11 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   bool isAudioPlayed = false;
   bool isQuestionAnswered = false;
   late SpriteComponent missingTileBucket;
-  late RoundedRectangleComponent missingTilePlaceholder;
+  late recforest.StrokeRoundedRectangleComponent missingTilePlaceholder;
   bool isMapDisplayed = false;
   bool isDialogueBoxDisplayed = false;
   bool isMollyDisplayed = false;
-  List<DraggableTile> currentTiles = [];
+  List<draggableblocks.DraggableTile> currentBlocks = [];
   int puzzleStage = 1; 
 
   final Map<String, String> colorLetterMap = {
@@ -101,7 +104,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
       ..position = Vector2(10, size.y * 0.1);
     add(molly);
 
-    dialogueBox = DialogueBoxComponent(
+    dialogueBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
       text: "Let's continue the journey! Tap on the screen to start moving.",
@@ -183,7 +186,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
             molly.size = Vector2(120, 120); 
             add(molly);
 
-            dialogueBox = DialogueBoxComponent(
+            dialogueBox = speechbox.DialogueBoxComponent(
               position: Vector2(size.x * 0.35, size.y * 0.1),
               size: Vector2(size.x * 0.6, size.y * 0.15),
               text: "Oh wow! It’s a map! What could it lead to?",
@@ -229,7 +232,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
                   if (!isDialogueBoxDisplayed) {
                     isDialogueBoxDisplayed = true;
 
-                    final explanationBox = DialogueBoxComponent(
+                    final explanationBox = speechbox.DialogueBoxComponent(
                       position: Vector2(size.x * 0.1, size.y * 0.1),
                       size: Vector2(size.x * 0.8, size.y * 0.25),
                       text:
@@ -266,7 +269,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     final color =
         colorLetterMap.keys.elementAt(random.nextInt(colorLetterMap.length));
     final letter = colorLetterMap[color]!;
-    return "Find the tile that is $color and shows the letter '$letter'!";
+    return "Find the block that is $color and shows the letter '$letter'!";
   }
 
   void startPuzzleGameplay() async {
@@ -276,7 +279,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     isQuestionAnswered = true;
     
     final questionText = generateRandomQuestion();
-    final questionBox = DialogueBoxComponent(
+    final questionBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.15),
       text: questionText,
@@ -286,17 +289,17 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     await _flutterTts.speak(questionText +
         "Pick the correct color block and drag it towards the bucket.");
 
-    addDraggableTiles(questionText);
+    addDraggableBlocks(questionText);
   }
 
-  void addDraggableTiles(String questionText) async {
-    final List<DraggableTile> tileOptions = [];
+  void addDraggableBlocks(String questionText) async {
+    final List<draggableblocks.DraggableTile> tileOptions = [];
     final random = Random();
 
     final color = questionText.split(' ')[5]; 
     final letter = questionText.split(' ').last.replaceAll("'", "");
     
-    final correctTile = DraggableTile(
+    final correctTile = draggableblocks.DraggableTile(
       tileName: "Correct-$color-Tile",
       sprite: await loadSprite('correct_tiles/correct-$color-tile.png'),
       size: Vector2(70, 70),
@@ -308,7 +311,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     );
     tileOptions.add(correctTile);
     
-    currentTiles.add(correctTile);
+    currentBlocks.add(correctTile);
     const incorrectTileNames = [
       "blue-with-D-tile.png",
       "blue-with-G-tile.png",
@@ -328,7 +331,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     ];
 
     for (int i = 0; i < 3; i++) {
-      final incorrectTile = DraggableTile(
+      final incorrectTile = draggableblocks.DraggableTile(
         tileName: "Incorrect-Tile-$i",
         sprite: await loadSprite(
             'incorrect_tiles/${incorrectTileNames[random.nextInt(incorrectTileNames.length)]}'),
@@ -340,7 +343,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
         },
       );
       tileOptions.add(incorrectTile);
-      currentTiles.add(incorrectTile);
+      currentBlocks.add(incorrectTile);
     }
     for (var tile in tileOptions) {
       add(tile);
@@ -348,7 +351,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     add(missingTileBucket);
   }
 
-  void handleTileDropped(DraggableTile droppedTile) async {
+  void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
     final isCorrect = droppedTile.tileName.contains("Correct");
 
     if (isCorrect) {
@@ -371,74 +374,48 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     }
   }
 
-  void snapToPlaceholder(DraggableTile tile) {
-    
+  void snapToPlaceholder(draggableblocks.DraggableTile tile) {
     remove(missingTileBucket);
-
-    
     tile.position = missingTileBucket.position;
     tile.size = missingTileBucket.size;
-
     addSuccessFeedback();
   }
 
   Future<void> addSuccessFeedback() async {
-    
-    final successBox = DialogueBoxComponent(
+    final successBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.15),
-      text: "Great job! You placed the correct tile.",
+      text: "Great job! You placed the correct block.",
     );
-
-    
     add(successBox);
+    await _flutterTts.speak("Great job! You placed the correct block.");
 
-    
-    await _flutterTts.speak("Great job! You placed the correct tile.");
-
-    
     Future.delayed(const Duration(seconds: 5), () {
       if (successBox.parent != null) remove(successBox);
     });
   }
 
   Future<void> addFailureFeedback() async {
-    
-    final failureBox = DialogueBoxComponent(
+    final failureBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.15),
       text: "Not quite! Try again!",
     );
-
-    
     add(failureBox);
-
-    
     await _flutterTts.speak("Not quite! Try again!");
 
-    
     Future.delayed(const Duration(seconds: 5), () {
       if (failureBox.parent != null) remove(failureBox);
     });
-    
-    
   }
 
   void trackSelection(String tileName, {required bool isCorrect}) {
     print("Tile selected: $tileName, Correct: $isCorrect");
-
-    
     final String result = isCorrect ? "Correct" : "Incorrect";
-    
-    
     print("Tracking data: $tileName -> $result");
-
-    
-    
   }
 
   void showUpdatedMap() async {
-    
     final overlay = RectangleComponent(
       size: Vector2(size.x, size.y),
       paint: Paint()..color = const Color(0xAA000000), 
@@ -453,8 +430,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
           Vector2(0, size.y - size.y * 0.4); 
     add(updatedMap);
 
-    
-    final dialogueBox = DialogueBoxComponent(
+    final dialogueBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.2),
       text:
@@ -465,14 +441,11 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     await _flutterTts.speak(
         "Look! After completing the puzzle, we have found the missing part, the pond! Now, let's move on to the next part.");
     
-    
-
     Future.delayed(const Duration(seconds: 10), () {
       if (dialogueBox.parent != null) remove(dialogueBox);
       if (updatedMap.parent != null) remove(updatedMap);
       remove(overlay);
 
-      
       startNextPuzzle();
     });
   }
@@ -493,8 +466,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
           Vector2(0, size.y - size.y * 0.4); 
     add(updatedMapWithForest);
 
-    
-    final dialogueBox = DialogueBoxComponent(
+    final dialogueBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.2),
       text:
@@ -502,7 +474,6 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     );
     add(dialogueBox);
 
-    
     await _flutterTts.speak(
         "Look! After completing the next puzzle, we have found the missing part: the forest! Now, we can find the treasure.");
 
@@ -520,18 +491,12 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
 
   void startNextPuzzle() {
     isQuestionAnswered = false;
-
-    
-    for (var tile in currentTiles) {
+    for (var tile in currentBlocks) {
       if (tile.parent != null) {
         remove(tile);
       }
     }
-
-    
-    currentTiles.clear();
-
-    
+    currentBlocks.clear();
     startPuzzleGameplay();
   }
 
@@ -559,134 +524,11 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   @override
   void onTapDown(TapDownEvent event) {
     _flutterTts.stop();
-
     isMoving = true;
   }
 }
 
-class DialogueBoxComponent extends PositionComponent {
-  String text;
-
-  DialogueBoxComponent({
-    required Vector2 position,
-    required Vector2 size,
-    required this.text,
-  }) : super(position: position, size: size);
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final paint = Paint()..color = const Color(0xFFFAF3DD);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20),
-    );
-    canvas.drawRRect(rrect, paint);
-
-    final textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 20,
-      fontWeight: FontWeight.w500,
-      fontFamily: 'Arial',
-    );
-
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: textStyle),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: size.x * 0.9,
-    );
-
-    final textOffset = Offset(
-      (size.x - textPainter.width) / 2,
-      (size.y - textPainter.height) / 2,
-    );
-
-    textPainter.paint(canvas, textOffset);
-  }
-}
-
-class DraggableTile extends SpriteComponent with DragCallbacks {
-  final String tileName; 
-  final Function(DraggableTile) onDropOnPlaceholder;
-  final SpriteComponent missingTilePlaceholder; 
-  final Vector2 initialPosition; 
-  bool isDragging = false;
-
-  DraggableTile({
-    required this.tileName,
-    required Sprite sprite,
-    required Vector2 size,
-    required Vector2 position,
-    required this.onDropOnPlaceholder,
-    required this.missingTilePlaceholder,
-  })  : initialPosition = position.clone(), 
-        super(sprite: sprite, size: size, position: position);
-
-  @override
-  void onDragStart(DragStartEvent event) {
-    super.onDragStart(event);
-    isDragging = true;
-  }
-
-  @override
-  void onDragUpdate(DragUpdateEvent event) {
-    super.onDragUpdate(event);
-    if (isDragging) {
-      position.add(event.delta);
-    }
-  }
-
-  @override
-  void onDragEnd(DragEndEvent event) {
-    super.onDragEnd(event);
-    isDragging = false;
-
-    
-    if ((position - missingTilePlaceholder.position).length < 50) {
-      onDropOnPlaceholder(this); 
-    } else {
-      
-      resetPosition();
-    }
-  }
-
-  @override
-  void onDragCancel(DragCancelEvent event) {
-    super.onDragCancel(event);
-    isDragging = false;
-    resetPosition();
-  }
-
-  void resetPosition() {
-    
-    position.setFrom(initialPosition);
-  }
-}
 
 
-class RoundedRectangleComponent extends RectangleComponent {
-  final double cornerRadius;
 
-  RoundedRectangleComponent({
-    required Vector2 size,
-    required Vector2 position,
-    required Paint paint,
-    this.cornerRadius = 10.0,
-  }) : super(size: size, position: position, paint: paint);
 
-  @override
-  void render(Canvas canvas) {
-    final rect = Rect.fromLTWH(position.x, position.y, size.x, size.y);
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(cornerRadius));
-    
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 4.0; 
-    canvas.drawRRect(rrect, paint);
-  }
-}

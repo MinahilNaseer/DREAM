@@ -9,7 +9,11 @@ import './class/textcomponent.dart' as custom_text;
 import './class/gamenavigator.dart';
 import 'dart:math';
 import 'package:flutter_tts/flutter_tts.dart';
-import 'package:flutter/gestures.dart';
+import 'package:dream/game/class/bluroverlay.dart' as blur;
+import 'package:dream/game/class/giftboxcomp.dart' as giftboxcomp;
+import 'package:dream/game/class/dialogueboxwithhighlight.dart'
+    as dialoguehighlight;
+import 'package:dream/game/class/congratscomp.dart' as congratsdiacomp;
 
 class Fishinglevel extends FlameGame with TapCallbacks {
   final BuildContext context;
@@ -20,7 +24,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
   late SpriteComponent island;
   late SpriteComponent kidOnRock;
   late SpriteComponent molly;
-  late DialogueBoxComponent dialogueBox;
+  late dialoguehighlight.DialogueBoxComponent dialogueBox;
   late SpriteComponent giftBox;
   late SpriteComponent friendshipBadge;
 
@@ -138,7 +142,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
       ..position = Vector2(10, size.y * 0.1);
     add(molly);
 
-    dialogueBox = DialogueBoxComponent(
+    dialogueBox = dialoguehighlight.DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
       text: "🐟 Tap the fish with the matching word!",
@@ -261,7 +265,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
     if (correctSelectionsList.length == occurrences ||
         incorrectSelections.length >= 4 ||
         selectedWords.length == 9) {
-      final blurOverlay = BlurOverlayComponent(size: size);
+      final blurOverlay = blur.BlurOverlayComponent(size: size);
       add(blurOverlay);
 
       final girlWithFish = SpriteComponent()
@@ -270,238 +274,27 @@ class Fishinglevel extends FlameGame with TapCallbacks {
         ..position = Vector2(size.x * 0.1, size.y * 0.4);
       add(girlWithFish);
 
-      final congratsDialogueBox = CongratsDialogueBoxComponent(
+      final congratsDialogueBox = congratsdiacomp.CongratsDialogueBoxComponent(
         position: Vector2(size.x * 0.45, size.y * 0.4),
         size: Vector2(size.x * 0.5, size.y * 0.2),
-        text: "Congratulations! You completed the level.",
+        text: "Congratulations! You helped your friend capture all the fish.",
       );
       add(congratsDialogueBox);
 
-      await _flutterTts.speak(
-          "Congratulations! You completed the level. As a thank-you, your friend has a gift for you!");
+      await _flutterTts.speak("Congratulations! You helped your friend capture all the fish.");
 
-      await Future.delayed(const Duration(seconds: 8));
+      await Future.delayed(const Duration(seconds: 6));
 
-      late GiftBoxComponent giftBox;
-
-      giftBox = GiftBoxComponent(
-        sprite: await loadSprite('gift-box.png'),
-        size: Vector2(200, 200),
-        position: Vector2(size.x * 0.2, size.y * 0.5),
-        onGiftOpened: () async {
-          remove(giftBox);
-
-          final friendshipBadge = SpriteComponent()
-            ..sprite = await loadSprite('friendship-badge.png')
-            ..size = Vector2(150, 150)
-            ..position = Vector2(size.x * 0.2, size.y * 0.5);
-          add(friendshipBadge);
-
-          await Future.delayed(const Duration(seconds: 3));
-          remove(friendshipBadge);
-
-          molly.sprite = await loadSprite('girl-with-fish.png');
-          congratsDialogueBox.updateText(
-            newText:
-                "Congratulations! You helped your friend capture all the fish.",
-            newHyperlinkText: "Next level",
-            newHyperlinkCallback: () {
-              GameNavigator.switchToInitialScene(context, this);
-            },
-          );
+      molly.sprite = await loadSprite('girl-with-fish.png');
+      congratsDialogueBox.updateText(
+        newHyperlinkText: "Next level",
+        
+        newHyperlinkCallback: () {
+          GameNavigator.switchToInitialScene(context, this);
         },
+        
       );
-      add(giftBox);
-      await _flutterTts.speak("Open the gift to see what's inside!");
+      await _flutterTts.speak("Move on to the next level.");
     }
-  }
-}
-
-class BlurOverlayComponent extends PositionComponent {
-  BlurOverlayComponent({required Vector2 size}) : super(size: size);
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    Paint paint = Paint()..color = Colors.black.withOpacity(0.4);
-    canvas.drawRect(size.toRect(), paint);
-  }
-}
-
-class GiftBoxComponent extends SpriteComponent with TapCallbacks {
-  final Function onGiftOpened;
-
-  GiftBoxComponent({
-    required this.onGiftOpened,
-    required Sprite sprite,
-    required Vector2 size,
-    required Vector2 position,
-  }) : super(sprite: sprite, size: size, position: position);
-
-  @override
-  bool onTapUp(TapUpEvent event) {
-    onGiftOpened();
-    return true;
-  }
-}
-
-class DialogueBoxComponent extends PositionComponent {
-  String text;
-  String? highlightWord;
-
-  DialogueBoxComponent({
-    required Vector2 position,
-    required Vector2 size,
-    required this.text,
-    this.highlightWord,
-  }) : super(position: position, size: size);
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final paint = Paint()..color = const Color(0xFFFAF3DD);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20),
-    );
-    canvas.drawRRect(rrect, paint);
-
-    final defaultTextStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 22,
-      fontWeight: FontWeight.w500,
-      fontFamily: 'Arial',
-    );
-
-    final highlightedTextStyle = TextStyle(
-      color: Color(0xFF008080),
-      fontSize: 22,
-      fontWeight: FontWeight.w700,
-      fontFamily: 'Arial',
-    );
-
-    final spans = <TextSpan>[];
-    text.split(' ').forEach((word) {
-      spans.add(
-        TextSpan(
-          text: word + ' ',
-          style:
-              word == highlightWord ? highlightedTextStyle : defaultTextStyle,
-        ),
-      );
-    });
-
-    final textPainter = TextPainter(
-      text: TextSpan(children: spans),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: size.x * 0.9,
-    );
-
-    final textOffset = Offset(
-      (size.x - textPainter.width) / 2,
-      (size.y - textPainter.height) / 2,
-    );
-
-    textPainter.paint(canvas, textOffset);
-  }
-
-  void updateText(String newText, {String? newHighlightWord}) {
-    text = newText;
-    highlightWord = newHighlightWord;
-  }
-}
-
-class CongratsDialogueBoxComponent extends PositionComponent with TapCallbacks {
-  String text;
-  String? highlightWord;
-  String? hyperlinkText;
-  VoidCallback? onHyperlinkTap;
-
-  CongratsDialogueBoxComponent({
-    required Vector2 position,
-    required Vector2 size,
-    required this.text,
-    this.highlightWord,
-    this.hyperlinkText,
-    this.onHyperlinkTap,
-  }) : super(position: position, size: size);
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final paint = Paint()..color = const Color(0xFFFAF3DD);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20),
-    );
-    canvas.drawRRect(rrect, paint);
-
-    final defaultTextStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 22,
-      fontWeight: FontWeight.w500,
-      fontFamily: 'Arial',
-    );
-
-    final hyperlinkTextStyle = TextStyle(
-      color: Colors.blue,
-      fontSize: 15,
-      fontWeight: FontWeight.w500,
-      fontFamily: 'Arial',
-      decoration: TextDecoration.underline,
-    );
-
-    final spans = <TextSpan>[
-      TextSpan(text: text + '\n', style: defaultTextStyle),
-      if (hyperlinkText != null)
-        TextSpan(
-          text: hyperlinkText,
-          style: hyperlinkTextStyle,
-          recognizer: TapGestureRecognizer()..onTap = onHyperlinkTap,
-        ),
-    ];
-
-    final textPainter = TextPainter(
-      text: TextSpan(children: spans),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: size.x * 0.9,
-    );
-
-    final textOffset = Offset(
-      (size.x - textPainter.width) / 2,
-      (size.y - textPainter.height) / 2,
-    );
-
-    textPainter.paint(canvas, textOffset);
-  }
-
-  @override
-  bool onTapUp(TapUpEvent event) {
-    if (onHyperlinkTap != null) onHyperlinkTap!();
-    return true;
-  }
-
-  void updateText({
-    String? newText,
-    String? newHighlightWord,
-    String? newHyperlinkText,
-    VoidCallback? newHyperlinkCallback,
-  }) {
-    if (newText != null) text = newText;
-    highlightWord = newHighlightWord;
-    hyperlinkText = newHyperlinkText;
-    onHyperlinkTap = newHyperlinkCallback;
   }
 }

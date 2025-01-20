@@ -7,6 +7,7 @@ import 'package:flame/parallax.dart';
 import 'package:flame/timer.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dream/game/class/dialogueboxcomponent.dart' as speechbox;
 import 'forestlevel.dart';
 
 class Afterfishlevel extends FlameGame with TapCallbacks {
@@ -18,7 +19,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
   SpriteComponent? forestScene;
 
   late SpriteComponent molly;
-  late DialogueBoxComponent dialogueBox;
+  late speechbox.DialogueBoxComponent dialogueBox;
   late TextComponent forestTitle;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -88,7 +89,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
       ..position = Vector2(10, size.y * 0.1);
     add(molly);
 
-    dialogueBox = DialogueBoxComponent(
+    dialogueBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
       text: "Let's continue the journey! Tap on the screen to start moving.",
@@ -183,7 +184,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
           molly.position = Vector2(10, size.y * 0.1);
           add(molly);
 
-          dialogueBox = DialogueBoxComponent(
+          dialogueBox = speechbox.DialogueBoxComponent(
             position: Vector2(size.x * 0.35, size.y * 0.1),
             size: Vector2(size.x * 0.6, size.y * 0.15),
             text: "We’ve made it to the Whispering Forest!",
@@ -231,52 +232,5 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     _flutterTts.stop();
 
     isMoving = true;
-  }
-}
-
-class DialogueBoxComponent extends PositionComponent {
-  String text;
-
-  DialogueBoxComponent({
-    required Vector2 position,
-    required Vector2 size,
-    required this.text,
-  }) : super(position: position, size: size);
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final paint = Paint()..color = const Color(0xFFFAF3DD);
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.x, size.y),
-      Radius.circular(20),
-    );
-    canvas.drawRRect(rrect, paint);
-
-    final textStyle = TextStyle(
-      color: Colors.black,
-      fontSize: 20,
-      fontWeight: FontWeight.w500,
-      fontFamily: 'Arial',
-    );
-
-    final textPainter = TextPainter(
-      text: TextSpan(text: text, style: textStyle),
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.ltr,
-    );
-
-    textPainter.layout(
-      minWidth: 0,
-      maxWidth: size.x * 0.9,
-    );
-
-    final textOffset = Offset(
-      (size.x - textPainter.width) / 2,
-      (size.y - textPainter.height) / 2,
-    );
-
-    textPainter.paint(canvas, textOffset);
   }
 }
