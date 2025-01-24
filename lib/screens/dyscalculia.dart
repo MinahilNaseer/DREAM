@@ -1,7 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-import '../services/api_service.dart';
+//import '../services/api_service.dart';
+import 'dart:convert'; // For jsonEncode and jsonDecode
+import 'package:http/http.dart' as http; // For HTTP requests
+
 
 class DyscalculiaLevel extends StatefulWidget {
   @override
@@ -233,17 +236,74 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   }
 
   Future<void> _checkAnswer(String answer) async {
-    if (answer == correctAnswers[currentQuestionIndex]) {
-      setState(() {
-        selectedColor = Colors.green; 
-        totalCorrectAnswers++; 
-      });
-    } else {
-      setState(() {
-        selectedColor = Colors.red; 
-      });
-    }
+  DateTime questionEndTime = DateTime.now();
+  double responseTime = questionEndTime.difference(startTime!).inSeconds.toDouble();
+
+  // Identify the specific question column
+  Map<String, double> questionFlags = {
+    'Question_"6 + 3"': 0.0,
+    'Question_"7 + 2"': 0.0,
+    'Question_"9 + 6"': 0.0,
+    'Question_"9 - 6"': 0.0,
+  };
+  String currentQuestionText = questionsText[currentQuestionIndex];
+  questionFlags['Question_"$currentQuestionText"'] = 1.0;
+
+  // Prepare the data payload
+  Map<String, dynamic> dataPayload = {
+    "Correct_Answer": double.parse(correctAnswers[currentQuestionIndex]),
+    "Selected_Option": double.parse(answer),
+    "Response_Time": responseTime,
+    "Question_Type": 1.0, // Text questions are type 1
+    "Is_Hardcoded": 1.0,  // Hardcoded is true
+    ...questionFlags,
+  };
+
+  // Send data to backend
+  await sendDataToBackend(dataPayload);
+
+  // Update UI for feedback
+  if (answer == correctAnswers[currentQuestionIndex]) {
+    setState(() {
+      selectedColor = Colors.green;
+      totalCorrectAnswers++;
+    });
+  } else {
+    setState(() {
+      selectedColor = Colors.red;
+    });
   }
+}
+
+Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
+  try {
+    // API endpoint for predictions
+    final url = Uri.parse('http://192.168.18.140:5000/predict');
+
+    print("Sending data: ${dataPayload.values.toList()}");
+    print("URL: $url");
+
+
+    // Send POST request with data payload
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"features": dataPayload.values.toList()}),
+    );
+
+    if (response.statusCode == 200) {
+      final prediction = jsonDecode(response.body)['prediction'];
+      print(prediction == 1
+          ? "The child may have dyscalculia."
+          : "The child does not show signs of dyscalculia.");
+    } else {
+      print("Failed to get prediction. Status code: ${response.statusCode}");
+    }
+  } catch (e) {
+    print("Error sending data to backend: $e");
+  }
+}
+
 
   void _showResults() {
     int minutes = totalTimeTaken ~/ 60; 
@@ -310,16 +370,37 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     print('Report generated!'); 
   }
 
-  void _onContinue() {
-    if (selectedOption != null) {
-      _checkAnswer(selectedOption!);
+  void _onContinue() async {
+    bool isLoading = false;
 
-      
-      Future.delayed(Duration(seconds: 1), () {
-        _nextQuestion();
+  if (selectedOption != null) {
+    setState(() {
+      isLoading = true; // Set loading to true
+    });
+
+    // Show a loading animation dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: CircularProgressIndicator(), // Display a spinner
+        );
+      },
+    );
+
+    await _checkAnswer(selectedOption!); // Wait for the backend call to complete
+
+    Navigator.of(context).pop(); // Remove the loading dialog
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        isLoading = false; // Set loading to false
+        _nextQuestion(); // Move to the next question
       });
-    }
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
