@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import '../services/api_service.dart';
 
 class DyscalculiaLevel extends StatefulWidget {
   @override
@@ -11,75 +13,249 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   String? selectedOption;
   Color selectedColor = Colors.transparent;
 
-  // List to hold randomly generated questions and their correct answers
-  List<String> questions = [];
+  List<Widget> questions = [];
   List<String> correctAnswers = [];
+  List<String> questionsText = []; 
+  List<List<String>> options = [];
   int totalCorrectAnswers = 0;
   int totalTimeTaken = 0;
   DateTime? startTime;
 
+  final FlutterTts flutterTts = FlutterTts();
+
   @override
   void initState() {
     super.initState();
-    _generateQuestions(); // Generate questions on initialization
-    startTime = DateTime.now(); // Start timing
+    _initializeTts();
+    _generateQuestions(); 
+    startTime = DateTime.now(); 
+    _speakQuestion();
+  }
+
+  void _initializeTts() async {
+    try {
+      await flutterTts.setLanguage("en-US"); 
+      await flutterTts.setSpeechRate(0.5);   
+      await flutterTts.setPitch(1.0);        
+    } catch (e) {
+      print("Error initializing TTS: $e");
+    }
   }
 
   void _generateQuestions() {
-    Random random = Random();
-    while (questions.length < 10) { // Ensure exactly 10 questions are generated
-      int num1 = random.nextInt(10); // Random number between 0 and 9
-      int num2 = random.nextInt(10); // Random number between 0 and 9
+  Random random = Random();
+  questions.clear();
+  correctAnswers.clear();
+  questionsText.clear();
+  options.clear();
 
-      // Randomly decide whether to generate an addition or subtraction question
+  // Hard-coded specific single-digit questions
+  List<Map<String, dynamic>> specificQuestions = [
+    {
+      "questionText": "6 + 3",
+      "correctAnswer": "9",
+      "options": ["6", "8", "9", "7"]
+    },
+    {
+      "questionText": "9 - 6",
+      "correctAnswer": "3",
+      "options": ["9", "3", "6", "4"]
+    },
+    {
+      "questionText": "7 + 2",
+      "correctAnswer": "9",
+      "options": ["9", "7", "8", "10"]
+    },
+    {
+      "questionText": "8 - 3",
+      "correctAnswer": "5",
+      "options": ["6", "3", "7", "5"]
+    },
+    {
+      "questionText": "9 + 6",
+      "correctAnswer": "15",
+      "options": ["15", "12", "14", "13"]
+    },
+  ];
+
+  // Add hard-coded specific questions
+  for (var sq in specificQuestions) {
+    questionsText.add(sq["questionText"]);
+    correctAnswers.add(sq["correctAnswer"]);
+    questions.add(_buildTextQuestion(
+      int.parse(sq["questionText"].split(" ")[0]),
+      int.parse(sq["questionText"].split(" ")[2]),
+      sq["questionText"].contains("+"),
+    ));
+    options.add(sq["options"]..shuffle());
+  }
+
+  // Add randomly generated questions
+  while (questions.length < 10) {
+    bool isImageQuestion = random.nextBool();
+
+    if (isImageQuestion && questions.length < 7) {
+      int num1 = random.nextInt(5) + 1;
+      int num2 = random.nextInt(5) + 1;
       bool isAddition = random.nextBool();
+      String correctAnswer;
+      String questionText;
 
-      // Generate question based on the operation
       if (isAddition) {
-        if (num1 + num2 > 9 || num1 + num2 <= 0) {
-          continue; // Skip if sum is greater than 9 or less than or equal to 0
-        }
-        questions.add("$num1 + $num2 =");
-        correctAnswers.add((num1 + num2).toString()); // Calculate correct answer for addition
+        correctAnswer = (num1 + num2).toString();
+        questionText = "$num1 + $num2";
+        questions.add(_buildImageQuestion(num1, num2, true));
       } else {
-        // For subtraction, ensure that num1 is greater than num2 to avoid negative results
-        if (num1 < num2) {
-          continue; // Skip if the first number is less than the second
-        }
-        questions.add("$num1 - $num2 =");
-        correctAnswers.add((num1 - num2).toString()); // Calculate correct answer for subtraction
+        if (num1 < num2) continue;
+        correctAnswer = (num1 - num2).toString();
+        questionText = "$num1 - $num2";
+        questions.add(_buildImageQuestion(num1, num2, false));
       }
+
+      correctAnswers.add(correctAnswer);
+      questionsText.add(questionText);
+
+      // Generate 4 unique options including the correct answer
+      Set<String> generatedOptions = {correctAnswer};
+      while (generatedOptions.length < 4) {
+        generatedOptions.add((random.nextInt(9) + 1).toString());
+      }
+      options.add(generatedOptions.toList()..shuffle());
+    } else if (!isImageQuestion && questions.length < 10) {
+      int num1 = random.nextInt(10);
+      int num2 = random.nextInt(10);
+      bool isAddition = random.nextBool();
+      String correctAnswer;
+      String questionText;
+
+      if (isAddition) {
+        correctAnswer = (num1 + num2).toString();
+        questionText = "$num1 + $num2";
+        questions.add(_buildTextQuestion(num1, num2, true));
+      } else {
+        if (num1 < num2) continue;
+        correctAnswer = (num1 - num2).toString();
+        questionText = "$num1 - $num2";
+        questions.add(_buildTextQuestion(num1, num2, false));
+      }
+
+      correctAnswers.add(correctAnswer);
+      questionsText.add(questionText);
+
+      // Generate 4 unique options including the correct answer
+      Set<String> generatedOptions = {correctAnswer};
+      while (generatedOptions.length < 4) {
+        generatedOptions.add((random.nextInt(9)).toString());
+      }
+      options.add(generatedOptions.toList()..shuffle());
     }
+  }
+
+  // Shuffle questions to randomize the appearance of hard-coded and random questions
+  List<int> indices = List<int>.generate(questions.length, (i) => i);
+  indices.shuffle();
+  questions = indices.map((i) => questions[i]).toList();
+  correctAnswers = indices.map((i) => correctAnswers[i]).toList();
+  questionsText = indices.map((i) => questionsText[i]).toList();
+  options = indices.map((i) => options[i]).toList();
+}
+
+
+
+  Future<void> _speakQuestion() async {
+    String questionText = questionsText[currentQuestionIndex];
+    String ttsText = questionText
+        .replaceAll("+", "plus")
+        .replaceAll("-", "minus") +
+        " equals what?";
+
+    await flutterTts.speak(ttsText);
+  }
+
+  Widget _buildImageQuestion(int num1, int num2, bool isAddition) {
+    return Column(
+      children: [
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 10.0,
+          children: List.generate(
+            num1,
+            (index) => Image.asset(
+              'assets/images/ball.png', 
+              width: 50,
+              height: 50,
+            ),
+          ),
+        ),
+        Text(
+          isAddition ? "+" : "-",
+          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        ),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 10.0,
+          children: List.generate(
+            num2,
+            (index) => Image.asset(
+              'assets/images/ball.png', 
+              width: 50,
+              height: 50,
+            ),
+          ),
+        ),
+        Text(
+          "= ?",
+          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextQuestion(int num1, int num2, bool isAddition) {
+    return Text(
+      "$num1 ${isAddition ? "+" : "-"} $num2 = ?",
+      style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+    );
   }
 
   void _nextQuestion() {
     setState(() {
       if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
+        _speakQuestion(); 
       } else {
-        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds; // Calculate total time taken
-        _showResults(); // Show results when all questions are answered
-        return; // Exit the function to avoid resetting the index prematurely
+        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds;
+        _showResults();
       }
-      selectedOption = null; // Reset selected option for the next question
-      selectedColor = Colors.transparent; // Reset color
+      selectedOption = null; 
+      selectedColor = Colors.transparent; 
     });
   }
 
   Future<void> _checkAnswer(String answer) async {
     if (answer == correctAnswers[currentQuestionIndex]) {
       setState(() {
-        selectedColor = Colors.green; // Set color to green for correct answer
-        totalCorrectAnswers++; // Increment total correct answers
+        selectedColor = Colors.green; 
+        totalCorrectAnswers++; 
       });
     } else {
       setState(() {
-        selectedColor = Colors.red; // Set color to red for incorrect answer
+        selectedColor = Colors.red; 
       });
     }
   }
 
   void _showResults() {
+    int minutes = totalTimeTaken ~/ 60; 
+    int seconds = totalTimeTaken % 60; 
+
+    String timeDisplay;
+    if (minutes > 0) {
+      timeDisplay = "$minutes minute${minutes > 1 ? 's' : ''} and $seconds second${seconds > 1 ? 's' : ''}";
+    } else {
+      timeDisplay = "$seconds second${seconds > 1 ? 's' : ''}";
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -90,11 +266,11 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
             children: [
               Text(
                 'Total Correct Answers: $totalCorrectAnswers\n'
-                'Time Taken: $totalTimeTaken seconds\n'
+                'Time Taken: $timeDisplay\n'
                 'Thank you for participating!',
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20), // Space between text and button
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   _generateReport();
@@ -110,7 +286,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 10), // Space between text and icon
+                    SizedBox(width: 10),
                     Icon(
                       Icons.arrow_forward,
                       color: Colors.white,
@@ -118,7 +294,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                   ],
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, // Purple background
+                  backgroundColor: Colors.purple, 
                 ),
               ),
             ],
@@ -126,22 +302,19 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
         );
       },
     ).then((_) {
-      // Navigate to /mainmenu when the dialog is dismissed
-      Navigator.of(context).pushReplacementNamed('/mainmenu');
+      Navigator.of(context).pushReplacementNamed('/mainmenu'); 
     });
   }
 
-  // Placeholder function for generating a report
   void _generateReport() {
-    // Implement your report generation logic here
-    print('Report generated!'); // Replace with actual report logic
+    print('Report generated!'); 
   }
 
   void _onContinue() {
     if (selectedOption != null) {
       _checkAnswer(selectedOption!);
 
-      // Show the selected color for 1 second before moving to the next question
+      
       Future.delayed(Duration(seconds: 1), () {
         _nextQuestion();
       });
@@ -153,7 +326,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Dyscalculia Detection Level',
+          'Dyscalculia Detection',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.purple,
@@ -161,88 +334,60 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(height: 100), // Add space at the top
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  questions[currentQuestionIndex],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(width: 10), // Space between '=' and the box
-                Container(
-                  width: 50,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.purple, width: 2),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-              ],
+            Container(
+              height: 250, 
+              alignment: Alignment.center,
+              child: questions[currentQuestionIndex],
             ),
-            SizedBox(height: 150), // Space between question and options
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+            GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, 
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+              ),
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: 4, 
+              itemBuilder: (context, index) {
+                String option = options[currentQuestionIndex][index];
+                return CardOption(
+                  text: option,
+                  isSelected: selectedOption == option,
+                  selectedColor: selectedColor,
+                  onTap: () {
+                    setState(() {
+                      selectedOption = option;
+                    });
+                  },
+                );
+              },
+            ),
+            ElevatedButton(
+              onPressed: selectedOption != null ? _onContinue : null,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Two options per row
-                      childAspectRatio: 1.5,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
+                  Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: 4, // Number of options
-                    itemBuilder: (context, index) {
-                      String option = (int.parse(correctAnswers[currentQuestionIndex]) + (index - 2)).toString();
-                      return CardOption(
-                        text: option,
-                        isSelected: selectedOption == option,
-                        selectedColor: selectedColor,
-                        onTap: () {
-                          setState(() {
-                            selectedOption = option;
-                          });
-                        },
-                      );
-                    },
                   ),
-                  SizedBox(height: 50), // Space between options and button
-                  ElevatedButton(
-                    onPressed: selectedOption != null ? _onContinue : null, // Disable if no option selected
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Continue',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: const Color.fromARGB(255, 236, 230, 230),
-                          ),
-                        ),
-                        SizedBox(width: 10), // Space between text and icon
-                        Icon(
-                          Icons.arrow_forward,
-                          color: const Color.fromARGB(255, 236, 230, 230),
-                        ),
-                      ],
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      disabledBackgroundColor: Colors.grey, // Change color when disabled
-                    ),
+                  SizedBox(width: 10),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: Colors.white,
                   ),
                 ],
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                disabledBackgroundColor: Colors.grey,
               ),
             ),
           ],
@@ -255,7 +400,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 class CardOption extends StatelessWidget {
   final String text;
   final bool isSelected;
-  final Color selectedColor; // Accept the selected color
+  final Color selectedColor;
   final VoidCallback onTap;
 
   const CardOption({
