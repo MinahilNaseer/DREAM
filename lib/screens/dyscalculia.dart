@@ -23,6 +23,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   int totalCorrectAnswers = 0;
   int totalTimeTaken = 0;
   DateTime? startTime;
+  DateTime? questionStartTime;
 
   final FlutterTts flutterTts = FlutterTts();
 
@@ -31,7 +32,8 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     super.initState();
     _initializeTts();
     _generateQuestions(); 
-    startTime = DateTime.now(); 
+    _startQuizTimer();
+    _startQuestionTimer(); 
     _speakQuestion();
   }
 
@@ -44,6 +46,16 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       print("Error initializing TTS: $e");
     }
   }
+
+
+  void _startQuestionTimer() {
+    questionStartTime = DateTime.now(); // Set the start time for the current question
+  }
+
+  void _startQuizTimer() {
+  startTime = DateTime.now(); // Initialize the quiz timer
+}
+
 
   void _generateQuestions() {
   Random random = Random();
@@ -222,22 +234,24 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   }
 
   void _nextQuestion() {
-    setState(() {
-      if (currentQuestionIndex < questions.length - 1) {
-        currentQuestionIndex++;
-        _speakQuestion(); 
-      } else {
-        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds;
-        _showResults();
-      }
-      selectedOption = null; 
-      selectedColor = Colors.transparent; 
-    });
-  }
+  setState(() {
+    if (currentQuestionIndex < questions.length - 1) {
+      currentQuestionIndex++;
+      _startQuestionTimer(); // Reset the timer for the next question
+      _speakQuestion();
+    } else {
+      totalTimeTaken = startTime != null
+          ? DateTime.now().difference(startTime!).inSeconds
+          : 0;
+      _showResults();
+    }
+    selectedOption = null;
+    selectedColor = Colors.transparent;
+  });
+}
 
   Future<void> _checkAnswer(String answer) async {
-  DateTime questionEndTime = DateTime.now();
-  double responseTime = questionEndTime.difference(startTime!).inSeconds.toDouble();
+  double responseTime = DateTime.now().difference(questionStartTime!).inSeconds.toDouble();
 
   // Identify the specific question column
   Map<String, double> questionFlags = {
@@ -278,7 +292,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   try {
     // API endpoint for predictions
-    final url = Uri.parse('http://192.168.18.140:5000/predict');
+    final url = Uri.parse('http://192.168.18.84:5000/predict');
 
     print("Sending data: ${dataPayload.values.toList()}");
     print("URL: $url");
@@ -306,15 +320,17 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
 
 
   void _showResults() {
-    int minutes = totalTimeTaken ~/ 60; 
-    int seconds = totalTimeTaken % 60; 
+    totalTimeTaken = startTime != null
+      ? DateTime.now().difference(startTime!).inSeconds
+      : 0;
 
-    String timeDisplay;
-    if (minutes > 0) {
-      timeDisplay = "$minutes minute${minutes > 1 ? 's' : ''} and $seconds second${seconds > 1 ? 's' : ''}";
-    } else {
-      timeDisplay = "$seconds second${seconds > 1 ? 's' : ''}";
-    }
+  // Format the total time into minutes and seconds
+  int minutes = totalTimeTaken ~/ 60; // Get the minutes
+  int seconds = totalTimeTaken % 60; // Get the remaining seconds
+
+  String timeDisplay = minutes > 0
+      ? "$minutes minute${minutes > 1 ? 's' : ''} and $seconds second${seconds > 1 ? 's' : ''}"
+      : "$seconds second${seconds > 1 ? 's' : ''}";
 
     showDialog(
       context: context,
