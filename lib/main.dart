@@ -3,6 +3,7 @@ import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/profilepage.dart';
 import 'package:flutter/material.dart';
 import 'package:dream/screens/dyscalculia.dart';
+import 'package:dream/screens/dysgraphia.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +27,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const InitialPage(), // Initial Page
         '/mainmenu': (context) => const MainMenu(), // Main Menu
         '/profile': (context) => const ProfilePage(), // Profile Page
-        '/dyscalculia':(context)=>DyscalculiaLevel()
+        '/dyscalculia':(context)=>DyscalculiaLevel(),
+        '/dysgraphia':(context)=>DysgraphiaScreen()
       },
     );
   }
