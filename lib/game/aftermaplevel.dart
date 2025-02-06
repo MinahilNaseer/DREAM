@@ -55,6 +55,10 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   late SpriteComponent treasureChest;
   bool isTreasureMoving = false;
   late speechbox.DialogueBoxComponent foundTreasureBox;
+  List<String> dyslexiaWords = [
+  "cat", "bat", "dog", "bog", "pin", "pen", "ship", "sheep",
+  "was", "saw", "on", "no", "big", "dig", "tap"
+];
 
   @override
   Future<void> onLoad() async {
@@ -128,9 +132,9 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
       if (!gateAppeared) {
         gateAppeared = true; // Ensure the gate appears only once
         gate = SpriteComponent()
-          ..sprite = await loadSprite('gate.png')
-          ..size = Vector2(250, 250)
-          ..position = Vector2(size.x + 60, size.y - size.y * 0.18 - 130)
+          ..sprite = await loadSprite('newgate-game.png')
+          ..size = Vector2(150, 150)
+          ..position = Vector2(size.x + 90, size.y - size.y * 0.18 - 40)
           ..angle = pi / 20;
         add(gate!);
       }
@@ -139,17 +143,23 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
     gateTimer.start();
   }
 
-  /// Speak the given dialogue text
   Future<void> speakDialogue(String text) async {
-    // Stop any ongoing speech
-    await _flutterTts.stop();
+  // Stop any ongoing speech
+  await _flutterTts.stop();
 
-    // Log the text being spoken for debugging
-    print("Speaking: $text");
+  // Log the text being spoken for debugging
+  print("Speaking: $text");
 
-    // Speak the dialogue text
-    await _flutterTts.speak(text);
-  }
+  // Speak the dialogue text
+  await _flutterTts.speak(text);
+}
+
+String getRandomWord() {
+  final random = Random();
+  return dyslexiaWords[random.nextInt(dyslexiaWords.length)];
+}
+
+
 
   Future<void> _initializeTTS() async {
     _flutterTts = FlutterTts();
@@ -159,73 +169,79 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   }
 
   void _initializeSpeechToText() async {
-    speechToText = stt.SpeechToText();
-    await speechToText.initialize(
-      onStatus: (status) {
-        print("SpeechToText status: $status");
-        if (status == 'done') {
-          isRecording = false;
-          _analyzeRecordedWord();
-        }
-      },
-      onError: (error) => print("SpeechToText error: $error"),
+  speechToText = stt.SpeechToText();
+  await speechToText.initialize(
+    onStatus: (status) {
+      print("🟡 SpeechToText status: $status");
+      if (status == 'done' && recognizedText.isNotEmpty) {
+        print("🛑 Speech recognition completed.");
+      }
+    },
+    onError: (error) => print("❌ SpeechToText error: $error"),
+  );
+}
+
+
+
+  void showGateTaskOverlay() async {
+  // Select a random word from the dyslexiaWords list
+  displayedWord = getRandomWord();
+
+  Future.delayed(Duration(seconds: 5), () async {
+    remove(kidOnCycle);
+    overlayContainer = PositionComponent();
+
+    // Create a dim overlay
+    overlay = RectangleComponent(
+      size: Vector2(size.x, size.y),
+      paint: Paint()..color = const Color(0xAA000000),
     );
-  }
+    overlayContainer.add(overlay);
 
-  void showGateTaskOverlay(String word) async {
-    Future.delayed(Duration(seconds: 5), () async {
-      remove(kidOnCycle);
-      overlayContainer = PositionComponent();
+    molly = SpriteComponent()
+      ..sprite = await loadSprite('girl-idea.png')
+      ..size = Vector2(150, 150)
+      ..position = Vector2(10, size.y * 0.1);
+    overlayContainer.add(molly);
 
-      // Create a dim overlay
-      overlay = RectangleComponent(
-        size: Vector2(size.x, size.y),
-        paint: Paint()..color = const Color(0xAA000000),
-      );
-      overlayContainer.add(overlay);
+    // Display the dyslexia word
+    instructionBox = diabox.DialogueBoxComponent(
+      position: Vector2(size.x * 0.35, size.y * 0.1),
+      size: Vector2(size.x * 0.6, size.y * 0.15),
+      text: "To open the gate, say the word written correctly:",
+    );
+    overlayContainer.add(instructionBox);
 
-      molly = SpriteComponent()
-        ..sprite = await loadSprite('girl-idea.png')
-        ..size = Vector2(150, 150)
-        ..position = Vector2(10, size.y * 0.1);
-      overlayContainer.add(molly);
+    await speakDialogue("To open the gate, say the word written correctly:");
 
-      instructionBox = diabox.DialogueBoxComponent(
-        position: Vector2(size.x * 0.35, size.y * 0.1),
-        size: Vector2(size.x * 0.6, size.y * 0.15),
-        text: "To open the gate, say the word written correctly:",
-      );
-      overlayContainer.add(instructionBox);
+    wordBox = recwithword.FilledRoundedRectangleWithWordComponent(
+      position: Vector2(size.x * 0.2, size.y * 0.5),
+      size: Vector2(size.x * 0.6, 150),
+      color: const Color(0xFFFAF3DD),
+      borderRadius: 20,
+      word: displayedWord, // Use the selected random word
+    );
+    overlayContainer.add(wordBox);
 
-      await speakDialogue("To open the gate, say the word written correctly:");
+    recognizedTextDisplay = TextComponent(
+      text: "Recognized: ",
+      position: Vector2(wordBox.position.x + 20, wordBox.position.y + 100),
+      textRenderer: TextPaint(
+        style: const TextStyle(fontSize: 18, color: Colors.black),
+      ),
+    );
+    overlayContainer.add(recognizedTextDisplay);
 
-      wordBox = recwithword.FilledRoundedRectangleWithWordComponent(
-        position: Vector2(size.x * 0.2, size.y * 0.5),
-        size: Vector2(size.x * 0.6, 150),
-        color: const Color(0xFFFAF3DD),
-        borderRadius: 20,
-        word: word,
-      );
-      overlayContainer.add(wordBox);
+    addToggleButton();
+    overlayContainer.add(toggleButton!);
 
-      recognizedTextDisplay = TextComponent(
-        text: "Recognized: ",
-        position: Vector2(wordBox.position.x + 20, wordBox.position.y + 100),
-        textRenderer: TextPaint(
-          style: const TextStyle(fontSize: 18, color: Colors.black),
-        ),
-      );
-      overlayContainer.add(recognizedTextDisplay);
+    add(overlayContainer);
 
-      addToggleButton();
-      overlayContainer.add(toggleButton!);
+    await speakPhonics(displayedWord); // Speak the random word phonetically
+    await _flutterTts.speak(instructionBox.text);
+  });
+}
 
-      add(overlayContainer);
-
-      await speakPhonics(word);
-      await _flutterTts.speak(instructionBox.text);
-    });
-  }
 
   Future<void> speakPhonics(String word) async {
     // Pronounce each letter individually
@@ -271,70 +287,135 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   }
 
   void _startSpeechRecognition(TextComponent buttonText) async {
-    if (speechToText.isAvailable) {
-      isRecording = true;
-      recognizedText = ""; // Reset recognized text
-      speechToText.listen(
-        onResult: (result) {
-          recognizedText = result.recognizedWords;
-          if (!isRecording) return; // Ensure we only analyze once
+  if (speechToText.isAvailable) {
+    print("🎤 Speech recognition started...");
+    isRecording = true;
+    recognizedText = ""; // Reset recognized text
 
-          // Check if the recognition result is final
-          if (result.finalResult) {
-            isRecording = false;
-            buttonText.text = "Press to Start";
+    speechToText.listen(
+      onResult: (result) {
+        recognizedText = result.recognizedWords;
+        recognizedTextDisplay.text = "Recognized: $recognizedText";
+
+        if (result.finalResult) {
+          print("🎤 Final recognition result: ${result.recognizedWords}");
+          isRecording = false;
+          buttonText.text = "Press to Start";
+
+          // Ensure analysis only happens once
+          if (recognizedText.isNotEmpty) {
             _analyzeRecordedWord();
+          } else {
+            print("⚠️ No valid word detected in final result.");
           }
-        },
-        listenFor: Duration(seconds: 5),
-        pauseFor: Duration(seconds: 2),
-      );
-    } else {
-      print("Speech recognition is not available.");
-      buttonText.text = "Press to Start";
-    }
+        }
+      },
+      listenFor: Duration(seconds: 5),
+      pauseFor: Duration(seconds: 2),
+    );
+  } else {
+    print("❌ Speech recognition is not available.");
+    buttonText.text = "Press to Start";
   }
+}
+
+
 
   void _analyzeRecordedWord() {
-    recognizedTextDisplay.text = "Recognized: $recognizedText";
-
-    if (recognizedText.toLowerCase() == displayedWord.toLowerCase()) {
-      _onCorrectPronunciation();
-    } else {
-      instructionBox.text = "Oops! Try again.";
-      _flutterTts.speak(instructionBox.text);
-    }
-    isRecording = false;
-    toggleButton?.children.whereType<TextComponent>().first.text =
-        "Press to Start";
+  if (recognizedText.isEmpty || recognizedText.trim().isEmpty) {
+    print("⚠️ No valid word recognized, skipping analysis.");
+    return; // Prevents execution if no word is recognized
   }
 
-  void _onCorrectPronunciation() async {
-    speechToText.stop(); // Stop recognition
-    isRecording = false;
+  recognizedTextDisplay.text = "Recognized: $recognizedText";
+  bool isCorrect = recognizedText.toLowerCase().trim() == displayedWord.toLowerCase().trim();
 
-    // Provide feedback
-    instructionBox.text = "Great! You pronounced it correctly!";
-    await _flutterTts.speak(instructionBox.text);
-
-    // Logic to open the gate or proceed to the next level can be added here
-    Future.delayed(Duration(seconds: 4), () {
-      hideGateTaskOverlay();
-      openGate();
-      showKidOnCycleAfterGate();
-    });
+  if (isCorrect) {
+    print("✅ Correct word: $recognizedText");
+    _onCorrectPronunciation();
+  } else {
+    print("❌ Incorrect word: $recognizedText");
+    _onIncorrectPronunciation();
   }
+}
+
+
+
+bool _doWordsRhyme(String word1, String word2) {
+  // Simple rhyming check: compare the last two letters
+  if (word1.length < 2 || word2.length < 2) return false;
+  return word1.substring(word1.length - 2) == word2.substring(word2.length - 2);
+}
+
+int correctResponses = 0;
+int incorrectResponses = 0;
+
+void _onCorrectPronunciation() async {
+  correctResponses++;
+  speechToText.stop(); // Stop recognition
+  isRecording = false;
+
+  instructionBox.text = "✅ Great! You pronounced it correctly!";
+  print("🟢 Speaking: Great! You pronounced it correctly!");
+
+  await speakDialogue("Great! You pronounced it correctly!");
+
+  Future.delayed(Duration(seconds: 4), () {
+    hideGateTaskOverlay();
+    openGate();
+    showKidOnCycleAfterGate();
+  });
+}
+
+
+void _onIncorrectPronunciation() async {
+  incorrectResponses++;
+  speechToText.stop(); // Stop recognition
+  isRecording = false;
+
+  instructionBox.text = "❌ Oops! Try again.";
+  print("🔴 Speaking: Oops! Try again.");
+
+  await speakDialogue("Oops! Try again.");
+}
+
+
+void showPerformanceSummary() {
+  final summary = "Correct: $correctResponses, Incorrect: $incorrectResponses";
+  print(summary); // Or display this in the game UI
+}
 
   void openGate() async {
-    if (gate != null) {
-      gate!.sprite = await loadSprite('gate-open.png');
-      gate!.size = Vector2(250, 250); // Adjust size as needed for open gate
+  if (gate != null) {
+    // Load the new images for the gate as two parts (left and right)
+    SpriteComponent leftGate = SpriteComponent()
+      ..sprite = await loadSprite('left-side-gate.png')
+      ..size = Vector2(100, 100) // Smaller size
+      ..position = Vector2(40, size.y - size.y * 0.18 - 40); // Left side position
 
-      // Position the gate slightly more to the left when it opens
-      gate!.position = Vector2(size.x - 350, size.y - size.y * 0.18 - 190);
+    SpriteComponent rightGate = SpriteComponent()
+      ..sprite = await loadSprite('right-side-gate.png')
+      ..size = Vector2(100, 100) // Smaller size
+      ..position = Vector2(30, size.y - size.y * 0.18 + 40); // Slightly to the right of the left gate
+
+    // Remove the previous single gate and add the two gate parts
+    remove(gate!);
+    gate = null;
+    add(leftGate);
+    add(rightGate);
+
+    // Delay to simulate the "opening" action
+    Future.delayed(Duration(seconds: 2), () {
+      // Move the gate parts outward to simulate an opening effect
+      leftGate.position.x -= 20; // Move left gate further left
+      rightGate.position.x += 20; // Move right gate further right
+
+      // Indicate the gate has opened
       gateOpened = true;
-    }
+    });
   }
+}
+
 
   void showKidOnCycleAfterGate() {
     if (gate != null) {
@@ -361,25 +442,25 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
         isMoving = true; // Resume movement after the gate is removed
 
         // Show treasure and Molly after 3 seconds
-      Future.delayed(Duration(seconds: 3), () {
-        showTreasureAndMolly();
-        isMoving = false; // Stop movement when the treasure is found
-      });
-      
+        Future.delayed(Duration(seconds: 3), () {
+          showTreasureAndMolly();
+          isMoving = false; // Stop movement when the treasure is found
+        });
       }
     }
   }
-  // Modify `showTreasureAndMolly` method
-void showTreasureAndMolly() async {
-  // Add the treasure chest image
-  treasureChest = SpriteComponent()
-    ..sprite = await loadSprite('treasure chest.png')
-    ..size = Vector2(150, 150)
-    ..position = Vector2(size.x + 50, size.y - size.y * 0.18 - 150);
-  add(treasureChest);
 
-  isTreasureMoving = true;
-}
+  // Modify `showTreasureAndMolly` method
+  void showTreasureAndMolly() async {
+    // Add the treasure chest image
+    treasureChest = SpriteComponent()
+      ..sprite = await loadSprite('treasure chest.png')
+      ..size = Vector2(150, 150)
+      ..position = Vector2(size.x + 50, size.y - size.y * 0.18 - 150);
+    add(treasureChest);
+
+    isTreasureMoving = true;
+  }
 
   //@override
   @override
@@ -432,12 +513,13 @@ void showTreasureAndMolly() async {
             dialogueBox = speechbox.DialogueBoxComponent(
               position: Vector2(size.x * 0.35, size.y * 0.1),
               size: Vector2(size.x * 0.6, size.y * 0.15),
-              text: "Oh no! This gate is blocking the way.",
+              text: "Oh no! There is a barrier that is blocking the way.",
             );
             add(dialogueBox);
 
             // Speak the dialogue
-            await speakDialogue("Oh no! This gate is blocking the way.");
+            await speakDialogue(
+                "Oh no! There is a barrier that is blocking the way.");
             // Show the overlay after the gate dialogue
             if (!showOverlay) {
               Future.delayed(Duration(seconds: 4), () {
@@ -446,7 +528,7 @@ void showTreasureAndMolly() async {
               });
 
               showOverlay = true;
-              showGateTaskOverlay("APPLE"); // Example preschooler-friendly word
+              showGateTaskOverlay(); // Example preschooler-friendly word
             }
           } else {
             // Move the gate toward the screen
@@ -461,32 +543,32 @@ void showTreasureAndMolly() async {
       // Move the gate left if it has been opened
       moveGateLeftAndRemove(dt);
       // Move the treasure chest if it is set to move
-    if (isTreasureMoving && treasureChest != null) {
-      treasureChest.position.x -= speed * dt;
+      if (isTreasureMoving && treasureChest != null) {
+        treasureChest.position.x -= speed * dt;
 
-      // Stop the treasure chest and show Molly with the dialogue when it reaches the left side
-      if (treasureChest.position.x <= size.x / 2 - 75) {
-        isTreasureMoving = false;
+        // Stop the treasure chest and show Molly with the dialogue when it reaches the left side
+        if (treasureChest.position.x <= size.x / 2 - 75) {
+          isTreasureMoving = false;
 
-        // Add Molly with the shocked sprite
-        molly = SpriteComponent()
-          ..sprite = await loadSprite('animated-shocked-girl.png')
-          ..size = Vector2(150, 150)
-          ..position = Vector2(10, size.y * 0.1);
-        add(molly);
+          // Add Molly with the shocked sprite
+          molly = SpriteComponent()
+            ..sprite = await loadSprite('animated-shocked-girl.png')
+            ..size = Vector2(150, 150)
+            ..position = Vector2(10, size.y * 0.1);
+          add(molly);
 
-        // Add dialogue box
-        foundTreasureBox = speechbox.DialogueBoxComponent(
-          position: Vector2(size.x * 0.35, size.y * 0.1),
-          size: Vector2(size.x * 0.6, size.y * 0.15),
-          text: "We have found the treasure!",
-        );
-        add(foundTreasureBox);
+          // Add dialogue box
+          foundTreasureBox = speechbox.DialogueBoxComponent(
+            position: Vector2(size.x * 0.35, size.y * 0.1),
+            size: Vector2(size.x * 0.6, size.y * 0.15),
+            text: "We have found the treasure!",
+          );
+          add(foundTreasureBox);
 
-        // Speak the dialogue
-        await speakDialogue("We have found the treasure!");
+          // Speak the dialogue
+          await speakDialogue("We have found the treasure!");
+        }
       }
-    }
     }
   }
 
@@ -516,11 +598,12 @@ void showTreasureAndMolly() async {
     _flutterTts.stop();
 
     if (gateOpened) {
-    // If the gate is opened, start moving the gate left
-    isMoving = true; // Temporarily stop the kid on cycle until the gate moves off-screen
-  } else {
-    isMoving = true; // Continue the regular movement
-  }
+      // If the gate is opened, start moving the gate left
+      isMoving =
+          true; // Temporarily stop the kid on cycle until the gate moves off-screen
+    } else {
+      isMoving = true; // Continue the regular movement
+    }
   }
 }
 
