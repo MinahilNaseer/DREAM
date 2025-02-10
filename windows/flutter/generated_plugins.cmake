@@ -3,11 +3,12 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  cloud_firestore
-  firebase_auth
-  firebase_core
-  firebase_storage
-  flutter_tts
+  audioplayers_windows    # From the newgame branch
+  cloud_firestore          # From the main branch
+  firebase_auth            # From the main branch
+  firebase_core            # From the main branch
+  firebase_storage         # From the main branch
+  flutter_tts              # Shared in both branches
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

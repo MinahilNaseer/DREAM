@@ -17,21 +17,21 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController relationController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>(); // Key for form validation
+  final _formKey = GlobalKey<FormState>(); 
 
-  String? selectedGender; // Variable to store selected gender
+  String? selectedGender; 
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xfffeeed7), // Transparent background for the AppBar
-        elevation: 0, // Remove the shadow under the AppBar
+        backgroundColor: const Color(0xfffeeed7), 
+        elevation: 0, 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), // Back icon
+          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), 
           onPressed: () {
-            Navigator.pop(context); // Use pop to go back to the previous page
+            Navigator.pop(context); 
           },
         ),
       ),
@@ -47,7 +47,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
-                child: Form( // Wrap the form with a Form widget
+                child: Form( 
                   key: _formKey,
                   child: Container(
                     padding: const EdgeInsets.all(16.0),

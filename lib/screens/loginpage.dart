@@ -184,8 +184,12 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-              Image.asset("assets/images/train.png")
+              
+              Image.asset(
+                "assets/images/writing-dy.png",
+                height: 150,
+                width: 600,
+                )
             ],
           ),
         ),
