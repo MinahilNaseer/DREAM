@@ -164,7 +164,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
           isPondRemoved = true;
 
           await _flutterTts.speak(
-              "Watch out! There’s a mysterious forest ahead. Do you hear the whispers?");
+              "Watch out! There’s a mysterious forest ahead.");
         }
       }
 
