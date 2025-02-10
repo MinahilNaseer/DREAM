@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -27,9 +28,13 @@ class ScenicGame extends FlameGame with TapCallbacks {
   bool isDialogueVisible = true;
   Rect? dialogueBoxRect;
 
+  late AudioPlayer _bicycleSoundPlayer;
+  bool isBicycleSoundPlaying = false;
+
   @override
   Future<void> onLoad() async {
     _initializeTTS();
+    _initializeBicycleSound();
 
     parallaxComponent = await ParallaxComponent.load(
       [
@@ -103,6 +108,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
     super.update(dt);
 
     if (isMoving) {
+      playBicycleSound();
       pondTimer.update(dt);
 
       moveComponent(road1, road2, speed * dt);
@@ -127,6 +133,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
 
         if ((pond.position.x - kidOnCycle.position.x).abs() < 130) {
           isMoving = false;
+          stopBicycleSound();
           parallaxComponent.parallax!.baseVelocity = Vector2.zero();
 
           showMollyWithDialogue(
@@ -138,6 +145,8 @@ class ScenicGame extends FlameGame with TapCallbacks {
           remove(pond);
         }
       }
+    }else{
+      stopBicycleSound();
     }
   }
 
@@ -248,6 +257,27 @@ class ScenicGame extends FlameGame with TapCallbacks {
     _flutterTts.setLanguage("en-US");
     _flutterTts.setPitch(1.5);
     _flutterTts.setSpeechRate(0.4);
+  }
+
+   void _initializeBicycleSound() {
+    _bicycleSoundPlayer = AudioPlayer();
+  }
+
+  void playBicycleSound() async {
+    if (!isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.setSource(AssetSource('audio/cycling-noise.mp3'));
+      await _bicycleSoundPlayer.setVolume(1.0);
+      await _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bicycleSoundPlayer.resume();
+      isBicycleSoundPlaying = true;
+    }
+  }
+
+  void stopBicycleSound() async {
+    if (isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.stop();
+      isBicycleSoundPlaying = false;
+    }
   }
 
   Future<void> _speakDialogue(String text) async {

@@ -31,10 +31,13 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
   bool isPondRemoved = false;
   late Timer forestSceneTimer;
   bool isAudioPlayed = false;
+  late AudioPlayer _bicycleSoundPlayer;
+  bool isBicycleSoundPlaying = false;
 
   @override
   Future<void> onLoad() async {
     await _initializeTTS();
+    _initializeBicycleSound();
 
     parallaxComponent = await ParallaxComponent.load(
       [
@@ -139,11 +142,33 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
     await _flutterTts.setSpeechRate(0.4);
   }
 
+  void _initializeBicycleSound() {
+    _bicycleSoundPlayer = AudioPlayer();
+  }
+
+  void playBicycleSound() async {
+    if (!isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.setSource(AssetSource('audio/cycling-noise.mp3'));
+      await _bicycleSoundPlayer.setVolume(1.0);
+      await _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bicycleSoundPlayer.resume();
+      isBicycleSoundPlaying = true;
+    }
+  }
+
+  void stopBicycleSound() async {
+    if (isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.stop();
+      isBicycleSoundPlaying = false;
+    }
+  }
+
   @override
   void update(double dt) async {
     super.update(dt);
 
     if (isMoving) {
+      playBicycleSound();
       if (molly.parent != null) remove(molly);
       if (dialogueBox.parent != null) remove(dialogueBox);
 
@@ -178,6 +203,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
 
         if ((forestScene!.position.x - kidOnCycle.position.x).abs() < 100) {
           isMoving = false;
+          stopBicycleSound();
           parallaxComponent.parallax!.baseVelocity = Vector2.zero();
 
           molly.sprite = await loadSprite('girl-idea.png');
@@ -203,6 +229,8 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
           });
         }
       }
+    }else{
+      stopBicycleSound();
     }
   }
 

@@ -38,6 +38,8 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   bool isMollyDisplayed = false;
   List<draggableblocks.DraggableTile> currentBlocks = [];
   int puzzleStage = 1; 
+  late AudioPlayer _bicycleSoundPlayer;
+  bool isBicycleSoundPlaying = false;
 
   final Map<String, String> colorLetterMap = {
     "blue": "B",
@@ -50,6 +52,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   @override
   Future<void> onLoad() async {
     await _initializeTTS();
+    _initializeBicycleSound();
 
     parallaxComponent = await ParallaxComponent.load(
       [
@@ -137,12 +140,33 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     await _flutterTts.setPitch(1.5);
     await _flutterTts.setSpeechRate(0.4);
   }
+  void _initializeBicycleSound() {
+    _bicycleSoundPlayer = AudioPlayer();
+  }
+
+  void playBicycleSound() async {
+    if (!isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.setSource(AssetSource('audio/cycling-noise.mp3'));
+      await _bicycleSoundPlayer.setVolume(1.0);
+      await _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bicycleSoundPlayer.resume();
+      isBicycleSoundPlaying = true;
+    }
+  }
+
+  void stopBicycleSound() async {
+    if (isBicycleSoundPlaying) {
+      await _bicycleSoundPlayer.stop();
+      isBicycleSoundPlaying = false;
+    }
+  }
 
   @override
   void update(double dt) async {
     super.update(dt);
 
     if (isMoving) {
+      playBicycleSound();
       if (molly.parent != null) remove(molly);
       if (dialogueBox.parent != null) remove(dialogueBox);
       mapScroollTimer.update(dt);
@@ -177,7 +201,8 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
         mapScrool!.position.x -= speed * dt;
         if ((mapScrool!.position.x - kidOnCycle.position.x).abs() < 80) {
           
-          isMoving = false; 
+          isMoving = false;
+          stopBicycleSound(); 
           parallaxComponent.parallax!.baseVelocity = Vector2.zero();
           if (!isMapDisplayed) {
             molly.sprite = await loadSprite('animated-shocked-girl.png');
@@ -260,6 +285,8 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
           if (mapScrool!.parent != null) remove(mapScrool!);
         }
       }
+    }else{
+      stopBicycleSound();
     }
   }
 
