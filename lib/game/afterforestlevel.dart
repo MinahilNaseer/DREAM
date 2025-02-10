@@ -510,7 +510,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
       if (updatedMapWithForest.parent != null) remove(updatedMapWithForest);
       remove(overlay);
 
-      // Navigate to AfterMapLevel
+      
     switchToAfterMapLevel(buildContext!);
       
     });

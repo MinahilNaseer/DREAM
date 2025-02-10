@@ -250,7 +250,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
             correctSelections++;
             correctSelectionsList.add(selectedWord);
           } else {
-            // Track incorrect selections
+            
             incorrectSelections.add(selectedWord);
           }
           checkIfUserCompleted(context);

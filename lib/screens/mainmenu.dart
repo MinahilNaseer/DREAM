@@ -5,7 +5,7 @@ import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
-import 'package:flame/game.dart'; // Import Flame
+import 'package:flame/game.dart'; 
 import '../game/scenicgame.dart';
 
 class MainMenu extends StatefulWidget {
@@ -36,9 +36,9 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
     });
 
     if (index == 0) {
-      // Handle the first tab (e.g., Home)
+      
     } else if (index == 1) {
-      // Navigate to the ProfilePage using the correct named route
+      
       Navigator.pushNamed(context, '/profile');
     }
   }
@@ -171,7 +171,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(context, '/dyscalculia'); // Navigate to Dyscalculia level
+                            Navigator.pushNamed(context, '/dyscalculia'); 
                           },
                           child: LevelCard(
                             level: "Level 1",
@@ -185,7 +185,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         
                         GestureDetector(
                           onTap: () {
-                            // Navigate to Dysgraphia level
+                            
                             Navigator.pushNamed(context, '/dysgraphia');
                           },
                           child: LevelCard(

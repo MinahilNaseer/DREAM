@@ -18,17 +18,17 @@ class _GameMainScreenState extends State<GameMainScreen> {
     _playWelcomeMessage();
   }
 
-  // Initialize TTS
+  
   void _initializeTTS() {
     _flutterTts = FlutterTts();
 
-    // Configure TTS settings
-    _flutterTts.setLanguage("en-US"); // Set language
-    _flutterTts.setPitch(1.5); // Higher pitch for a child-like voice
-    _flutterTts.setSpeechRate(0.4); // Adjust speed for clarity
+    
+    _flutterTts.setLanguage("en-US"); 
+    _flutterTts.setPitch(1.5); 
+    _flutterTts.setSpeechRate(0.4); 
   }
 
-  // Play the welcome message
+  
   void _playWelcomeMessage() async {
     await _flutterTts.speak(
       "Welcome to Dream Quest! Get ready for an amazing adventure! Tap start to begin your journey, solve puzzles, and find hidden treasures. Let the fun begin!",
@@ -37,7 +37,7 @@ class _GameMainScreenState extends State<GameMainScreen> {
 
   @override
   void dispose() {
-    _flutterTts.stop(); // Stop TTS when leaving the screen
+    _flutterTts.stop(); 
     super.dispose();
   }
 

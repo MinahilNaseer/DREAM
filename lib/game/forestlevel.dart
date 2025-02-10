@@ -10,7 +10,7 @@ import 'package:flame/events.dart';
 import 'dart:math';
 import 'package:dream/game/class/animalrectangle.dart' as animalrec;
 import 'package:dream/game/class/filledroundreccomp.dart' as roundrec;
-//import 'package:dream/game/class/strokeroundreccompforest.dart' as recforest;
+
 import 'package:dream/game/class/dialogueboxcomponent.dart' as diabox;
 
 class ForestLevel extends FlameGame {

@@ -4,10 +4,10 @@ import 'package:flame/components.dart';
 
 class FishRectangleComponent extends PositionComponent with TapCallbacks {
   final String word;
-  final Function(String) onWordSelected; // Callback to notify word selection
+  final Function(String) onWordSelected; 
   TextPaint textRenderer;
-  Paint rectanglePaint; // Paint object for the rectangle color
-  bool isSelected = false; // Track if the word has been selected
+  Paint rectanglePaint; 
+  bool isSelected = false; 
 
   FishRectangleComponent({
     required this.word,
@@ -16,12 +16,12 @@ class FishRectangleComponent extends PositionComponent with TapCallbacks {
     required Vector2 size,
   })  : textRenderer = TextPaint(
           style: TextStyle(
-            color: const Color.fromARGB(255, 0, 102, 204), // Default text color
+            color: const Color.fromARGB(255, 0, 102, 204), 
             fontSize: 18,
           ),
         ),
         rectanglePaint = Paint()
-          ..color = const Color.fromARGB(255, 235, 235, 210), // Default rectangle color
+          ..color = const Color.fromARGB(255, 235, 235, 210), 
         super() {
     this.position = position;
     this.size = size;
@@ -31,13 +31,13 @@ class FishRectangleComponent extends PositionComponent with TapCallbacks {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // Draw the rectangle
+    
     final radius = Radius.circular(10);
     final rrect = RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.x, size.y), radius);
-    canvas.drawRRect(rrect, rectanglePaint); // Draw rectangle with custom paint
+    canvas.drawRRect(rrect, rectanglePaint); 
 
-    // Draw the word inside the rectangle
+    
     final textPainter = TextPainter(
       text: TextSpan(
         text: word,
@@ -48,29 +48,29 @@ class FishRectangleComponent extends PositionComponent with TapCallbacks {
 
     textPainter.layout();
 
-    // Position the text to be centered in the rectangle
+    
     final textX = (size.x - textPainter.width) / 2;
     final textY = (size.y - textPainter.height) / 2;
     textPainter.paint(canvas, Offset(textX, textY));
   }
 
-  // Handle tap event to change the color
+  
   @override
   bool onTapDown(TapDownEvent event) {
     isSelected = true;
 
-    // Change the background to a dyslexic-friendly color (light yellow)
-    rectanglePaint.color = const Color.fromARGB(255, 255, 255, 153); // Light yellow
+    
+    rectanglePaint.color = const Color.fromARGB(255, 255, 255, 153); 
 
-    // Change the text color to distinguish that it's been selected (dark blue)
+    
     textRenderer = TextPaint(
       style: TextStyle(
-        color: const Color.fromARGB(255, 0, 0, 102), // Dark blue color for selected text
+        color: const Color.fromARGB(255, 0, 0, 102), 
         fontSize: 18,
       ),
     );
 
-    // Notify the game that a word has been selected
+    
     onWordSelected(word);
 
     return true;
@@ -78,6 +78,6 @@ class FishRectangleComponent extends PositionComponent with TapCallbacks {
 
   @override
   void update(double dt) {
-    // No additional logic needed, Flame will re-render automatically.
+    
   }
 }

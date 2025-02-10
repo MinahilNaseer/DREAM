@@ -11,7 +11,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   String? selectedOption;
   Color selectedColor = Colors.transparent;
 
-  // List to hold randomly generated questions and their correct answers
+  
   List<String> questions = [];
   List<String> correctAnswers = [];
   int totalCorrectAnswers = 0;
@@ -21,33 +21,33 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   @override
   void initState() {
     super.initState();
-    _generateQuestions(); // Generate questions on initialization
-    startTime = DateTime.now(); // Start timing
+    _generateQuestions(); 
+    startTime = DateTime.now(); 
   }
 
   void _generateQuestions() {
     Random random = Random();
-    while (questions.length < 10) { // Ensure exactly 10 questions are generated
-      int num1 = random.nextInt(10); // Random number between 0 and 9
-      int num2 = random.nextInt(10); // Random number between 0 and 9
+    while (questions.length < 10) { 
+      int num1 = random.nextInt(10); 
+      int num2 = random.nextInt(10); 
 
-      // Randomly decide whether to generate an addition or subtraction question
+      
       bool isAddition = random.nextBool();
 
-      // Generate question based on the operation
+      
       if (isAddition) {
         if (num1 + num2 > 9 || num1 + num2 <= 0) {
-          continue; // Skip if sum is greater than 9 or less than or equal to 0
+          continue; 
         }
         questions.add("$num1 + $num2 =");
-        correctAnswers.add((num1 + num2).toString()); // Calculate correct answer for addition
+        correctAnswers.add((num1 + num2).toString()); 
       } else {
-        // For subtraction, ensure that num1 is greater than num2 to avoid negative results
+        
         if (num1 < num2) {
-          continue; // Skip if the first number is less than the second
+          continue; 
         }
         questions.add("$num1 - $num2 =");
-        correctAnswers.add((num1 - num2).toString()); // Calculate correct answer for subtraction
+        correctAnswers.add((num1 - num2).toString()); 
       }
     }
   }
@@ -57,24 +57,24 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       if (currentQuestionIndex < questions.length - 1) {
         currentQuestionIndex++;
       } else {
-        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds; // Calculate total time taken
-        _showResults(); // Show results when all questions are answered
-        return; // Exit the function to avoid resetting the index prematurely
+        totalTimeTaken = DateTime.now().difference(startTime!).inSeconds; 
+        _showResults(); 
+        return; 
       }
-      selectedOption = null; // Reset selected option for the next question
-      selectedColor = Colors.transparent; // Reset color
+      selectedOption = null; 
+      selectedColor = Colors.transparent; 
     });
   }
 
   Future<void> _checkAnswer(String answer) async {
     if (answer == correctAnswers[currentQuestionIndex]) {
       setState(() {
-        selectedColor = Colors.green; // Set color to green for correct answer
-        totalCorrectAnswers++; // Increment total correct answers
+        selectedColor = Colors.green; 
+        totalCorrectAnswers++; 
       });
     } else {
       setState(() {
-        selectedColor = Colors.red; // Set color to red for incorrect answer
+        selectedColor = Colors.red; 
       });
     }
   }
@@ -94,7 +94,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                 'Thank you for participating!',
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20), // Space between text and button
+              SizedBox(height: 20), 
               ElevatedButton(
                 onPressed: () {
                   _generateReport();
@@ -110,7 +110,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 10), // Space between text and icon
+                    SizedBox(width: 10), 
                     Icon(
                       Icons.arrow_forward,
                       color: Colors.white,
@@ -118,7 +118,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                   ],
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, // Purple background
+                  backgroundColor: Colors.purple, 
                 ),
               ),
             ],
@@ -126,22 +126,22 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
         );
       },
     ).then((_) {
-      // Navigate to /mainmenu when the dialog is dismissed
+      
       Navigator.of(context).pushReplacementNamed('/mainmenu');
     });
   }
 
-  // Placeholder function for generating a report
+  
   void _generateReport() {
-    // Implement your report generation logic here
-    print('Report generated!'); // Replace with actual report logic
+    
+    print('Report generated!'); 
   }
 
   void _onContinue() {
     if (selectedOption != null) {
       _checkAnswer(selectedOption!);
 
-      // Show the selected color for 1 second before moving to the next question
+      
       Future.delayed(Duration(seconds: 1), () {
         _nextQuestion();
       });
@@ -163,7 +163,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(height: 100), // Add space at the top
+            SizedBox(height: 100), 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -176,7 +176,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(width: 10), // Space between '=' and the box
+                SizedBox(width: 10), 
                 Container(
                   width: 50,
                   height: 40,
@@ -187,21 +187,21 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                 ),
               ],
             ),
-            SizedBox(height: 150), // Space between question and options
+            SizedBox(height: 150), 
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Two options per row
+                      crossAxisCount: 2, 
                       childAspectRatio: 1.5,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
                     ),
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: 4, // Number of options
+                    itemCount: 4, 
                     itemBuilder: (context, index) {
                       String option = (int.parse(correctAnswers[currentQuestionIndex]) + (index - 2)).toString();
                       return CardOption(
@@ -216,9 +216,9 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                       );
                     },
                   ),
-                  SizedBox(height: 50), // Space between options and button
+                  SizedBox(height: 50), 
                   ElevatedButton(
-                    onPressed: selectedOption != null ? _onContinue : null, // Disable if no option selected
+                    onPressed: selectedOption != null ? _onContinue : null, 
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -230,7 +230,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                             color: const Color.fromARGB(255, 236, 230, 230),
                           ),
                         ),
-                        SizedBox(width: 10), // Space between text and icon
+                        SizedBox(width: 10), 
                         Icon(
                           Icons.arrow_forward,
                           color: const Color.fromARGB(255, 236, 230, 230),
@@ -239,7 +239,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
-                      disabledBackgroundColor: Colors.grey, // Change color when disabled
+                      disabledBackgroundColor: Colors.grey, 
                     ),
                   ),
                 ],
@@ -255,7 +255,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 class CardOption extends StatelessWidget {
   final String text;
   final bool isSelected;
-  final Color selectedColor; // Accept the selected color
+  final Color selectedColor; 
   final VoidCallback onTap;
 
   const CardOption({

@@ -8,12 +8,12 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 240, 225, 225), // Transparent background for the AppBar
-        elevation: 0, // Remove the shadow under the AppBar
+        backgroundColor: const Color.fromARGB(255, 240, 225, 225), 
+        elevation: 0, 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), // Back icon
+          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), 
           onPressed: () {
-            Navigator.pop(context); // Use pop to go back to the previous page
+            Navigator.pop(context); 
           },
         ),
       ),
@@ -27,7 +27,7 @@ class ProfilePage extends StatelessWidget {
               fontSize: 30,
               color: Color(0xFF0D47A1)
             ),),
-            // Upper Part with Profile Image
+            
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -39,7 +39,7 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
 
-            // Bottom Part that takes up the rest of the screen
+            
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(16.0),
@@ -60,12 +60,12 @@ class ProfilePage extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Edit Personal Information
+                    
                     CustomListTile(
                       icon: Icons.edit,
                       title: "Edit Personal Information",
                       onTap: () {
-                        // Handle edit personal information functionality
+                        
                       },
                     ),
                     const Divider(),
@@ -74,7 +74,7 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.insert_chart_outlined,
                       title: "Reports / Results",
                       onTap: () {
-                        // Handle reports/results functionality
+                        
                       },
                     ),
                     const Divider(),
@@ -83,7 +83,7 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.help_outline,
                       title: "Help",
                       onTap: () {
-                        // Handle help functionality
+                        
                       },
                     ),
                     const Divider(),
@@ -92,7 +92,7 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.logout,
                       title: "Logout",
                       onTap: () {
-                        // Handle logout functionality
+                        
                       },
                     ),
                   ],
