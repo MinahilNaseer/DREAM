@@ -30,38 +30,39 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   }
 
   Future<void> _uploadImage() async {
-    if (_selectedImage == null) return;
+  if (_selectedImage == null) return;
 
-    setState(() {
-      _isUploading = true;
-      _showAnalyzeButton = false; // Hide button while uploading
-    });
+  setState(() {
+    _isUploading = true;
+    _showAnalyzeButton = false;
+  });
 
-    try {
-      var request = http.MultipartRequest('POST', Uri.parse(backendUrl));
-      request.files.add(await http.MultipartFile.fromPath('image', _selectedImage!.path));
+  try {
+    var request = http.MultipartRequest('POST', Uri.parse('http://192.168.18.84:5000/analyze-handwriting'));
+    request.files.add(await http.MultipartFile.fromPath('image', _selectedImage!.path));
 
-      var response = await request.send();
-      if (response.statusCode == 200) {
-        var responseBody = await response.stream.bytesToString();
-        setState(() {
-          _result = responseBody;
-        });
-      } else {
-        setState(() {
-          _result = 'Error: Unable to process the image';
-        });
-      }
-    } catch (e) {
+    var response = await request.send();
+    if (response.statusCode == 200) {
+      var responseBody = await response.stream.bytesToString();
       setState(() {
-        _result = 'Error: $e';
+        _result = responseBody;
       });
-    } finally {
+    } else {
       setState(() {
-        _isUploading = false;
+        _result = 'Error: Unable to process the image';
       });
     }
+  } catch (e) {
+    setState(() {
+      _result = 'Error: $e';
+    });
+  } finally {
+    setState(() {
+      _isUploading = false;
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
