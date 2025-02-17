@@ -14,27 +14,16 @@
 #include <flutter_tts/flutter_tts_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  // Register audioplayers plugin
   AudioplayersWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("AudioplayersWindowsPlugin"));
-
-  // Register Cloud Firestore plugin
   CloudFirestorePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("CloudFirestorePluginCApi"));
-
-  // Register Firebase Auth plugin
   FirebaseAuthPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseAuthPluginCApi"));
-
-  // Register Firebase Core plugin
   FirebaseCorePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
-
-  // Register Firebase Storage plugin
   FirebaseStoragePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseStoragePluginCApi"));
-
-  // Register Flutter TTS plugin
   FlutterTtsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterTtsPlugin"));
 }
