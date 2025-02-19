@@ -4,8 +4,15 @@ import 'package:dream/screens/profilepage.dart';
 import 'package:flutter/material.dart';
 import 'package:dream/screens/dyscalculia.dart';
 import 'package:dream/screens/dysgraphia.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: ".env");  // ✅ Explicitly specify .env
+  } catch (e) {
+    print("Error loading .env file: $e");  // ✅ Debugging
+  }
   runApp(const MyApp());
 }
 
