@@ -1,9 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
-//import '../services/api_service.dart';
-import 'dart:convert'; // For jsonEncode and jsonDecode
-import 'package:http/http.dart' as http; // For HTTP requests
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert'; 
+import 'package:http/http.dart' as http; 
+import 'package:dream/screens/screenclass/cardoption.dart' as cardoption;
 
 
 class DyscalculiaLevel extends StatefulWidget {
@@ -49,11 +50,11 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 
   void _startQuestionTimer() {
-    questionStartTime = DateTime.now(); // Set the start time for the current question
+    questionStartTime = DateTime.now(); 
   }
 
   void _startQuizTimer() {
-  startTime = DateTime.now(); // Initialize the quiz timer
+  startTime = DateTime.now(); 
 }
 
 
@@ -64,7 +65,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   questionsText.clear();
   options.clear();
 
-  // Hard-coded specific single-digit questions
+  
   List<Map<String, dynamic>> specificQuestions = [
     {
       "questionText": "6 + 3",
@@ -93,7 +94,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     },
   ];
 
-  // Add hard-coded specific questions
+  
   for (var sq in specificQuestions) {
     questionsText.add(sq["questionText"]);
     correctAnswers.add(sq["correctAnswer"]);
@@ -105,7 +106,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     options.add(sq["options"]..shuffle());
   }
 
-  // Add randomly generated questions
+  
   while (questions.length < 10) {
     bool isImageQuestion = random.nextBool();
 
@@ -130,7 +131,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       correctAnswers.add(correctAnswer);
       questionsText.add(questionText);
 
-      // Generate 4 unique options including the correct answer
+      
       Set<String> generatedOptions = {correctAnswer};
       while (generatedOptions.length < 4) {
         generatedOptions.add((random.nextInt(9) + 1).toString());
@@ -157,7 +158,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       correctAnswers.add(correctAnswer);
       questionsText.add(questionText);
 
-      // Generate 4 unique options including the correct answer
+      
       Set<String> generatedOptions = {correctAnswer};
       while (generatedOptions.length < 4) {
         generatedOptions.add((random.nextInt(9)).toString());
@@ -166,7 +167,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     }
   }
 
-  // Shuffle questions to randomize the appearance of hard-coded and random questions
+  
   List<int> indices = List<int>.generate(questions.length, (i) => i);
   indices.shuffle();
   questions = indices.map((i) => questions[i]).toList();
@@ -237,7 +238,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   setState(() {
     if (currentQuestionIndex < questions.length - 1) {
       currentQuestionIndex++;
-      _startQuestionTimer(); // Reset the timer for the next question
+      _startQuestionTimer(); 
       _speakQuestion();
     } else {
       totalTimeTaken = startTime != null
@@ -253,7 +254,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   Future<void> _checkAnswer(String answer) async {
   double responseTime = DateTime.now().difference(questionStartTime!).inSeconds.toDouble();
 
-  // Identify the specific question column
+  
   Map<String, double> questionFlags = {
     'Question_"6 + 3"': 0.0,
     'Question_"7 + 2"': 0.0,
@@ -263,20 +264,20 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   String currentQuestionText = questionsText[currentQuestionIndex];
   questionFlags['Question_"$currentQuestionText"'] = 1.0;
 
-  // Prepare the data payload
+  
   Map<String, dynamic> dataPayload = {
     "Correct_Answer": double.parse(correctAnswers[currentQuestionIndex]),
     "Selected_Option": double.parse(answer),
     "Response_Time": responseTime,
-    "Question_Type": 1.0, // Text questions are type 1
-    "Is_Hardcoded": 1.0,  // Hardcoded is true
+    "Question_Type": 1.0, 
+    "Is_Hardcoded": 1.0,  
     ...questionFlags,
   };
 
-  // Send data to backend
+  
   await sendDataToBackend(dataPayload);
 
-  // Update UI for feedback
+  
   if (answer == correctAnswers[currentQuestionIndex]) {
     setState(() {
       selectedColor = Colors.green;
@@ -291,14 +292,15 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   try {
-    // API endpoint for predictions
-    final url = Uri.parse('http://192.168.18.84:5000/predict');
+    
+    final String urlString = dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
+    final Uri url = Uri.parse(urlString); 
 
     print("Sending data: ${dataPayload.values.toList()}");
     print("URL: $url");
 
 
-    // Send POST request with data payload
+    
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -324,9 +326,9 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
       ? DateTime.now().difference(startTime!).inSeconds
       : 0;
 
-  // Format the total time into minutes and seconds
-  int minutes = totalTimeTaken ~/ 60; // Get the minutes
-  int seconds = totalTimeTaken % 60; // Get the remaining seconds
+  
+  int minutes = totalTimeTaken ~/ 60; 
+  int seconds = totalTimeTaken % 60; 
 
   String timeDisplay = minutes > 0
       ? "$minutes minute${minutes > 1 ? 's' : ''} and $seconds second${seconds > 1 ? 's' : ''}"
@@ -391,27 +393,27 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
 
   if (selectedOption != null) {
     setState(() {
-      isLoading = true; // Set loading to true
+      isLoading = true; 
     });
 
-    // Show a loading animation dialog
+    
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return Center(
-          child: CircularProgressIndicator(), // Display a spinner
+          child: CircularProgressIndicator(), 
         );
       },
     );
 
-    await _checkAnswer(selectedOption!); // Wait for the backend call to complete
+    await _checkAnswer(selectedOption!); 
 
-    Navigator.of(context).pop(); // Remove the loading dialog
+    Navigator.of(context).pop(); 
     Future.delayed(Duration(milliseconds: 500), () {
       setState(() {
-        isLoading = false; // Set loading to false
-        _nextQuestion(); // Move to the next question
+        isLoading = false; 
+        _nextQuestion(); 
       });
     });
   }
@@ -450,7 +452,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
               itemCount: 4, 
               itemBuilder: (context, index) {
                 String option = options[currentQuestionIndex][index];
-                return CardOption(
+                return cardoption.CardOption(
                   text: option,
                   isSelected: selectedOption == option,
                   selectedColor: selectedColor,
@@ -494,37 +496,4 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   }
 }
 
-class CardOption extends StatelessWidget {
-  final String text;
-  final bool isSelected;
-  final Color selectedColor;
-  final VoidCallback onTap;
 
-  const CardOption({
-    required this.text,
-    required this.isSelected,
-    required this.selectedColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        elevation: 5,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: isSelected ? selectedColor : Colors.transparent, width: 2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        color: isSelected ? selectedColor : Colors.white,
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-    );
-  }
-}
