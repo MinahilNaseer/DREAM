@@ -47,6 +47,9 @@ dependencies:
 
   flutter_tts: ^4.2.1
   http: ^1.3.0
+  image_picker: ^1.1.2
+  flutter_dotenv: ^5.2.1
+  image: ^4.5.2
 
 
 dev_dependencies:
@@ -78,6 +81,12 @@ flutter:
   assets:
       - assets/icons/
       - assets/images/
+      - assets/images/—Pngtree—hand-painted cartoon images of children_4346171.png
+      - assets/images/children_learning.png
+      - assets/images/kids-playing-game.png
+      - assets/images/math-problem.png
+      - assets/images/writing-girl.png
+      - .env
       - assets/play/
       - assets/audio/
       - assets/images/correct_tiles/

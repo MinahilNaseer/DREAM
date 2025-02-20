@@ -5,11 +5,19 @@ import 'package:dream/screens/registerpage.dart'; // Import RegisterPage
 import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
 import 'package:flutter/material.dart';
 import 'package:dream/screens/dyscalculia.dart';
+import 'package:dream/screens/dysgraphia.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dream/screens/loginpage.dart'; // Ensure this import is present
 import 'package:dream/screens/helppage.dart';
 import 'package:dream/screens/editpage.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  try {
+    await dotenv.load(fileName: ".env");  // ✅ Explicitly specify .env
+  } catch (e) {
+    print("Error loading .env file: $e");  // ✅ Debugging
+  }
   await Firebase.initializeApp(); // Initialize Firebase
   runApp(const MyApp());
 }
@@ -31,13 +39,12 @@ class MyApp extends StatelessWidget {
         '/': (context) => const InitialPage(), // Initial Page
         '/mainmenu': (context) => const MainMenu(), // Main Menu
         '/profile': (context) => const ProfilePage(), // Profile Page
-
         '/register': (context) => const RegisterPage(), // Register Page
         '/login': (context) => const LoginPage(), // This should match the name used in Navigator
-        '/help'  :(context) => const HelpPage(), 
-        '/edit' :(context) =>  const EditProfilePage(),
-        '/dyscalculia':(context)=>DyscalculiaLevel()
-
+        '/help': (context) => const HelpPage(), 
+        '/edit': (context) => const EditProfilePage(),
+        '/dyscalculia': (context) => DyscalculiaLevel(),
+        '/dysgraphia': (context) => DysgraphiaScreen(),
       },
     );
   }
