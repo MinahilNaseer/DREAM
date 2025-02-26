@@ -1,24 +1,24 @@
 import 'package:dream/screens/initialpage.dart';
 import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/profilepage.dart';
-import 'package:dream/screens/registerpage.dart'; // Import RegisterPage
-import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
+import 'package:dream/screens/registerpage.dart'; 
+import 'package:firebase_core/firebase_core.dart'; 
 import 'package:flutter/material.dart';
 import 'package:dream/screens/dyscalculia.dart';
 import 'package:dream/screens/dysgraphia.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:dream/screens/loginpage.dart'; // Ensure this import is present
+import 'package:dream/screens/loginpage.dart'; 
 import 'package:dream/screens/helppage.dart';
 import 'package:dream/screens/editpage.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized(); 
   try {
-    await dotenv.load(fileName: ".env");  // ✅ Explicitly specify .env
+    await dotenv.load(fileName: ".env");  
   } catch (e) {
-    print("Error loading .env file: $e");  // ✅ Debugging
+    print("Error loading .env file: $e");  
   }
-  await Firebase.initializeApp(); // Initialize Firebase
+  await Firebase.initializeApp(); 
   runApp(const MyApp());
 }
 
@@ -36,11 +36,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const InitialPage(), // Initial Page
-        '/mainmenu': (context) => const MainMenu(), // Main Menu
-        '/profile': (context) => const ProfilePage(), // Profile Page
-        '/register': (context) => const RegisterPage(), // Register Page
-        '/login': (context) => const LoginPage(), // This should match the name used in Navigator
+        '/': (context) => const InitialPage(), 
+        '/mainmenu': (context) => const MainMenu(), 
+        '/profile': (context) => const ProfilePage(), 
+        '/register': (context) => const RegisterPage(), 
+        '/login': (context) => const LoginPage(), 
         '/help': (context) => const HelpPage(), 
         '/edit': (context) => const EditProfilePage(),
         '/dyscalculia': (context) => DyscalculiaLevel(),
