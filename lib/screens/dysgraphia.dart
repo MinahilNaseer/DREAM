@@ -50,7 +50,6 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
 
-      // Fix image rotation
       imageFile = await _fixImageRotation(imageFile);
 
       setState(() {
@@ -66,13 +65,11 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
     final decodedImage = img.decodeImage(imageBytes);
 
     if (decodedImage == null) {
-      return imageFile; // Return original file if decoding fails
+      return imageFile;
     }
 
-    // Auto-fix orientation
     final orientedImage = img.bakeOrientation(decodedImage);
 
-    // Save fixed image
     final fixedFile = File(imageFile.path)
       ..writeAsBytesSync(img.encodeJpg(orientedImage));
     return fixedFile;
@@ -82,8 +79,8 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
     if (_selectedImage == null || _selectedWord == null) return;
 
     setState(() {
-      _isUploading = true; // Show loader
-      _result = null; // Hide previous results
+      _isUploading = true;
+      _result = null;
       _showAnalyzeButton = false;
     });
 
@@ -115,7 +112,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
       });
     } finally {
       setState(() {
-        _isUploading = false; // Hide loader after uploading
+        _isUploading = false;
       });
     }
   }
@@ -125,7 +122,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
     final decodedImage = img.decodeImage(imageBytes);
 
     if (decodedImage == null) {
-      return imageFile; // Return original file if decoding fails
+      return imageFile;
     }
 
     final resizedImage = img.copyResize(decodedImage, width: 128, height: 128);
@@ -159,27 +156,54 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
             Text("Select a Word to Write:",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              children: words.map((word) {
-                return ChoiceChip(
-                  label: Text(word,
-                      style: TextStyle(fontSize: 16, color: Colors.black)),
-                  selected: _selectedWord == word,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      _selectedWord = selected ? word : null;
-                    });
-                  },
-                  selectedColor: Colors.blueAccent,
-                  labelStyle: TextStyle(color: Colors.white),
-                );
-              }).toList(),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white, 
+                borderRadius: BorderRadius.circular(12), 
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2), 
+                    blurRadius: 6,
+                    spreadRadius: 2,
+                    offset: Offset(0, 3), 
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.all(10),
+              child: SizedBox(
+                height: 150,
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: List.generate(words.length, (index) {
+                      return SizedBox(
+                        width: MediaQuery.of(context).size.width / 4 - 15,
+                        child: ChoiceChip(
+                          label: Text(
+                            words[index],
+                            style: TextStyle(fontSize: 16, color: Colors.black),
+                          ),
+                          selected: _selectedWord == words[index],
+                          onSelected: (bool selected) {
+                            setState(() {
+                              _selectedWord = selected ? words[index] : null;
+                            });
+                          },
+                          selectedColor: Colors.blueAccent,
+                          labelStyle: TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
             ),
             SizedBox(height: 20),
             if (_selectedImage == null)
               Text(
-                'No image selected. Please upload a handwriting sample.',
+                'No image uploaded. Please upload a handwriting sample.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, color: Colors.black54),
               ),
@@ -250,8 +274,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
             if (_isUploading)
               Column(
                 children: [
-                  CircularProgressIndicator(
-                      color: Colors.blueAccent), // Show Loader
+                  CircularProgressIndicator(color: Colors.blueAccent),
                   SizedBox(height: 16),
                   Text(
                     'Analyzing Handwriting...',
@@ -270,7 +293,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
                   child: Text(
                     'Result: $_result',
                     style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 5,
                         fontWeight: FontWeight.bold,
                         color: Colors.blueAccent),
                     textAlign: TextAlign.center,

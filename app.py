@@ -7,13 +7,14 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import cv2
 from tensorflow.keras.preprocessing.image import img_to_array
+from PIL import Image, ExifTags
 
-# Load the trained model
+
 model = joblib.load("DyscalD.pkl")
 dysgraphia_model = tf.keras.models.load_model("dysgraphia_cnn_model.h5")
 
 
-# Initialize Flask app
+
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
@@ -23,17 +24,110 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 
+def resize_image(image, size=(128, 128)):
+    return cv2.resize(image, size)
 
+def deskew_image(image):
+    coords = cv2.findNonZero(image)
+    angle = cv2.minAreaRect(coords)[-1]
+    if angle < -45:
+        angle = -(90 + angle)
+    else:
+        angle = -angle
+    (h, w) = image.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    return cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+def fix_orientation(image_path):
+    image = Image.open(image_path)
+    try:
+        for orientation in ExifTags.TAGS.keys():
+            if ExifTags.TAGS[orientation] == 'Orientation':
+                break
+        exif = dict(image._getexif().items())
+
+        if orientation in exif:
+            if exif[orientation] == 3:
+                image = image.rotate(180, expand=True)
+            elif exif[orientation] == 6:
+                image = image.rotate(270, expand=True)
+            elif exif[orientation] == 8:
+                image = image.rotate(90, expand=True)
+    except (AttributeError, KeyError, IndexError):
+        
+        pass
+    return image
+
+def remove_noise(image):
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,1))
+    return cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
+
+def apply_threshold(image):
+    return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+def convert_to_grayscale(image_path):
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    return gray
 
 def preprocess_image(image_path):
-    img = Image.open(image_path).convert('RGB')
-    img = img.resize((128, 128))  # Match training size
-    img = img_to_array(img) / 255.0  # Normalize like training
-    img = np.expand_dims(img, axis=0)  # Add batch dimension
-    return img
+    
+    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError("Error: Unable to load image, file might be corrupted or unreadable.")
+
+    
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    
+    edges = cv2.Canny(blurred, 30, 150)
+
+    
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if contours:
+        
+        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+
+        
+        padding = 10
+        x = max(x - padding, 0)
+        y = max(y - padding, 0)
+        w = min(w + (2 * padding), image.shape[1] - x)
+        h = min(h + (2 * padding), image.shape[0] - y)
+
+        
+        cropped_image = image[y:y+h, x:x+w]
+
+        
+        cropped_image = cv2.resize(cropped_image, (128, 128))
+
+        
+        cv2.imwrite("cropped_image.jpg", cropped_image)
+        print("Saved Cropped Image: cropped_image.jpg")
+
+    else:
+        print("No handwriting detected! Using full image.")
+        cropped_image = cv2.resize(image, (128, 128))  
+
+    
+    cropped_image = cropped_image / 255.0  
+
+    
+    img_array = img_to_array(cropped_image)
+
+    
+    img_array = np.expand_dims(img_array, axis=0)
+
+    return img_array
 
 
-# Function to extract handwriting features using OCR
+
+
 def extract_features(image_path):
     image = cv2.imread(image_path)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -66,7 +160,7 @@ def extract_features(image_path):
 def predict():
     try:
         data = request.json
-        print(f"Received data: {data}")  # Log received data
+        print(f"Received data: {data}")  
         features = np.array(data['features']).reshape(1, -1)
         prediction = model.predict(features)[0]
         return jsonify({'prediction': int(prediction)})
@@ -86,30 +180,26 @@ def analyze_handwriting():
     file.save(file_path)
 
     try:
-        # Step 1: Apply OCR-based feature extraction
-        #ocr_features = extract_features(file_path)
-        #ocr_result = classify_ocr(ocr_features)
-
-        # Step 2: Apply CNN for image classification
         processed_img = preprocess_image(file_path)
-        prediction = dysgraphia_model.predict(processed_img)[0][0]
-        cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
+        print("Processed Image Shape:", processed_img.shape)  
 
-        # Step 3: Combine results
+        prediction = dysgraphia_model.predict(processed_img)[0][0]  
+
+        cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
         final_result = "Dysgraphia" if cnn_result == "Dysgraphia" else "Non-Dysgraphia"
 
         response = {
-            #"OCR Result": ocr_result,
             "CNN Result": cnn_result,
             "Final Result": final_result,
             "Confidence": float(prediction)
         }
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Processing error: {str(e)}"}), 500
     finally:
-        os.remove(file_path)  # Clean up image file
+        os.remove(file_path)  
 
     return jsonify(response)
+
 
 
 if __name__ == '__main__':
