@@ -181,8 +181,8 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const SimpleVideoPlayerScreen(
-                                  videoPath: "assets/videos/dyscal-instruction-vid.mp4", // Adjust for each level
-                                  nextRoute: '/dyscalculia', // Target level screen
+                                  videoPath: "assets/videos/dyscal-instruction-vid.mp4", 
+                                  nextRoute: '/dyscalculia', 
                                 ),
                               ),
                             );
@@ -205,8 +205,8 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const SimpleVideoPlayerScreen(
-                                  videoPath: "assets/videos/dysgraphia-video.mp4", // Adjust for each level
-                                 nextRoute: '/dysgraphia', // Target level screen
+                                  videoPath: "assets/videos/dysgraphia-video.mp4", 
+                                 nextRoute: '/dysgraphia', 
                                 ),
                               ),
                             );
