@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dream/screens/loginpage.dart'; 
 import 'package:dream/screens/helppage.dart';
 import 'package:dream/screens/editpage.dart';
+import 'package:dream/game/gamemainscreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/edit': (context) => const EditProfilePage(),
         '/dyscalculia': (context) => DyscalculiaLevel(),
         '/dysgraphia': (context) => DysgraphiaScreen(),
+        '/gameMainScreen': (context) => GameMainScreen(),
       },
     );
   }

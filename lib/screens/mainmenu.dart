@@ -228,9 +228,9 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const SimpleVideoPlayerScreen(
+                                  builder: (context) => SimpleVideoPlayerScreen(
                                     videoPath: 'assets/videos/Dyslexia-game-vid.mp4',
-                                    nextRoute: '/GameMainScreen()',
+                                    nextRoute: '/gameMainScreen',
                                   )
                                    ),
                             );
