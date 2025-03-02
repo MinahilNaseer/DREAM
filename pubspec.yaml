@@ -37,7 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flame: ^1.25.0
   google_fonts: ^6.2.1
-  video_player: ^2.9.2
+  video_player: ^2.9.3
   audioplayers: ^6.1.0
   just_audio: ^0.9.42
  
@@ -48,6 +48,7 @@ dependencies:
   image_picker: ^1.1.2
   flutter_dotenv: ^5.2.1
   image: ^4.5.2
+  chewie: ^1.10.0
 
 
 dev_dependencies:
@@ -89,6 +90,9 @@ flutter:
       - assets/audio/
       - assets/images/correct_tiles/
       - assets/images/incorrect_tiles/
+      - assets/videos/dysgraphia-video.mp4
+      - assets/videos/Dyslexia-game-vid.mp4
+      - assets/videos/dyscal-instruction-vid.mp4
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
