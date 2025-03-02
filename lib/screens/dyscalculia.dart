@@ -14,6 +14,9 @@ class DyscalculiaLevel extends StatefulWidget {
 
 class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   int currentQuestionIndex = 0;
+  int totalQuestions = 10;
+
+  bool showIntroScreen = true;
   String? selectedOption;
   Color selectedColor = Colors.transparent;
 
@@ -27,15 +30,15 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   DateTime? questionStartTime;
 
   final FlutterTts flutterTts = FlutterTts();
+  bool isReadyScreen = true;
+  bool isCountingDown = false;
+  int countdown = 3;
 
   @override
   void initState() {
     super.initState();
     _initializeTts();
     _generateQuestions(); 
-    _startQuizTimer();
-    _startQuestionTimer(); 
-    _speakQuestion();
   }
 
   void _initializeTts() async {
@@ -46,6 +49,31 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
     } catch (e) {
       print("Error initializing TTS: $e");
     }
+  }
+
+  void _startCountdown() {
+    setState(() {
+      isCountingDown = true;
+    });
+
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() => countdown = 2);
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() => countdown = 1);
+    });
+
+    Future.delayed(const Duration(seconds: 3), () {
+      setState(() {
+        isReadyScreen = false;
+        isCountingDown = false;
+        showIntroScreen = false;
+        _startQuizTimer();
+        _startQuestionTimer();
+        _speakQuestion();
+      });
+    });
   }
 
 
@@ -83,9 +111,9 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
       "options": ["9", "7", "8", "10"]
     },
     {
-      "questionText": "8 - 3",
-      "correctAnswer": "5",
-      "options": ["6", "3", "7", "5"]
+      "questionText": "9 - 6",
+      "correctAnswer": "3",
+      "options": ["9", "3", "6", "4"]
     },
     {
       "questionText": "9 + 6",
@@ -205,7 +233,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
         ),
         Text(
           isAddition ? "+" : "-",
-          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
         ),
         Wrap(
           alignment: WrapAlignment.center,
@@ -219,7 +247,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
             ),
           ),
         ),
-        Text(
+        const Text(
           "= ?",
           style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
         ),
@@ -338,7 +366,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Quiz Results'),
+          title: const Text('Quiz Results'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -348,7 +376,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
                 'Thank you for participating!',
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   _generateReport();
@@ -401,7 +429,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return Center(
+        return const Center(
           child: CircularProgressIndicator(), 
         );
       },
@@ -410,7 +438,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
     await _checkAnswer(selectedOption!); 
 
     Navigator.of(context).pop(); 
-    Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         isLoading = false; 
         _nextQuestion(); 
@@ -422,11 +450,38 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
 
   @override
   Widget build(BuildContext context) {
+    if (showIntroScreen) {
+      return Scaffold(
+        body: Center(
+          child: isCountingDown
+              ? Text(
+                  countdown.toString(),
+                  style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: Colors.purple),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Are you ready to test your child?",
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _startCountdown,
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                      child: const Text("Start", style: TextStyle(fontSize: 24, color: Colors.white)),
+                    ),
+                  ],
+                ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Dyscalculia Detection',
-          style: TextStyle(color: Colors.white),
+          'Dyscalculia Detection (${currentQuestionIndex + 1}/$totalQuestions)',
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.purple,
       ),
@@ -441,14 +496,14 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
               child: questions[currentQuestionIndex],
             ),
             GridView.builder(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const  SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, 
                 childAspectRatio: 2.5,
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
               ),
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: 4, 
               itemBuilder: (context, index) {
                 String option = options[currentQuestionIndex][index];

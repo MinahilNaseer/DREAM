@@ -1,12 +1,13 @@
 import 'package:dream/game/gamemainscreen.dart';
 import 'package:flutter/material.dart';
-import 'dart:math'; 
+import 'dart:math';
 import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
-import 'package:flame/game.dart'; 
+import 'package:flame/game.dart';
 import '../game/scenicgame.dart';
+import '../screens/videoplayerscreen.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -21,11 +22,11 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(seconds: 10),
       vsync: this,
-    )..repeat(reverse: true); 
+    )..repeat(reverse: true);
   }
 
   int _selectedIndex = 0;
@@ -36,16 +37,14 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
     });
 
     if (index == 0) {
-      
     } else if (index == 1) {
-      
       Navigator.pushNamed(context, '/profile');
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose(); 
+    _controller.dispose();
     super.dispose();
   }
 
@@ -64,14 +63,22 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                       return Stack(
                         children: [
                           Positioned(
-                            left: _controller.value * MediaQuery.of(context).size.width * 0.7,
+                            left: _controller.value *
+                                MediaQuery.of(context).size.width *
+                                0.7,
                             top: 50 + sin(_controller.value * 2 * pi) * 20,
-                            child: Icon(Icons.edit, color: Colors.blueAccent.withOpacity(0.2), size: 40),
+                            child: Icon(Icons.edit,
+                                color: Colors.blueAccent.withOpacity(0.2),
+                                size: 40),
                           ),
                           Positioned(
-                            right: _controller.value * MediaQuery.of(context).size.width * 0.5,
+                            right: _controller.value *
+                                MediaQuery.of(context).size.width *
+                                0.5,
                             top: 100 + cos(_controller.value * 2 * pi) * 30,
-                            child: Icon(Icons.star, color: Colors.yellowAccent.withOpacity(0.3), size: 50),
+                            child: Icon(Icons.star,
+                                color: Colors.yellowAccent.withOpacity(0.3),
+                                size: 50),
                           ),
                         ],
                       );
@@ -79,7 +86,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                   ),
                 ),
                 Container(
-                  height: MediaQuery.of(context).size.height * 0.25, 
+                  height: MediaQuery.of(context).size.height * 0.25,
                   width: double.infinity,
                   padding: const EdgeInsets.all(20.0),
                   child: Row(
@@ -94,7 +101,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             Row(
                               children: [
                                 Text(
-                                  "Welcome to ", 
+                                  "Welcome to ",
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.normal,
@@ -102,7 +109,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 Text(
-                                  "DREAM!", 
+                                  "DREAM!",
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -113,7 +120,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              "Let's start to detect learning challenges.", 
+                              "Let's start to detect learning challenges.",
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Color(0xFF0D47A1),
@@ -124,7 +131,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                       ),
                       const SizedBox(height: 36),
                       Image.asset(
-                        'assets/icons/icon_app.png', 
+                        'assets/icons/icon_app.png',
                         height: 140,
                         width: 140,
                         fit: BoxFit.contain,
@@ -140,7 +147,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                 child: Container(
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: Colors.white, 
+                    color: Colors.white,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
@@ -168,48 +175,75 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 30),
-                        
                         GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, '/dyscalculia'); 
-                          },
-                          child: LevelCard(
-                            level: "Level 1",
-                            title: "Detect Dyscalculia: ",
-                            subtitle: "Math Skill Challenges",
-                            imageUrl: "assets/images/math-problem.png", 
-                            gradientColors: [Colors.pinkAccent, Colors.orangeAccent],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        
-                        GestureDetector(
-                          onTap: () {
-                            
-                            Navigator.pushNamed(context, '/dysgraphia');
-                          },
-                          child: LevelCard(
-                            level: "Level 2",
-                            title: "Detect Dysgraphia: ",
-                            subtitle: "Writing Assessment",
-                            imageUrl: "assets/images/writing-girl.png", 
-                            gradientColors: [Colors.blueAccent, Colors.cyanAccent],
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => GameMainScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const SimpleVideoPlayerScreen(
+                                  videoPath: "assets/videos/dyscal-instruction-vid.mp4", // Adjust for each level
+                                  nextRoute: '/dyscalculia', // Target level screen
+                                ),
+                              ),
+                            );
+                          },
+                          child: const LevelCard(
+                            level: "Level 1",
+                            title: "Detect Dyscalculia: ",
+                            subtitle: "Math Skill Challenges",
+                            imageUrl: "assets/images/math-problem.png",
+                            gradientColors: [
+                              Colors.pinkAccent,
+                              Colors.orangeAccent
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const SimpleVideoPlayerScreen(
+                                  videoPath: "assets/videos/dysgraphia-video.mp4", // Adjust for each level
+                                 nextRoute: '/dysgraphia', // Target level screen
+                                ),
+                              ),
+                            );
+                          },
+                          child: const LevelCard(
+                            level: "Level 2",
+                            title: "Detect Dysgraphia: ",
+                            subtitle: "Writing Assessment",
+                            imageUrl: "assets/images/writing-girl.png",
+                            gradientColors: [
+                              Colors.blueAccent,
+                              Colors.cyanAccent
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SimpleVideoPlayerScreen(
+                                    videoPath: 'assets/videos/Dyslexia-game-vid.mp4',
+                                    nextRoute: '/GameMainScreen()',
+                                  )
+                                   ),
                             );
                           },
                           child: LevelCard(
                             level: "Level 3",
                             title: "Dyslexia Detection: ",
                             subtitle: "Interactive Game",
-                            imageUrl: "assets/images/kids-playing-game.png", 
-                            gradientColors: [Colors.purpleAccent, Colors.deepPurpleAccent],
+                            imageUrl: "assets/images/kids-playing-game.png",
+                            gradientColors: [
+                              Colors.purpleAccent,
+                              Colors.deepPurpleAccent
+                            ],
                           ),
                         ),
                       ],
@@ -222,8 +256,8 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
         ),
       ),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex, 
-        onTap: _onItemTapped, 
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
