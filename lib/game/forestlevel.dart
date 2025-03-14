@@ -60,6 +60,8 @@ class ForestLevel extends FlameGame {
   final Random random = Random();
   String? correctAnimal;
   animalrec.AnimalRectangle? selectedRectangle;
+  int roundCount = 0;
+  final int maxRounds = 3;
 
   @override
   Future<void> onLoad() async {
@@ -109,6 +111,10 @@ class ForestLevel extends FlameGame {
   }
 
   Future<void> startGame() async {
+    
+    removeAnimalImage();
+    clearAnimalRectangles();
+
     final audioFiles = [
       'Cat-1.mp3',
       'Cow-1.mp3',
@@ -139,6 +145,15 @@ class ForestLevel extends FlameGame {
     final selectedNamesList = selectedNames.toList()..shuffle();
 
     addAnimalRectangles(selectedNamesList);
+  }
+
+  void clearAnimalRectangles() {
+    
+    for (var component in children.toList()) {
+      if (component is animalrec.AnimalRectangle) {
+        remove(component);
+      }
+    }
   }
 
   void removeAnimalImage() {
@@ -198,7 +213,18 @@ class ForestLevel extends FlameGame {
       firstAttemptMade = false;
       showAnimalImage(correctAnimal!);
       await tts.speak("Congratulations! You found the $correctAnimal!");
-      onTaskCompleted();
+
+      
+      roundCount++;
+
+      if (roundCount < maxRounds) {
+        
+        await Future.delayed(Duration(seconds: 6));
+        startGame();
+      } else {
+        
+        onTaskCompleted();
+      }
     } else {
       removeAnimalImage();
       await tts.speak("Try again! That's not the right animal.");
