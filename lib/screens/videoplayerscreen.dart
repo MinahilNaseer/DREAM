@@ -56,14 +56,30 @@ class _SimpleVideoPlayerScreenState extends State<SimpleVideoPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Watch Video")),
-      body: Center(
-        child: _controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              )
-            : const CircularProgressIndicator(),
+      body: Stack(
+        children:[
+          Center(
+          child: _controller.value.isInitialized
+              ? AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                )
+              : const CircularProgressIndicator(),
+        ),
+        Positioned(
+          top: 40,
+          right: 20,
+          child: ElevatedButton(
+            onPressed: (){
+          Navigator.pushReplacementNamed(context, widget.nextRoute);
+        }, 
+        child: const Text("Skip")
+        )
+        )
+
+        ] 
       ),
+      
     );
   }
 }

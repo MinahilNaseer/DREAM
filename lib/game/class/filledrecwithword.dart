@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class FilledRoundedRectangleWithWordComponent extends PositionComponent {
   final Paint paint;
   final double borderRadius;
-  final String word;
+  String word;
 
   FilledRoundedRectangleWithWordComponent({
     required Vector2 position,
@@ -21,12 +21,12 @@ class FilledRoundedRectangleWithWordComponent extends PositionComponent {
   void render(Canvas canvas) {
     super.render(canvas);
 
-    // Draw the rounded rectangle
+    
     final rect = Rect.fromLTWH(0, 0, size.x, size.y);
     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
     canvas.drawRRect(rrect, paint);
 
-    // Draw the word in the center of the rectangle
+    
     final textStyle = TextStyle(
       color: Colors.black,
       fontSize: 24,
