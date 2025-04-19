@@ -9,6 +9,10 @@ import cv2
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image, ExifTags
 from google.cloud import firestore
+import google.generativeai as genai
+
+# Configure the SDK with your hardcoded API key
+genai.configure(api_key="AIzaSyB6Mm0NiURGi5atvpmiPucwCKaRHRIF22A")
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\GTS\\Downloads\\service-account-key.json"
 db = firestore.Client()
@@ -159,6 +163,7 @@ def extract_features(image_path):
         'spacing': avg_spacing
     }
 
+    
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -169,11 +174,12 @@ def predict():
             return jsonify({"error": "UID is missing from the request"}), 400
         features = np.array(data['features']).reshape(1, -1)
         prediction = model.predict(features)[0]
-
+      
         store_prediction_in_firestore(uid, features.tolist(), int(prediction))
+        return jsonify({
+            'prediction': int(prediction),
+        })
 
-        return jsonify({'prediction': int(prediction)})
-    
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
@@ -183,11 +189,10 @@ def store_prediction_in_firestore(uid, features, prediction):
         # Flatten features into a dictionary
         features_dict = {f"feature_{i}": feature for i, feature in enumerate(features)}
 
-        # Reference the 'users' collection and create a subcollection 'predictions' under the user document
-        user_ref = db.collection('users').document(uid)  # Reference the 'users' collection
-        predictions_ref = user_ref.collection('predictions')  # Create a subcollection named 'predictions'
+        user_ref = db.collection('users').document(uid)
+        predictions_ref = user_ref.collection('predictions')
 
-        # Add a document to the 'predictions' subcollection
+        # Add new prediction
         predictions_ref.add({
             **features_dict,
             'prediction': prediction,
@@ -195,10 +200,56 @@ def store_prediction_in_firestore(uid, features, prediction):
         })
 
         print(f"Prediction stored for UID: {uid} under 'predictions' subcollection")
+
+        # Count total predictions
+        all_predictions = predictions_ref.stream()
+        prediction_count = sum(1 for _ in all_predictions)
+
+        print(f"Total predictions so far: {prediction_count}")
+
+        # If 5 predictions, trigger summary report
+        if prediction_count == 5:
+            generate_and_store_summary_report(uid)
+
     except Exception as e:
         print(f"Error storing data in Firestore: {e}")
 
+def generate_and_store_summary_report(uid):
+    try:
+        # Fetch last 5 predictions
+        predictions_ref = db.collection('users').document(uid).collection('predictions')
+        predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
+        prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
 
+        if len(prediction_values) < 5:
+            print("Not enough predictions to generate a report.")
+            return
+
+        prompt = f"""
+        A child with UID: {uid} has completed 5 dyscalculia screening tests.
+
+        The prediction outcomes were: {prediction_values}
+
+        Based on these results, please write a professional, clear, and encouraging report for the parents. The report should explain whether the child may show signs of dyscalculia (if 3 or more results are 1) or not (if 3 or more are 0), and suggest any next steps if needed.
+        """
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        summary = response.text
+
+        # Store in main user doc
+        db.collection('users').document(uid).update({
+            'dyscalculia_report': summary,
+            'report_generated_at': firestore.SERVER_TIMESTAMP
+        })
+
+        print(f"✅ Gemini summary report generated and stored for UID: {uid}")
+
+    except Exception as e:
+        print(f"Error generating summary report: {e}")
+       
+
+        
 
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
