@@ -8,7 +8,10 @@ from PIL import Image
 import cv2
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image, ExifTags
+from google.cloud import firestore
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\GTS\\Downloads\\service-account-key.json"
+db = firestore.Client()
 
 model = joblib.load("DyscalD.pkl")
 dysgraphia_model = tf.keras.models.load_model("dysgraphia_cnn_model.h5")
@@ -161,12 +164,40 @@ def predict():
     try:
         data = request.json
         print(f"Received data: {data}")  
+        uid = data.get("uid")
+        if not uid:
+            return jsonify({"error": "UID is missing from the request"}), 400
         features = np.array(data['features']).reshape(1, -1)
         prediction = model.predict(features)[0]
+
+        store_prediction_in_firestore(uid, features.tolist(), int(prediction))
+
         return jsonify({'prediction': int(prediction)})
+    
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
+    
+def store_prediction_in_firestore(uid, features, prediction):
+    try:
+        # Flatten features into a dictionary
+        features_dict = {f"feature_{i}": feature for i, feature in enumerate(features)}
+
+        # Reference the 'users' collection and create a subcollection 'predictions' under the user document
+        user_ref = db.collection('users').document(uid)  # Reference the 'users' collection
+        predictions_ref = user_ref.collection('predictions')  # Create a subcollection named 'predictions'
+
+        # Add a document to the 'predictions' subcollection
+        predictions_ref.add({
+            **features_dict,
+            'prediction': prediction,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        })
+
+        print(f"Prediction stored for UID: {uid} under 'predictions' subcollection")
+    except Exception as e:
+        print(f"Error storing data in Firestore: {e}")
+
 
 
 @app.route('/analyze-handwriting', methods=['POST'])
