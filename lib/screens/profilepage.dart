@@ -137,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: Icons.insert_chart_outlined,
                             title: "Reports / Results",
                             onTap: () {
-                              // Handle reports/results functionality
+                               Navigator.pushNamed(context, "/reports");
                             },
                           ),
                           const Divider(),

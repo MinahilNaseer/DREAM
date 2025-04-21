@@ -8,7 +8,14 @@ from PIL import Image
 import cv2
 from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image, ExifTags
+from google.cloud import firestore
+import google.generativeai as genai
 
+# Configure the SDK with your hardcoded API key
+genai.configure(api_key="AIzaSyB6Mm0NiURGi5atvpmiPucwCKaRHRIF22A")
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\GTS\\Downloads\\service-account-key.json"
+db = firestore.Client()
 
 model = joblib.load("DyscalD.pkl")
 dysgraphia_model = tf.keras.models.load_model("dysgraphia_cnn_model.h5")
@@ -156,18 +163,108 @@ def extract_features(image_path):
         'spacing': avg_spacing
     }
 
+    
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.json
         print(f"Received data: {data}")  
+        uid = data.get("uid")
+        if not uid:
+            return jsonify({"error": "UID is missing from the request"}), 400
         features = np.array(data['features']).reshape(1, -1)
         prediction = model.predict(features)[0]
-        return jsonify({'prediction': int(prediction)})
+      
+        store_prediction_in_firestore(uid, features.tolist(), int(prediction))
+        return jsonify({
+            'prediction': int(prediction),
+        })
+
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
+    
+def store_prediction_in_firestore(uid, features, prediction):
+    try:
+       
+        features_dict = {f"feature_{i}": feature for i, feature in enumerate(features)}
+        user_ref = db.collection('users').document(uid)
+        predictions_ref = user_ref.collection('predictions')
+        predictions_ref.add({
+            **features_dict,
+            'prediction': prediction,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        })
 
+        print(f"Prediction stored for UID: {uid} under 'predictions' subcollection")
+        all_predictions = predictions_ref.stream()
+        prediction_count = sum(1 for _ in all_predictions)
+
+        print(f"Total predictions so far: {prediction_count}")
+
+        # If 5 predictions, trigger summary report
+        if prediction_count == 5:
+            generate_and_store_summary_report(uid)
+
+    except Exception as e:
+        print(f"Error storing data in Firestore: {e}")
+
+def generate_and_store_summary_report(uid):
+    try:
+        # Fetch predictions
+        predictions_ref = db.collection('users').document(uid).collection('predictions')
+        predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
+        prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
+
+        if len(prediction_values) < 5:
+            print("Not enough predictions to generate a report.")
+            return
+
+        # Fetch child's name from user document
+        user_doc = db.collection('users').document(uid).get()
+        if not user_doc.exists:
+            print("User document not found.")
+            return
+        user_data = user_doc.to_dict()
+        name = user_data.get("name", "The child")
+
+        # Structured prompt for Gemini
+        prompt = f"""
+Generate a professional and parent-friendly summary report for dyscalculia screening following this format:
+
+📌 Child’s Name: {name}
+
+📊 Test Overview:
+- Total Screenings Taken: 5
+- Prediction Outcomes: {prediction_values}
+
+🧠 Interpretation:
+- Analyze the predictions. If 3 or more are 1, state that the child may show signs of dyscalculia.
+- If 3 or more are 0, state that the child is less likely to show signs.
+- Provide a warm, encouraging interpretation that avoids harsh labels.
+
+📌 Suggested Next Steps:
+- Offer 2–3 supportive next steps for parents.
+- Avoid clinical language and keep tone hopeful and friendly.
+
+Avoid adding closing phrases like “please contact us” or mentioning any organizations.
+Return the output exactly in the format above.
+"""
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        summary = response.text
+
+        # Store the report in Firestore
+        db.collection('users').document(uid).update({
+            'dyscalculia_report': summary,
+            'report_generated_at': firestore.SERVER_TIMESTAMP
+        })
+
+        print(f"✅ Gemini summary report generated and stored for UID: {uid}")
+
+    except Exception as e:
+        print(f"❌ Error generating summary report: {e}")
 
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
