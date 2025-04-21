@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:dream/screens/screenclass/cardoption.dart' as cardoption;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import "package:dream/screens/dyscalculia_report.dart";
 
 
 class DyscalculiaLevel extends StatefulWidget {
@@ -382,31 +383,34 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  _generateReport();
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Generate Report',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, 
-                ),
-              ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DyscalculiaReportPage(),
+      ),
+    );
+  },
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: const [
+      Text(
+        'Generate Report',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 122, 27, 151),
+        ),
+      ),
+      SizedBox(width: 10),
+      Icon(
+        Icons.arrow_forward,
+        color: Colors.white,
+      ),
+    ],
+  ),
+),
+
             ],
           ),
         );
