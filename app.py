@@ -186,13 +186,10 @@ def predict():
     
 def store_prediction_in_firestore(uid, features, prediction):
     try:
-        # Flatten features into a dictionary
+       
         features_dict = {f"feature_{i}": feature for i, feature in enumerate(features)}
-
         user_ref = db.collection('users').document(uid)
         predictions_ref = user_ref.collection('predictions')
-
-        # Add new prediction
         predictions_ref.add({
             **features_dict,
             'prediction': prediction,
@@ -200,8 +197,6 @@ def store_prediction_in_firestore(uid, features, prediction):
         })
 
         print(f"Prediction stored for UID: {uid} under 'predictions' subcollection")
-
-        # Count total predictions
         all_predictions = predictions_ref.stream()
         prediction_count = sum(1 for _ in all_predictions)
 
@@ -216,7 +211,6 @@ def store_prediction_in_firestore(uid, features, prediction):
 
 def generate_and_store_summary_report(uid):
     try:
-        # Fetch last 5 predictions
         predictions_ref = db.collection('users').document(uid).collection('predictions')
         predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
         prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
@@ -226,18 +220,18 @@ def generate_and_store_summary_report(uid):
             return
 
         prompt = f"""
-        A child with UID: {uid} has completed 5 dyscalculia screening tests.
+        Your child has completed 5 dyscalculia screening tests.
 
         The prediction outcomes were: {prediction_values}
 
-        Based on these results, please write a professional, clear, and encouraging report for the parents. The report should explain whether the child may show signs of dyscalculia (if 3 or more results are 1) or not (if 3 or more are 0), and suggest any next steps if needed.
+        Based on these results, write a short, professional, and encouraging report for the parents.
+        Do not include any closing statements like "Please do not hesitate to contact us" or organization names.
+        Just conclude with whether the child may show signs of dyscalculia (if 3 or more results are 1) or not (if 3 or more are 0), and suggest any next steps if needed. and suggest any next steps if needed.
         """
 
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
         summary = response.text
-
-        # Store in main user doc
         db.collection('users').document(uid).update({
             'dyscalculia_report': summary,
             'report_generated_at': firestore.SERVER_TIMESTAMP
@@ -248,9 +242,6 @@ def generate_and_store_summary_report(uid):
     except Exception as e:
         print(f"Error generating summary report: {e}")
        
-
-        
-
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
     if 'image' not in request.files:
