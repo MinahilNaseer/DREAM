@@ -5,6 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert'; 
 import 'package:http/http.dart' as http; 
 import 'package:dream/screens/screenclass/cardoption.dart' as cardoption;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import "package:dream/screens/dyscalculia_report.dart";
 
 
 class DyscalculiaLevel extends StatefulWidget {
@@ -320,7 +323,9 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   try {
-    
+      User? user = FirebaseAuth.instance.currentUser;
+    String uid = user?.uid ?? 'no_uid_found';
+
     final String urlString = dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
     final Uri url = Uri.parse(urlString); 
 
@@ -332,7 +337,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"features": dataPayload.values.toList()}),
+      body: jsonEncode({"uid": uid,"features": dataPayload.values.toList()}),
     );
 
     if (response.statusCode == 200) {
@@ -378,31 +383,34 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  _generateReport();
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Generate Report',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple, 
-                ),
-              ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DyscalculiaReportPage(),
+      ),
+    );
+  },
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: const [
+      Text(
+        'Generate Report',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 122, 27, 151),
+        ),
+      ),
+      SizedBox(width: 10),
+      Icon(
+        Icons.arrow_forward,
+        color: Colors.white,
+      ),
+    ],
+  ),
+),
+
             ],
           ),
         );
