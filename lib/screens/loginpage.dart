@@ -196,20 +196,44 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-  void _logIn() async{
-   String email = emailController.text.trim();
-    String password = passwordController.text;
+  void _logIn() async {
+  String email = emailController.text.trim();
+  String password = passwordController.text;
 
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
-    if(user!=null)
-    {
-      print("User succesfully Logged In");
-      Navigator.pushNamed(context, "/mainmenu"); 
-    }
-    else{
-      print("Some error occured");
-    }
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please fill in both email and password."),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    return;
   }
+
+  try {
+    User? user = await _auth.signInWithEmailAndPassword(email, password);
+    if (user != null) {
+      print("User successfully Logged In");
+      Navigator.pushNamed(context, "/mainmenu");
+    } else {
+      _showError("Login failed. Please check your credentials.");
+    }
+  } catch (e) {
+    _showError("Incorrect email or password. Please try again.");
+    print("Login error: $e");
+  }
+}
+
+void _showError(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
 }
 
 Route _createRoute(Widget page) {

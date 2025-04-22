@@ -57,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), // Back icon
           onPressed: () {
-            Navigator.pop(context); // Use pop to go back to the previous page
+            Navigator.pop(context, 'backToHome'); // Use pop to go back to the previous page
           },
         ),
       ),

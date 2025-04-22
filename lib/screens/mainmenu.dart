@@ -31,16 +31,26 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
 
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
+  if (index == 0) {
     setState(() {
-      _selectedIndex = index;
+      _selectedIndex = 0;
     });
+  } else if (index == 1) {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfilePage()),
+    );
 
-    if (index == 0) {
-    } else if (index == 1) {
-      Navigator.pushNamed(context, '/profile');
+    // If user came back and asked to reset to home
+    if (result == 'backToHome') {
+      setState(() {
+        _selectedIndex = 0;
+      });
     }
   }
+}
+
 
   @override
   void dispose() {
