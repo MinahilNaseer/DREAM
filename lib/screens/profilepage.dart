@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../widgets/listwidgetprofile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/screens/editpage.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic> childData;
@@ -106,8 +108,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: Icons.edit,
                             title: "Edit Personal Information",
                             onTap: () {
-                              // Handle edit personal information functionality
-                              Navigator.pushNamed(context, "/edit");
+                              Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => EditProfilePage(
+      childData: widget.childData,
+      childId: widget.childData['id'],
+    ),
+  ),
+);
                             },
                           ),
                           const Divider(),

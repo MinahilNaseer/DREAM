@@ -79,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            labelText: 'Name of Child',
+                            labelText: 'Full Name of Child',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -254,25 +254,39 @@ void _signUp() async {
   String relation = relationController.text;
   String email = emailController.text;
   String password = passwordController.text;
-  String childGender = selectedGender ?? ''; // Gender of parent/guardian
+  String childGender = selectedGender ?? ''; 
 
-  User? user = await _auth.signUpWithEmailAndChild(
-    email: email,
-    password: password,
-    relation: relation,
-    //parentGender: parentGender,
-    childName: childName,
-    childBirthdate: childBirthdate,
-    childGender: childGender, // Optional: Add another dropdown if you want child's gender separately
-  );
+  try {
+    User? user = await _auth.signUpWithEmailAndChild(
+      email: email,
+      password: password,
+      relation: relation,
+      childName: childName,
+      childBirthdate: childBirthdate,
+      childGender: childGender, 
+    );
 
-  if (user != null) {
-    print("User and child registered successfully.");
-    Navigator.pushNamed(context, "/login");
-  } else {
-    print("Registration failed.");
+    if (user != null) {
+      print("User and child registered successfully.");
+      Navigator.pushNamed(context, "/login");
+    } else {
+      _showErrorSnackBar("Registration failed. Please try again.");
+    }
+  } catch (e) {
+    print("Registration exception: $e");
+    _showErrorSnackBar("An error occurred during registration.");
   }
 }
+void _showErrorSnackBar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
 
 
 }

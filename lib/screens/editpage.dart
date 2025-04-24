@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
+  final Map<String, dynamic> childData;
+final String childId;
+  const EditProfilePage({super.key,required this.childData, required this.childId});
 
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
@@ -18,58 +20,60 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  Future<void> _loadUserData() async {
-    try {
-      DocumentSnapshot<Map<String, dynamic>> userDoc = await _firestoreService.getUserData();
-      if (userDoc.exists) {
-        _nameController.text = userDoc.data()?['name'] ?? '';
-        _passwordController.text = userDoc.data()?['password'] ?? ''; // Load the password
-        _gender = userDoc.data()?['gender'] ?? '';
-        setState(() {});
-      }
-    } catch (e) {
-      print("Error loading user data: $e");
+     super.initState();
+  _nameController.text = widget.childData['name'] ?? '';
+  _gender = widget.childData['gender'] ?? '';
+  // Fetch password from parent document
+  FirebaseFirestore.instance
+      .collection('users')
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .get()
+      .then((doc) {
+    if (doc.exists) {
+      setState(() {
+        _passwordController.text = doc['password'] ?? '';
+      });
     }
+  }).catchError((e) {
+    print("Error fetching password: $e");
+  });
   }
 
   Future<void> _updateUserData() async {
-    final updatedData = {
-      'name': _nameController.text,
-      'gender': _gender,
-      'password': _passwordController.text, // Directly assign the new password
-    };
+  final updatedChildData = {
+    'name': _nameController.text,
+    'gender': _gender,
+    'updatedAt': FieldValue.serverTimestamp(),
+  };
 
-    try {
-      // Update Firestore user data
-      await _firestoreService.updateUserData(updatedData);
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // update child under the current parent
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('children')
+          .doc(widget.childId)
+          .update(updatedChildData);
 
-      // Update the user's password in Firebase Auth
-      User? user = FirebaseAuth.instance.currentUser;
+      await FirebaseFirestore.instance
+    .collection('users')
+    .doc(user.uid)
+    .update({'password': _passwordController.text});
 
-      if (user != null) {
-        // Update password
-        await user.updatePassword(_passwordController.text);
-        // Sign out the user after updating
-        await FirebaseAuth.instance.signOut();
+      // Update password
+      await user.updatePassword(_passwordController.text);
 
-        // Sign in again with the updated password
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: user.email!, // Reuse the current email for signing back in
-          password: _passwordController.text,
-        );
-
-        _showSnackBar("Updated Info");
-        Navigator.pop(context); // Return to the ProfilePage after saving
-      }
-    } catch (e) {
-      print("Error updating user data: $e");
-      _showSnackBar("Error updating user info");
+      _showSnackBar("Profile updated successfully!");
+      Navigator.pop(context);
     }
+  } catch (e) {
+    print("Error updating profile: $e");
+    _showSnackBar("Failed to update profile");
   }
+}
+
 
   void _showSnackBar(String message) {
     final snackBar = SnackBar(
@@ -128,7 +132,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 16),
                     _buildGenderDropdown(),
                     const SizedBox(height: 16),
-                    _buildTextField(_passwordController, 'Password', TextInputType.visiblePassword), // Show password as normal text
+                    _buildTextField(_passwordController, 'Password', TextInputType.visiblePassword, true), // Show password as normal text
                     const SizedBox(height: 20),
                     Center(
                       child: ElevatedButton(
@@ -153,24 +157,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String labelText, [TextInputType keyboardType = TextInputType.text]) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30), // Match the rounded corners
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Colors.purple), // Focus color
-        ),
-        filled: true,
-        fillColor: Colors.white,
+  Widget _buildTextField(
+  TextEditingController controller,
+  String labelText,
+  [TextInputType keyboardType = TextInputType.text,
+  bool obscure = false]) {
+
+  return TextField(
+    controller: controller,
+    keyboardType: keyboardType,
+    obscureText: obscure,
+    decoration: InputDecoration(
+      labelText: labelText,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
       ),
-      keyboardType: keyboardType,
-    );
-  }
+      filled: true,
+      fillColor: Colors.white,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: const BorderSide(color: Colors.purple),
+      ),
+    ),
+  );
+}
 
   Widget _buildGenderDropdown() {
     return DropdownButtonFormField<String>(
