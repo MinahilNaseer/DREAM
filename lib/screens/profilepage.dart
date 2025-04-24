@@ -4,49 +4,28 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final Map<String, dynamic> childData;
+
+  const ProfilePage({super.key, required this.childData});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String _gender = 'Male'; // Default value
-  String _email = ''; // For storing user's email
+  late String _gender;
+  late String _childName;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _childName = widget.childData['name'] ?? 'Child';
+    _gender = widget.childData['gender'] ?? 'Male';
+    _isLoading = false;
   }
 
-  Future<void> _loadUserData() async {
-    try {
-      // Fetch user data from Firestore
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        _email = user.email!.split('@')[0]; // Get user's email and remove the domain part
-
-        DocumentSnapshot<Map<String, dynamic>> userDoc = await FirebaseFirestore.instance
-            .collection('users') // Replace with your actual collection
-            .doc(user.uid) // Assuming user's UID is the document ID
-            .get();
-
-        if (userDoc.exists) {
-          setState(() {
-            _gender = userDoc.data()?['gender'] ?? 'Male'; // Get gender from Firestore
-            _isLoading = false; // Stop loading once data is fetched
-          });
-        }
-      }
-    } catch (e) {
-      print("Error fetching user data: $e");
-      setState(() {
-        _isLoading = false; // Stop loading even if there's an error
-      });
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), // Back icon
           onPressed: () {
-            Navigator.pop(context); // Use pop to go back to the previous page
+            Navigator.pop(context, 'backToHome'); // Use pop to go back to the previous page
           },
         ),
       ),
@@ -90,7 +69,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'Welcome, $_email', // Display "Welcome" with user's email (without domain)
+                          'Welcome, $_childName', // Display "Welcome" with user's email (without domain)
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
