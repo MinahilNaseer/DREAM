@@ -131,7 +131,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         DropdownButtonFormField<String>(
                           value: selectedGender,
                           decoration: InputDecoration(
-                            labelText: 'Gender',
+                            labelText: 'Child Gender',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -249,28 +249,30 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
 void _signUp() async {
-  String name = nameController.text;
-  String birthdate = birthdateController.text;
+  String childName = nameController.text;
+  String childBirthdate = birthdateController.text;
   String relation = relationController.text;
   String email = emailController.text;
   String password = passwordController.text;
-  String gender = selectedGender ?? ''; // Ensure gender is not null
+  String childGender = selectedGender ?? ''; // Gender of parent/guardian
 
-  User? user = await _auth.signUpWithEmailAndPassword(
-    email, 
-    password, 
-    name, 
-    birthdate, 
-    relation, 
-    gender
+  User? user = await _auth.signUpWithEmailAndChild(
+    email: email,
+    password: password,
+    relation: relation,
+    //parentGender: parentGender,
+    childName: childName,
+    childBirthdate: childBirthdate,
+    childGender: childGender, // Optional: Add another dropdown if you want child's gender separately
   );
 
   if (user != null) {
-    print("User successfully registered and data stored in Firestore.");
-    Navigator.pushNamed(context, "/login"); 
+    print("User and child registered successfully.");
+    Navigator.pushNamed(context, "/login");
   } else {
-    print("Some error occurred");
+    print("Registration failed.");
   }
 }
+
 
 }

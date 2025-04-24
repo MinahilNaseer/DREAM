@@ -3,6 +3,9 @@ import 'package:dream/screens/registerpage.dart';
 import 'package:dream/u_auth/firebase_auth/firebase_auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/screens/addchildpage.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -201,12 +204,7 @@ class _LoginPageState extends State<LoginPage> {
   String password = passwordController.text;
 
   if (email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Please fill in both email and password."),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
+    _showError("Please fill in both email and password.");
     return;
   }
 
@@ -214,15 +212,98 @@ class _LoginPageState extends State<LoginPage> {
     User? user = await _auth.signInWithEmailAndPassword(email, password);
     if (user != null) {
       print("User successfully Logged In");
-      Navigator.pushNamed(context, "/mainmenu");
+
+      // Fetch children from Firestore
+      QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .get();
+
+      List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
+
+      if (children.isEmpty) {
+        _showError("No child found under this account. Please register at least one.");
+        return;
+      } else {
+        // Multiple children — show selection dialog
+        _showChildSelectionDialog(children);
+      }
     } else {
       _showError("Login failed. Please check your credentials.");
     }
   } catch (e) {
-    _showError("Incorrect email or password. Please try again.");
     print("Login error: $e");
+    _showError("Incorrect email or password. Please try again.");
   }
 }
+
+void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Select a Child"),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Child List
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: children.length,
+                itemBuilder: (context, index) {
+                  var child = children[index].data() as Map<String, dynamic>;
+                  return ListTile(
+                    leading: const Icon(Icons.child_care, color: Colors.purple),
+                    title: Text(child['name']),
+                    subtitle: Text("Birthdate: ${child['birthdate']}"),
+                    onTap: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MainMenu(childData: child),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            // Add New Child Button
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text("Add Another Child"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: () async {
+  Navigator.pop(context); // Close dialog
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const AddChildPage()),
+  );
+
+  // Refresh dialog if child was added
+  if (result == 'child_added') {
+    _logIn(); // Triggers refetch and opens dialog again
+  }
+},
+            )
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+
 
 void _showError(String message) {
   ScaffoldMessenger.of(context).showSnackBar(

@@ -10,7 +10,8 @@ import '../game/scenicgame.dart';
 import '../screens/videoplayerscreen.dart';
 
 class MainMenu extends StatefulWidget {
-  const MainMenu({super.key});
+  final Map<String, dynamic> childData;
+  const MainMenu({super.key,required this.childData});
 
   @override
   _MainMenuState createState() => _MainMenuState();
@@ -39,7 +40,7 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   } else if (index == 1) {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ProfilePage()),
+      MaterialPageRoute(builder: (context) => ProfilePage(childData: widget.childData)),
     );
 
     // If user came back and asked to reset to home
