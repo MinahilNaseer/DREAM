@@ -168,51 +168,58 @@ def extract_features(image_path):
 def predict():
     try:
         data = request.json
-        print(f"Received data: {data}")  
+        print(f"Received data: {data}")
+        
         uid = data.get("uid")
-        if not uid:
-            return jsonify({"error": "UID is missing from the request"}), 400
-        features = np.array(data['features']).reshape(1, -1)
+        child_id = data.get("childId")
+        features = data.get("features")
+
+        if not uid or not child_id or not features:
+            return jsonify({"error": "UID, childId or features are missing from the request"}), 400
+
+        features = np.array(features).reshape(1, -1)
         prediction = model.predict(features)[0]
-      
-        store_prediction_in_firestore(uid, features.tolist(), int(prediction))
-        return jsonify({
-            'prediction': int(prediction),
-        })
+
+        # Store prediction under specific child
+        store_prediction_in_firestore(uid, child_id, features.tolist(), int(prediction))
+
+        return jsonify({'prediction': int(prediction)})
 
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
-    
-def store_prediction_in_firestore(uid, features, prediction):
+
+
+def store_prediction_in_firestore(uid, child_id, features, prediction):
     try:
-       
         features_dict = {f"feature_{i}": feature for i, feature in enumerate(features)}
-        user_ref = db.collection('users').document(uid)
-        predictions_ref = user_ref.collection('predictions')
+        child_ref = db.collection('users').document(uid).collection('children').document(child_id)
+        predictions_ref = child_ref.collection('predictions')
+
         predictions_ref.add({
             **features_dict,
             'prediction': prediction,
             'timestamp': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"Prediction stored for UID: {uid} under 'predictions' subcollection")
+        print(f"Prediction stored for UID: {uid}, Child ID: {child_id}")
+
         all_predictions = predictions_ref.stream()
         prediction_count = sum(1 for _ in all_predictions)
 
-        print(f"Total predictions so far: {prediction_count}")
+        print(f"Total predictions so far for this child: {prediction_count}")
 
-        # If 5 predictions, trigger summary report
         if prediction_count == 5:
-            generate_and_store_summary_report(uid)
+            generate_and_store_summary_report(uid, child_id)
 
     except Exception as e:
         print(f"Error storing data in Firestore: {e}")
 
-def generate_and_store_summary_report(uid):
+
+def generate_and_store_summary_report(uid, child_id):
     try:
-        # Fetch predictions
-        predictions_ref = db.collection('users').document(uid).collection('predictions')
+        # Fetch last 5 predictions
+        predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('predictions')
         predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
         prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
 
@@ -220,15 +227,15 @@ def generate_and_store_summary_report(uid):
             print("Not enough predictions to generate a report.")
             return
 
-        # Fetch child's name from user document
-        user_doc = db.collection('users').document(uid).get()
-        if not user_doc.exists:
-            print("User document not found.")
+        # Fetch child name
+        child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
+        if not child_doc.exists:
+            print("Child document not found.")
             return
-        user_data = user_doc.to_dict()
-        name = user_data.get("name", "The child")
+        child_data = child_doc.to_dict()
+        name = child_data.get("name", "The child")
 
-        # Structured prompt for Gemini
+        # Prompt for Gemini
         prompt = f"""
 Generate a professional and parent-friendly summary report for dyscalculia screening following this format:
 
@@ -255,16 +262,17 @@ Return the output exactly in the format above.
         response = model.generate_content(prompt)
         summary = response.text
 
-        # Store the report in Firestore
-        db.collection('users').document(uid).update({
+        # Store report under the child document
+        db.collection('users').document(uid).collection('children').document(child_id).update({
             'dyscalculia_report': summary,
             'report_generated_at': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"✅ Gemini summary report generated and stored for UID: {uid}")
+        print(f"✅ Summary report generated and stored for UID: {uid}, Child ID: {child_id}")
 
     except Exception as e:
         print(f"❌ Error generating summary report: {e}")
+
 
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():

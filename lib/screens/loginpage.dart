@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/screens/addchildpage.dart';
-
+import 'package:dream/global.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -255,11 +255,13 @@ void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
                 itemCount: children.length,
                 itemBuilder: (context, index) {
                   var child = children[index].data() as Map<String, dynamic>;
+                  String id = children[index].id;
                   return ListTile(
                     leading: const Icon(Icons.child_care, color: Colors.purple),
                     title: Text(child['name']),
                     subtitle: Text("Birthdate: ${child['birthdate']}"),
                     onTap: () {
+                      currentSelectedChildId = id; 
                       Navigator.pop(context); // Close dialog
                       Navigator.push(
                         context,
