@@ -133,7 +133,20 @@
                               ),
                               obscureText: true, 
                             ),
-                            const SizedBox(height: 24), 
+                            Align(
+  alignment: Alignment.centerRight,
+  child: TextButton(
+    onPressed: _showForgotPasswordDialog,
+    child: const Text(
+      "Forgot Password?",
+      style: TextStyle(
+        color: Colors.purple,
+        fontSize: 14,
+        decoration: TextDecoration.underline,
+      ),
+    ),
+  ),
+),
                             
                             SizedBox(
                               width: 150,
@@ -232,7 +245,7 @@
       if (user != null) {
         print("User successfully Logged In");
 
-        // Fetch children from Firestore
+        
         QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -309,7 +322,7 @@
                   ),
                   subtitle: Text("Birthdate: ${child['birthdate']}"),
                   onTap: () {
-                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -331,14 +344,14 @@
                     MaterialPageRoute(builder: (context) => const AddChildPage()),
                   );
                   if (result == 'child_added') {
-                    _logIn(); // Refreshes the list
+                    _logIn(); 
                   }
                 },
-                icon: const Icon(Icons.add),
-                label: const Text("Add Another Child"),
+                icon: const Icon(Icons.add, color: Colors.white),
+                label: const Text("Add Another Child", style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.purple,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -352,6 +365,50 @@
     ),
   );
 }
+void _showForgotPasswordDialog() {
+  final TextEditingController _forgotEmailController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text("Reset Password"),
+      content: TextField(
+        controller: _forgotEmailController,
+        keyboardType: TextInputType.emailAddress,
+        decoration: const InputDecoration(
+          labelText: "Enter your registered email",
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.purple,
+          ),
+          child: const Text("Send Reset Link"),
+          onPressed: () async {
+            try {
+              await FirebaseAuth.instance.sendPasswordResetEmail(
+                email: _forgotEmailController.text.trim(),
+              );
+              Navigator.pop(context);
+              _showError("Reset link sent to your email.");
+            } catch (e) {
+              Navigator.pop(context);
+              _showError("Error sending reset email. Check email address.");
+            }
+          },
+        ),
+      ],
+    ),
+  );
+}
+
 
 
 
