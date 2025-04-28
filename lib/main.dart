@@ -1,3 +1,4 @@
+import 'package:dream/screens/dysgraphia_report.dart';
 import 'package:dream/screens/initialpage.dart';
 import 'package:dream/screens/mainmenu.dart';
 import 'package:dream/screens/profilepage.dart';
@@ -13,6 +14,7 @@ import 'package:dream/screens/editpage.dart';
 import 'package:dream/game/gamemainscreen.dart';
 import 'package:dream/screens/dyscalculia_report.dart';
 import 'package:dream/screens/reportpage.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
         '/gameMainScreen': (context) => GameMainScreen(),
           '/reports': (context) => const ReportSelectionPage(),
         '/dyscalculia_report': (context) => const DyscalculiaReportPage(),
+        '/dysgraphia_report':(context) => const DysgraphiaReportPage(),
       },
     );
   }

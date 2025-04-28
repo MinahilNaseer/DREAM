@@ -279,6 +279,12 @@ def analyze_handwriting():
     if 'image' not in request.files:
         return jsonify({"error": "No image uploaded"}), 400
 
+    uid = request.form.get('uid')
+    child_id = request.form.get('childId')
+
+    if not uid or not child_id:
+        return jsonify({"error": "UID or childId is missing"}), 400
+
     file = request.files['image']
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -286,12 +292,15 @@ def analyze_handwriting():
 
     try:
         processed_img = preprocess_image(file_path)
-        print("Processed Image Shape:", processed_img.shape)  
+        print("Processed Image Shape:", processed_img.shape)
 
-        prediction = dysgraphia_model.predict(processed_img)[0][0]  
+        prediction = dysgraphia_model.predict(processed_img)[0][0]
 
         cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
         final_result = "Dysgraphia" if cnn_result == "Dysgraphia" else "Non-Dysgraphia"
+
+        # 🧠 Store this prediction in Firestore
+        store_handwriting_prediction_in_firestore(uid, child_id, float(prediction), final_result)
 
         response = {
             "CNN Result": cnn_result,
@@ -301,9 +310,88 @@ def analyze_handwriting():
     except Exception as e:
         return jsonify({"error": f"Processing error: {str(e)}"}), 500
     finally:
-        os.remove(file_path)  
+        os.remove(file_path)
 
     return jsonify(response)
+def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result):
+    try:
+        child_ref = db.collection('users').document(uid).collection('children').document(child_id)
+        handwriting_predictions_ref = child_ref.collection('handwriting_predictions')
+
+        handwriting_predictions_ref.add({
+            'confidence': confidence_score,
+            'result': final_result,
+            'timestamp': firestore.SERVER_TIMESTAMP
+        })
+
+        print(f"Handwriting prediction stored for UID: {uid}, Child ID: {child_id}")
+
+        # Check if 5 predictions are stored
+        all_predictions = handwriting_predictions_ref.stream()
+        prediction_count = sum(1 for _ in all_predictions)
+
+        print(f"Total handwriting predictions so far: {prediction_count}")
+
+        if prediction_count == 5:
+            generate_and_store_handwriting_summary(uid, child_id)
+
+    except Exception as e:
+        print(f"Error storing handwriting prediction: {e}")
+def generate_and_store_handwriting_summary(uid, child_id):
+    try:
+        handwriting_predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('handwriting_predictions')
+        predictions = handwriting_predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
+        prediction_results = [doc.to_dict().get('result') for doc in predictions]
+
+        if len(prediction_results) < 5:
+            print("Not enough handwriting predictions to generate a report.")
+            return
+
+        # Fetch child's name
+        child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
+        if not child_doc.exists:
+            print("Child document not found.")
+            return
+        child_data = child_doc.to_dict()
+        name = child_data.get("name", "The child")
+
+        # Build prompt for Gemini
+        prompt = f"""
+Generate a professional and parent-friendly summary report for dysgraphia screening following this format:
+
+📌 Child’s Name: {name}
+
+📊 Test Overview:
+- Total Handwriting Screenings Taken: 5
+- Prediction Results: {prediction_results}
+
+🧠 Interpretation:
+- If 2 or more results are "Dysgraphia", mention that the child may show signs of dysgraphia.
+- If 3 or more results are "Non-Dysgraphia", mention that the child is less likely to show signs.
+- Use a warm, supportive, and non-clinical tone without labeling the child harshly.
+
+📌 Suggested Next Steps:
+- Suggest 2–3 supportive next actions for parents (e.g., practicing fine motor skills, consulting a specialist if concerned).
+- Keep the tone encouraging and friendly.
+
+Do not mention any external organizations or invite them to contact anyone.
+Return the output strictly following the above format.
+"""
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+        summary = response.text
+
+        # Store report under the child document
+        db.collection('users').document(uid).collection('children').document(child_id).update({
+            'dysgraphia_report': summary,
+            'dysgraphia_report_generated_at': firestore.SERVER_TIMESTAMP
+        })
+
+        print(f"✅ Handwriting summary report generated and stored for UID: {uid}, Child ID: {child_id}")
+
+    except Exception as e:
+        print(f"❌ Error generating handwriting summary report: {e}")
 
 
 
