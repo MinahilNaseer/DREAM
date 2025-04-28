@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ReportSelectionPage extends StatelessWidget {
-  const ReportSelectionPage({super.key});
+    final String? selectedChildId;
+  const ReportSelectionPage({super.key, this.selectedChildId});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class ReportSelectionPage extends StatelessWidget {
             _buildReportCard(
               context,
               title: "Dyscalculia Report",
-              onTap: () => Navigator.pushNamed(context, '/dyscalculia_report'),
+              onTap: () => Navigator.pushNamed(context,'/dyscalculia_report',arguments: selectedChildId),
             ),
             const SizedBox(height: 16),
             _buildReportCard(

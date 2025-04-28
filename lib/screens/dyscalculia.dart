@@ -8,6 +8,7 @@ import 'package:dream/screens/screenclass/cardoption.dart' as cardoption;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import "package:dream/screens/dyscalculia_report.dart";
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class DyscalculiaLevel extends StatefulWidget {
@@ -36,6 +37,8 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
   bool isReadyScreen = true;
   bool isCountingDown = false;
   int countdown = 3;
+
+  String? selectedChildId;
 
   @override
   void initState() {
@@ -323,30 +326,52 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   try {
-      User? user = FirebaseAuth.instance.currentUser;
+    // Get the current user (parent)
+    User? user = FirebaseAuth.instance.currentUser;
     String uid = user?.uid ?? 'no_uid_found';
 
-    final String urlString = dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
-    final Uri url = Uri.parse(urlString); 
+    // Fetch all children under the current user
+    QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('children')
+        .get();
 
-    print("Sending data: ${dataPayload.values.toList()}");
-    print("URL: $url");
+    if (childrenSnapshot.docs.isEmpty) {
+      print("No children found for this user.");
+      return;
+    }
 
+    final String urlString =
+        dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
+    final Uri url = Uri.parse(urlString);
 
-    
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"uid": uid,"features": dataPayload.values.toList()}),
-    );
+    // Loop through each child
+    for (var childDoc in childrenSnapshot.docs) {
+            selectedChildId = childDoc.id;
 
-    if (response.statusCode == 200) {
-      final prediction = jsonDecode(response.body)['prediction'];
-      print(prediction == 1
-          ? "The child may have dyscalculia."
-          : "The child does not show signs of dyscalculia.");
-    } else {
-      print("Failed to get prediction. Status code: ${response.statusCode}");
+      print("Sending data for childId: $selectedChildId");
+      print("Data: ${dataPayload.values.toList()}");
+      print("URL: $url");
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "uid": uid,
+          "childId": selectedChildId,
+          "features": dataPayload.values.toList(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final prediction = jsonDecode(response.body)['prediction'];
+        print(prediction == 1
+            ? "The child ($selectedChildId) may have dyscalculia."
+            : "The child ($selectedChildId) does not show signs of dyscalculia.");
+      } else {
+        print("Failed for child ($selectedChildId). Status: ${response.statusCode}");
+      }
     }
   } catch (e) {
     print("Error sending data to backend: $e");
@@ -384,12 +409,10 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
               const SizedBox(height: 20),
               ElevatedButton(
   onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const DyscalculiaReportPage(),
-      ),
-    );
+    Navigator.pushNamed(
+  context,
+  '/dyscalculia_report'
+);
   },
   child: Row(
     mainAxisAlignment: MainAxisAlignment.center,

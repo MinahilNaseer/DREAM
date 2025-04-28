@@ -32,8 +32,8 @@ class FirebaseAuthService {
           'createdAt': Timestamp.now(),
         });
 
-        // Store child info in a subcollection called "children"
-        await _firestore
+        // Add child info and capture the DocumentReference
+        DocumentReference childRef = await _firestore
             .collection('users')
             .doc(user.uid)
             .collection('children')
@@ -42,6 +42,11 @@ class FirebaseAuthService {
           'birthdate': childBirthdate,
           'gender': childGender,
           'createdAt': Timestamp.now(),
+        });
+
+        // Update the child document with its own ID as 'childId'
+        await childRef.update({
+          'childId': childRef.id,
         });
       }
 
