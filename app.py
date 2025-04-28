@@ -246,7 +246,7 @@ Generate a professional and parent-friendly summary report for dyscalculia scree
 - Prediction Outcomes: {prediction_values}
 
 🧠 Interpretation:
-- Analyze the predictions. If 3 or more are 1, state that the child may show signs of dyscalculia.
+- Analyze the predictions. If 2 or more are 1, state that the child is likely to show signs of dyscalculia.
 - If 3 or more are 0, state that the child is less likely to show signs.
 - Provide a warm, encouraging interpretation that avoids harsh labels.
 
