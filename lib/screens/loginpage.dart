@@ -284,87 +284,171 @@
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Select a Child",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple,
-              ),
-            ),
-            const SizedBox(height: 15),
-            ListView.separated(
-              separatorBuilder: (_, __) => const Divider(),
-              shrinkWrap: true,
-              itemCount: children.length,
-              itemBuilder: (context, index) {
-                var child = children[index].data() as Map<String, dynamic>;
-                child['id'] = children[index].id;
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.purple.shade100,
-                    child: const Icon(Icons.child_care, color: Colors.purple),
-                  ),
-                  title: Text(
-                    child['name'],
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text("Birthdate: ${child['birthdate']}"),
-                  onTap: () {
-                    Navigator.pop(context); 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MainMenu(childData: child),
-                      ),
-                    );
-                  },
+    builder: (context) => StatefulBuilder(
+      builder: (context, setStateDialog) {
+        bool isDeleting = false;
+
+        Future<void> deleteChild(String childId) async {
+          setStateDialog(() => isDeleting = true);
+
+          try {
+            User? user = FirebaseAuth.instance.currentUser;
+            if (user != null) {
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .collection('children')
+                  .doc(childId)
+                  .delete();
+
+              // Fetch updated children list
+              QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(user.uid)
+                  .collection('children')
+                  .get();
+
+              List<QueryDocumentSnapshot> updatedChildren = updatedSnapshot.docs;
+
+              if (updatedChildren.isEmpty) {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddChildPage()),
                 );
-              },
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AddChildPage()),
-                  );
-                  if (result == 'child_added') {
-                    _logIn(); 
-                  }
-                },
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text("Add Another Child", style: TextStyle(color: Colors.white)),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.purple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+              } else {
+                setStateDialog(() {
+                  children.clear();
+                  children.addAll(updatedChildren);
+                  isDeleting = false;
+                });
+              }
+            }
+          } catch (e) {
+            print("Delete error: $e");
+            setStateDialog(() => isDeleting = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Error deleting child")),
+            );
+          }
+        }
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Select a Child",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
                   ),
-                  textStyle: const TextStyle(fontSize: 16),
                 ),
-              ),
+                const SizedBox(height: 15),
+                isDeleting
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: CircularProgressIndicator(color: Colors.purple),
+                      )
+                    : ListView.separated(
+                        separatorBuilder: (_, __) => const Divider(),
+                        shrinkWrap: true,
+                        itemCount: children.length,
+                        itemBuilder: (context, index) {
+                          var child = children[index].data() as Map<String, dynamic>;
+                          String childId = children[index].id;
+                          child['id'] = childId;
+
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.purple.shade100,
+                              child: const Icon(Icons.child_care, color: Colors.white),
+                            ),
+                            title: Text(
+                              child['name'],
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text("Birthdate: ${child['birthdate']}"),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                // Confirm before deleting
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text("Confirm Deletion"),
+                                    content: Text("Are you sure you want to delete ${child['name']}?"),
+                                    actions: [
+                                      TextButton(
+                                        child: const Text("Cancel"),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                        child: const Text("Delete"),
+                                        onPressed: () {
+                                          Navigator.pop(context); 
+                                          deleteChild(childId);
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MainMenu(childData: child),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddChildPage()),
+                      );
+                      if (result == 'child_added') {
+                        _logIn(); 
+                      }
+                    },
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text("Add Another Child", style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: Colors.purple,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      textStyle: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     ),
   );
 }
+
 void _showForgotPasswordDialog() {
   final TextEditingController _forgotEmailController = TextEditingController();
 
