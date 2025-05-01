@@ -29,7 +29,6 @@ class FirebaseAuthService {
           'uid': user.uid,
           'createdAt': Timestamp.now(),
         });
-
         await _firestore
             .collection('users')
             .doc(user.uid)
@@ -39,6 +38,11 @@ class FirebaseAuthService {
           'birthdate': childBirthdate,
           'gender': childGender,
           'createdAt': Timestamp.now(),
+        });
+
+        // Update the child document with its own ID as 'childId'
+        await childRef.update({
+          'childId': childRef.id,
         });
       }
 

@@ -1,28 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart'; // make sure this has currentSelectedChildId
 
 class DyscalculiaReportPage extends StatelessWidget {
   const DyscalculiaReportPage({super.key});
 
   Future<String?> _fetchReport() async {
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
 
-    DocumentSnapshot doc = await FirebaseFirestore.instance
+    if (user == null) {
+      throw Exception('User not logged in.');
+    }
+    if (currentSelectedChildId == null) {
+      throw Exception('No child selected.');
+    }
+
+    DocumentSnapshot childDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
         .get();
 
-    return doc['dyscalculia_report'] ?? "No report available.";
+    if (!childDoc.exists) {
+      throw Exception('Child document not found.');
+    }
+
+    return childDoc['dyscalculia_report'] ?? "No report available.";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50, // Softer background
+      backgroundColor: Colors.purple.shade50,
       appBar: AppBar(
-        backgroundColor: Colors.purple.shade200, // More vibrant app bar
+        backgroundColor: Colors.purple.shade200,
         elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -46,12 +59,24 @@ class DyscalculiaReportPage extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return const Center(
-              child: Text(
-                "Error loading report.",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.redAccent,
+            // 📋 Show the actual error message
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  color: Colors.red.shade100,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      "Error: ${snapshot.error}",
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             );
@@ -59,10 +84,7 @@ class DyscalculiaReportPage extends StatelessWidget {
 
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(
-              child: Text(
-                "No report available.",
-                style: TextStyle(fontSize: 18, color: Colors.black54),
-              ),
+              child: Text("No report available."),
             );
           }
 
@@ -77,7 +99,7 @@ class DyscalculiaReportPage extends StatelessWidget {
                 padding: const EdgeInsets.all(20.0),
                 child: SingleChildScrollView(
                   child: Container(
-                    width: double.infinity,  // Ensure width is constrained
+                    width: double.infinity,
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
                       color: Colors.white,
