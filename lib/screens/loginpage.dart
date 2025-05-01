@@ -301,7 +301,7 @@
                   .doc(childId)
                   .delete();
 
-              // Fetch updated children list
+              
               QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
                   .collection('users')
                   .doc(user.uid)
@@ -378,7 +378,7 @@
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
-                                // Confirm before deleting
+                                 
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -391,7 +391,10 @@
                                       ),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                        child: const Text("Delete"),
+                                        child: const Text("Delete",
+                                        style: TextStyle(
+                                          color: Colors.white
+                                        )),
                                         onPressed: () {
                                           Navigator.pop(context); 
                                           deleteChild(childId);
