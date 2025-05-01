@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image/image.dart' as img;
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DysgraphiaScreen extends StatefulWidget {
   @override
@@ -91,6 +93,10 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
       request.files
           .add(await http.MultipartFile.fromPath('image', resizedImage.path));
       request.fields['word'] = _selectedWord!;
+      request.fields['uid'] = FirebaseAuth.instance.currentUser?.uid ?? "default_uid"; // Dynamically get UID
+    request.fields['childId'] = currentSelectedChildId!; 
+    print("Sending UID: ${FirebaseAuth.instance.currentUser?.uid}");
+    print("Sending Child ID: $currentSelectedChildId");
 
       var response = await request.send();
       if (response.statusCode == 200) {
