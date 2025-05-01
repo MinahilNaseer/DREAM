@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/screens/addchildpage.dart';
+import 'package:dream/global.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
