@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Text(
+                          Text(
                             "Login",
                             style: TextStyle(
                               fontSize: 36,
@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.purple,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
                             "Sign in to continue",
                             style: TextStyle(
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 30),
+                          SizedBox(height: 30),
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 25),
+                          SizedBox(height: 25),
                           TextFormField(
                             controller: passwordController,
                             decoration: InputDecoration(
@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -277,8 +277,6 @@ class _LoginPageState extends State<LoginPage> {
 
           Future<void> deleteChild(String childId) async {
             setStateDialog(() => isDeleting = true);
-          Future<void> deleteChild(String childId) async {
-            setStateDialog(() => isDeleting = true);
 
             try {
               User? user = FirebaseAuth.instance.currentUser;
@@ -290,21 +288,7 @@ class _LoginPageState extends State<LoginPage> {
                     .doc(childId)
                     .delete();
 
-                QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user.uid)
-                    .collection('children')
-                    .get();
-            try {
-              User? user = FirebaseAuth.instance.currentUser;
-              if (user != null) {
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user.uid)
-                    .collection('children')
-                    .doc(childId)
-                    .delete();
-
+                // Fetch updated children list
                 QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
                     .collection('users')
                     .doc(user.uid)
@@ -313,32 +297,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 List<QueryDocumentSnapshot> updatedChildren =
                     updatedSnapshot.docs;
-                List<QueryDocumentSnapshot> updatedChildren =
-                    updatedSnapshot.docs;
 
-                if (updatedChildren.isEmpty) {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const AddChildPage()),
-                  );
-                } else {
-                  setStateDialog(() {
-                    children.clear();
-                    children.addAll(updatedChildren);
-                    isDeleting = false;
-                  });
-                }
-              }
-            } catch (e) {
-              print("Delete error: $e");
-              setStateDialog(() => isDeleting = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Error deleting child")),
-              );
-            }
-          }
                 if (updatedChildren.isEmpty) {
                   Navigator.pop(context);
                   Navigator.pushReplacement(
@@ -396,46 +355,13 @@ class _LoginPageState extends State<LoginPage> {
                                 children[index].data() as Map<String, dynamic>;
                             String childId = children[index].id;
                             child['id'] = childId;
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Select a Child",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.purple,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  isDeleting
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
-                          child:
-                              CircularProgressIndicator(color: Colors.purple),
-                        )
-                      : ListView.separated(
-                          separatorBuilder: (_, __) => const Divider(),
-                          shrinkWrap: true,
-                          itemCount: children.length,
-                          itemBuilder: (context, index) {
-                            var child =
-                                children[index].data() as Map<String, dynamic>;
-                            String childId = children[index].id;
-                            child['id'] = childId;
 
                             return ListTile(
                               contentPadding: EdgeInsets.zero,
                               leading: CircleAvatar(
                                 backgroundColor: Colors.purple.shade100,
                                 child: const Icon(Icons.child_care,
-                                    color: Colors.white),
+                                    color: Colors.purple),
                               ),
                               title: Text(
                                 child['name'],
@@ -448,6 +374,7 @@ class _LoginPageState extends State<LoginPage> {
                                 icon:
                                     const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () {
+                                  // Confirm before deleting
                                   showDialog(
                                     context: context,
                                     builder: (context) => AlertDialog(
@@ -463,11 +390,10 @@ class _LoginPageState extends State<LoginPage> {
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                               backgroundColor: Colors.red),
-                                          child: const Text("Delete",
-                                              style: TextStyle(
-                                                  color: Colors.white)),
+                                          child: const Text("Delete"),
                                           onPressed: () {
-                                            Navigator.pop(context);
+                                            Navigator.pop(
+                                                context); // Close confirmation
                                             deleteChild(childId);
                                           },
                                         )
@@ -501,102 +427,7 @@ class _LoginPageState extends State<LoginPage> {
                               builder: (context) => const AddChildPage()),
                         );
                         if (result == 'child_added') {
-                          _logIn();
-                        }
-                      },
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      label: const Text("Add Another Child",
-                          style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.purple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        textStyle: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.purple.shade100,
-                                child: const Icon(Icons.child_care,
-                                    color: Colors.white),
-                              ),
-                              title: Text(
-                                child['name'],
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle:
-                                  Text("Birthdate: ${child['birthdate']}"),
-                              trailing: IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text("Confirm Deletion"),
-                                      content: Text(
-                                          "Are you sure you want to delete ${child['name']}?"),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text("Cancel"),
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red),
-                                          child: const Text("Delete",
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            deleteChild(childId);
-                                          },
-                                        )
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                              onTap: () {
-                                Navigator.pop(context);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        MainMenu(childData: child),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const AddChildPage()),
-                        );
-                        if (result == 'child_added') {
-                          _logIn();
+                          _logIn(); // Refresh the dialog
                         }
                       },
                       icon: const Icon(Icons.add, color: Colors.white),

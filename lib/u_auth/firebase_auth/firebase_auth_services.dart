@@ -29,7 +29,8 @@ class FirebaseAuthService {
           'uid': user.uid,
           'createdAt': Timestamp.now(),
         });
-        await _firestore
+        // Add child info and capture the DocumentReference
+        DocumentReference childRef = await _firestore
             .collection('users')
             .doc(user.uid)
             .collection('children')
