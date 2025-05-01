@@ -12,13 +12,14 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-class _LoginPageState extends State<LoginPage> {
 
+class _LoginPageState extends State<LoginPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
- @override
+  @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
@@ -28,21 +29,22 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, 
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView( 
+          child: Stack(children: [
+        SingleChildScrollView(
           child: Column(
             children: [
               SizedBox(
-                height: 300, 
-                width: MediaQuery.of(context).size.width, 
+                height: 300,
+                width: MediaQuery.of(context).size.width,
                 child: Stack(
                   children: [
                     Positioned(
                       right: 0,
                       top: 30,
                       child: Image.asset(
-                        'assets/images/—Pngtree—hand-painted cartoon images of children_4346171.png', 
+                        'assets/images/—Pngtree—hand-painted cartoon images of children_4346171.png',
                         height: 250,
                         fit: BoxFit.contain,
                       ),
@@ -53,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          const Text(
+                          Text(
                             "Login",
                             style: TextStyle(
                               fontSize: 36,
@@ -61,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
                               color: Colors.purple,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
                             "Sign in to continue",
                             style: TextStyle(
@@ -75,8 +77,6 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-
-              
               IntrinsicHeight(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.white, 
+                        color: Colors.white,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(30),
                           topRight: Radius.circular(30),
@@ -96,42 +96,52 @@ class _LoginPageState extends State<LoginPage> {
                             color: Colors.grey.withOpacity(0.5),
                             spreadRadius: 5,
                             blurRadius: 7,
-                            offset: const Offset(0, 3), 
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start, 
-                        crossAxisAlignment: CrossAxisAlignment.center, 
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 30), 
-                          
+                          SizedBox(height: 30),
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              prefixIcon: const Icon(Icons.email), 
+                              prefixIcon: const Icon(Icons.email),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 25), 
-                          
+                          SizedBox(height: 25),
                           TextFormField(
                             controller: passwordController,
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock), 
-                              suffixIcon: const Icon(Icons.visibility), 
+                              prefixIcon: const Icon(Icons.lock),
+                              suffixIcon: const Icon(Icons.visibility),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            obscureText: true, 
+                            obscureText: true,
                           ),
-                          const SizedBox(height: 24), 
-                          
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: _showForgotPasswordDialog,
+                              child: const Text(
+                                "Forgot Password?",
+                                style: TextStyle(
+                                  color: Colors.purple,
+                                  fontSize: 14,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ),
                           SizedBox(
                             width: 150,
                             height: 50,
@@ -142,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: _logIn ,
+                              onPressed: _logIn,
                               child: const Text(
                                 'LOG IN',
                                 style: TextStyle(
@@ -152,12 +162,12 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10), 
-                          
+                          SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+                              const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20)),
                               const Text(
                                 "Not Registered Yet? ",
                                 style: TextStyle(fontSize: 16),
@@ -167,174 +177,352 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.push(
                                     context,
                                     _createRoute(const RegisterPage()),
-                                    )
+                                  )
                                 },
-                                child:const Text(
+                                child: const Text(
                                   "Register",
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.purple,
-                                    decoration: TextDecoration.underline
-                                  ),
+                                      fontSize: 16,
+                                      color: Colors.purple,
+                                      decoration: TextDecoration.underline),
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      
                     ),
                   ),
                 ),
               ),
-              
               Image.asset(
                 "assets/images/writing-dy.png",
                 height: 150,
                 width: 600,
-                )
+              )
             ],
           ),
         ),
+        if (_isLoading)
+          Container(
+              color: Colors.black.withOpacity(0.2),
+              child: const Center(
+                  child: CircularProgressIndicator(
+                color: Colors.purple,
+              )))
+      ])),
+    );
+  }
+
+  void _logIn() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError("Please fill in both email and password.");
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      User? user = await _auth.signInWithEmailAndPassword(email, password);
+      if (user != null) {
+        print("User successfully Logged In");
+
+        QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('children')
+            .get();
+
+        List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
+
+        if (children.isEmpty) {
+          setState(() {
+            _isLoading = false;
+          });
+          _showError(
+              "No child found under this account. Please register at least one.");
+          return;
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        _showChildSelectionDialog(children);
+        setState(() {
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        _showError("Login failed. Please check your credentials.");
+      }
+    } catch (e) {
+      print("Login error: $e");
+      _showError("Incorrect email or password. Please try again.");
+    }
+  }
+
+  void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          bool isDeleting = false;
+
+          Future<void> deleteChild(String childId) async {
+            setStateDialog(() => isDeleting = true);
+
+            try {
+              User? user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('children')
+                    .doc(childId)
+                    .delete();
+
+                // Fetch updated children list
+                QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('children')
+                    .get();
+
+                List<QueryDocumentSnapshot> updatedChildren =
+                    updatedSnapshot.docs;
+
+                if (updatedChildren.isEmpty) {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AddChildPage()),
+                  );
+                } else {
+                  setStateDialog(() {
+                    children.clear();
+                    children.addAll(updatedChildren);
+                    isDeleting = false;
+                  });
+                }
+              }
+            } catch (e) {
+              print("Delete error: $e");
+              setStateDialog(() => isDeleting = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Error deleting child")),
+              );
+            }
+          }
+
+          return Dialog(
+            backgroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Select a Child",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  isDeleting
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child:
+                              CircularProgressIndicator(color: Colors.purple),
+                        )
+                      : ListView.separated(
+                          separatorBuilder: (_, __) => const Divider(),
+                          shrinkWrap: true,
+                          itemCount: children.length,
+                          itemBuilder: (context, index) {
+                            var child =
+                                children[index].data() as Map<String, dynamic>;
+                            String childId = children[index].id;
+                            child['id'] = childId;
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.purple.shade100,
+                                child: const Icon(Icons.child_care,
+                                    color: Colors.purple),
+                              ),
+                              title: Text(
+                                child['name'],
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              subtitle:
+                                  Text("Birthdate: ${child['birthdate']}"),
+                              trailing: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  // Confirm before deleting
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text("Confirm Deletion"),
+                                      content: Text(
+                                          "Are you sure you want to delete ${child['name']}?"),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text("Cancel"),
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red),
+                                          child: const Text("Delete"),
+                                          onPressed: () {
+                                            Navigator.pop(
+                                                context); // Close confirmation
+                                            deleteChild(childId);
+                                          },
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                              onTap: () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainMenu(childData: child),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddChildPage()),
+                        );
+                        if (result == 'child_added') {
+                          _logIn(); // Refresh the dialog
+                        }
+                      },
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text("Add Another Child",
+                          style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: Colors.purple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
-  void _logIn() async {
-  String email = emailController.text.trim();
-  String password = passwordController.text;
 
-  if (email.isEmpty || password.isEmpty) {
-    _showError("Please fill in both email and password.");
-    return;
-  }
+  void _showForgotPasswordDialog() {
+    final TextEditingController _forgotEmailController =
+        TextEditingController();
 
-  try {
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
-    if (user != null) {
-      print("User successfully Logged In");
-
-      // Fetch children from Firestore
-      QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('children')
-        .get();
-
-      List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
-
-      if (children.isEmpty) {
-        _showError("No child found under this account. Please register at least one.");
-        return;
-      } else {
-        // Multiple children — show selection dialog
-        _showChildSelectionDialog(children);
-      }
-    } else {
-      _showError("Login failed. Please check your credentials.");
-    }
-  } catch (e) {
-    print("Login error: $e");
-    _showError("Incorrect email or password. Please try again.");
-  }
-}
-
-void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Select a Child"),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Child List
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: children.length,
-                itemBuilder: (context, index) {
-                  var child = children[index].data() as Map<String, dynamic>;
-                  String id = children[index].id;
-                  return ListTile(
-                    leading: const Icon(Icons.child_care, color: Colors.purple),
-                    title: Text(child['name']),
-                    subtitle: Text("Birthdate: ${child['birthdate']}"),
-                    onTap: () {
-                      currentSelectedChildId = id; 
-                      Navigator.pop(context); // Close dialog
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MainMenu(childData: child),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            // Add New Child Button
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text("Add Another Child"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              onPressed: () async {
-  Navigator.pop(context); // Close dialog
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const AddChildPage()),
-  );
-
-  // Refresh dialog if child was added
-  if (result == 'child_added') {
-    _logIn(); // Triggers refetch and opens dialog again
-  }
-},
-            )
-          ],
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Reset Password"),
+        content: TextField(
+          controller: _forgotEmailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: "Enter your registered email",
+            border: OutlineInputBorder(),
+          ),
         ),
+        actions: [
+          TextButton(
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+            ),
+            child: const Text("Send Reset Link"),
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance.sendPasswordResetEmail(
+                  email: _forgotEmailController.text.trim(),
+                );
+                Navigator.pop(context);
+                _showError("Reset link sent to your email.");
+              } catch (e) {
+                Navigator.pop(context);
+                _showError("Error sending reset email. Check email address.");
+              }
+            },
+          ),
+        ],
       ),
-    ),
-  );
-}
+    );
+  }
 
-
-
-void _showError(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.redAccent,
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
-
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }
 
 Route _createRoute(Widget page) {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0); 
-        const end = Offset.zero; 
-        const curve = Curves.easeInOut;
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween);
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
 
-        return SlideTransition(
-          position: offsetAnimation,
-          child: child,
-        );
-      },
-    );
-  }
-
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}

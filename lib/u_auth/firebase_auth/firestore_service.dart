@@ -5,7 +5,6 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Fetches the logged-in parent's info
   Future<DocumentSnapshot<Map<String, dynamic>>> getParentData() async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -14,7 +13,6 @@ class FirestoreService {
     throw Exception("User not logged in");
   }
 
-  /// Updates parent-level information
   Future<void> updateParentData(Map<String, dynamic> data) async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -23,8 +21,6 @@ class FirestoreService {
       throw Exception("User not logged in");
     }
   }
-
-  /// Creates a parent user document in Firestore
   Future<void> createParentProfile(String relation, String email, String gender) async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -44,7 +40,6 @@ class FirestoreService {
     }
   }
 
-  /// Adds a child under the current logged-in parent
   Future<void> addChild({
     required String name,
     required String birthdate,
@@ -66,8 +61,6 @@ class FirestoreService {
       throw Exception("User not logged in");
     }
   }
-
-  /// Fetch all children under the current parent
   Future<List<Map<String, dynamic>>> getChildren() async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -78,11 +71,11 @@ class FirestoreService {
     }
   }
   Future<DocumentSnapshot<Map<String, dynamic>>> getUserData() async {
-  return await getParentData(); // Alias to the new method
+  return await getParentData(); 
 }
 
 Future<void> updateUserData(Map<String, dynamic> data) async {
-  return await updateParentData(data); // Alias to the new method
+  return await updateParentData(data); 
 }
 
 }

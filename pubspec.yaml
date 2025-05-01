@@ -50,6 +50,7 @@ dependencies:
   image: ^4.5.2
   chewie: ^1.10.0
   flutter_markdown: ^0.6.18
+  intl: ^0.20.2
 
 
 

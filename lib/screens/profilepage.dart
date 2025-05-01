@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/listwidgetprofile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/screens/editpage.dart';
 
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic> childData;
@@ -25,24 +26,26 @@ class _ProfilePageState extends State<ProfilePage> {
     _isLoading = false;
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 240, 225, 225), // Transparent background for the AppBar
-        elevation: 0, // Remove the shadow under the AppBar
+        backgroundColor: const Color.fromARGB(255, 240, 225, 225),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), // Back icon
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.purple,
+            size: 30,
+          ),
           onPressed: () {
-            Navigator.pop(context, 'backToHome'); // Use pop to go back to the previous page
+            Navigator.pop(context, 'backToHome');
           },
         ),
       ),
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator()) // Show loading indicator while fetching data
+            ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
                   const Text(
@@ -53,7 +56,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Color(0xFF0D47A1),
                     ),
                   ),
-                  // Upper Part with Profile Image
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -61,15 +63,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Image.asset(
                           _gender == 'Female'
-                              ? 'assets/images/girl-pic.png' // If gender is Female, load girl-pic
-                              : 'assets/images/boy-pic.png',  // If gender is Male or any other value, load boy-pic
+                              ? 'assets/images/girl-pic.png'
+                              : 'assets/images/boy-pic.png',
                           height: 240,
                           width: 240,
                           fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'Welcome, $_childName', // Display "Welcome" with user's email (without domain)
+                          'Welcome, $_childName',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -79,8 +81,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
-
-                  // Bottom Part that takes up the rest of the screen
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
@@ -99,47 +99,61 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          // Edit Personal Information
-                          CustomListTile(
-                            icon: Icons.edit,
-                            title: "Edit Personal Information",
-                            onTap: () {
-                              // Handle edit personal information functionality
-                              Navigator.pushNamed(context, "/edit");
-                            },
-                          ),
-                          const Divider(),
-                          const SizedBox(height: 20),
-                          CustomListTile(
-                            icon: Icons.insert_chart_outlined,
-                            title: "Reports / Results",
-                            onTap: () {
-                               Navigator.pushNamed(context, "/reports");
-                            },
-                          ),
-                          const Divider(),
-                          const SizedBox(height: 20),
-                          CustomListTile(
-                            icon: Icons.help_outline,
-                            title: "Help",
-                            onTap: () {
-                              Navigator.pushNamed(context, "/help");
-                            },
-                          ),
-                          const Divider(),
-                          const SizedBox(height: 20),
-                          CustomListTile(
-                            icon: Icons.logout,
-                            title: "Logout",
-                            onTap: () {
-                              FirebaseAuth.instance.signOut();
-                              Navigator.pushNamed(context, "/login");
-                              // Handle logout functionality
-                            },
-                          ),
-                        ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            CustomListTile(
+                              icon: Icons.edit,
+                              title: "Edit Personal Information",
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditProfilePage(
+                                      childData: widget.childData,
+                                      childId: widget.childData['id'],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const Divider(),
+                            const SizedBox(height: 20),
+                            CustomListTile(
+                              icon: Icons.insert_chart_outlined,
+                              title: "Reports / Results",
+                              onTap: () {
+                                Navigator.pushNamed(context, "/reports");
+                              },
+                            ),
+                            const Divider(),
+                            const SizedBox(height: 20),
+                            CustomListTile(
+                              icon: Icons.help_outline,
+                              title: "Help",
+                              onTap: () {
+                                Navigator.pushNamed(context, "/help");
+                              },
+                            ),
+                            const Divider(),
+                            const SizedBox(height: 20),
+                            CustomListTile(
+                              icon: Icons.logout,
+                              title: "Logout",
+                              onTap: () {
+                                FirebaseAuth.instance.signOut();
+                                Navigator.pushNamed(context, "/login");
+                              },
+                            ),
+                            const Divider(),
+                            const SizedBox(height: 20),
+                            CustomListTile(
+                              icon: Icons.delete_forever,
+                              title: "Delete Guardian Account",
+                              onTap: _confirmDeleteAccount,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -147,5 +161,74 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
       ),
     );
+  }
+
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete Guardian Account"),
+        content: const Text(
+            "Are you sure you want to permanently delete your account and all associated child data? This cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteGuardianAccount();
+            },
+            child: const Text("Delete",
+            style: TextStyle(
+              color: Colors.white
+            ),),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteGuardianAccount() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final uid = user.uid;
+        final childrenSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .collection('children')
+            .get();
+
+        for (final doc in childrenSnapshot.docs) {
+          await doc.reference.delete();
+        }
+
+        await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+
+        await user.delete();
+
+        Navigator.pushNamedAndRemoveUntil(
+            context, "/", (route) => false);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print("Error deleting account: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              "Failed to delete account. Please reauthenticate or try again."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 }

@@ -79,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextFormField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            labelText: 'Name of Child',
+                            labelText: 'Full Name of Child',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
@@ -94,22 +94,57 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-                          controller: birthdateController,
-                          decoration: InputDecoration(
-                            labelText: 'Birthdate',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            prefixIcon: const Icon(Icons.calendar_today),
-                          ),
-                          keyboardType: TextInputType.datetime,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter the birthdate';
-                            }
-                            return null;
-                          },
-                        ),
+  controller: birthdateController,
+  readOnly: true, 
+  onTap: () async {
+    FocusScope.of(context).requestFocus(FocusNode()); 
+
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.purple, 
+              onPrimary: Colors.white, 
+              onSurface: Colors.black, 
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.purple, 
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        birthdateController.text =
+            "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
+      });
+    }
+  },
+  decoration: InputDecoration(
+    labelText: 'Birthdate',
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(30),
+    ),
+    prefixIcon: const Icon(Icons.calendar_today),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please select the birthdate';
+    }
+    return null;
+  },
+),
+
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: relationController,
@@ -254,25 +289,54 @@ void _signUp() async {
   String relation = relationController.text;
   String email = emailController.text;
   String password = passwordController.text;
-  String childGender = selectedGender ?? ''; // Gender of parent/guardian
+  String childGender = selectedGender ?? ''; 
 
-  User? user = await _auth.signUpWithEmailAndChild(
-    email: email,
-    password: password,
-    relation: relation,
-    //parentGender: parentGender,
-    childName: childName,
-    childBirthdate: childBirthdate,
-    childGender: childGender, // Optional: Add another dropdown if you want child's gender separately
-  );
+  try {
+    DateTime enteredBirthdate = DateTime.parse(
+      childBirthdate.split('/').reversed.join('-'),
+    );
+    DateTime today = DateTime.now();
+    int age = today.year - enteredBirthdate.year;
+    if (today.month < enteredBirthdate.month || (today.month == enteredBirthdate.month && today.day < enteredBirthdate.day)) {
+      age--;
+    }
 
-  if (user != null) {
-    print("User and child registered successfully.");
-    Navigator.pushNamed(context, "/login");
-  } else {
-    print("Registration failed.");
+    
+    if (age < 5) {
+      _showErrorSnackBar("Child must be at least 5 years old to register.");
+      return; 
+    }
+
+    User? user = await _auth.signUpWithEmailAndChild(
+      email: email,
+      password: password,
+      relation: relation,
+      childName: childName,
+      childBirthdate: childBirthdate,
+      childGender: childGender, 
+    );
+
+    if (user != null) {
+      print("User and child registered successfully.");
+      Navigator.pushNamed(context, "/login");
+    } else {
+      _showErrorSnackBar("Registration failed. Please try again.");
+    }
+  } catch (e) {
+    print("Registration exception: $e");
+    _showErrorSnackBar("An error occurred during registration.");
   }
 }
+void _showErrorSnackBar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.redAccent,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
 
 
 }
