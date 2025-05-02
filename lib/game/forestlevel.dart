@@ -12,7 +12,9 @@ import 'package:dream/game/class/animalrectangle.dart' as animalrec;
 import 'package:dream/game/class/filledroundreccomp.dart' as roundrec;
 
 import 'package:dream/game/class/dialogueboxcomponent.dart' as diabox;
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class ForestLevel extends FlameGame {
   late SpriteComponent background;
   late roundrec.FilledRoundedRectangleComponent bottomRectangle;
@@ -187,13 +189,20 @@ class ForestLevel extends FlameGame {
       ));
     }
   }
+ int correctAnswers = 0;
+  int totalAttempts = 0;
+  double currentLevelScore = 0.0;
 
   void onRectangleTap(animalrec.AnimalRectangle rectangle) async {
+    totalAttempts++;
+    
     if (!firstAttemptMade) {
       firstAttemptMade = true;
-      firstAttemptAnimal = rectangle.text; 
+      firstAttemptAnimal = rectangle.text;
     }
+    
     retryCount++;
+    
     if (selectedRectangle != null && selectedRectangle != rectangle) {
       selectedRectangle!.unselect();
     }
@@ -202,47 +211,80 @@ class ForestLevel extends FlameGame {
     rectangle.select();
 
     if (rectangle.text == correctAnimal) {
+      correctAnswers++;
+      
       roundData.add({
         'correctAnimal': correctAnimal,
         'firstAttempt': firstAttemptAnimal,
         'retryCount': retryCount,
+        'wasCorrect': true,
+        'timestamp': DateTime.now().toString(),
       });
-      debugPrint('Round Data: $roundData');
-      
-      retryCount = 0; 
+
+      retryCount = 0;
       firstAttemptMade = false;
       showAnimalImage(correctAnimal!);
       await tts.speak("Congratulations! You found the $correctAnimal!");
 
-      
       roundCount++;
 
       if (roundCount < maxRounds) {
-        
         await Future.delayed(Duration(seconds: 6));
         startGame();
       } else {
-        
+        calculateFinalScore();
+        await _storeForestScore();
         onTaskCompleted();
       }
     } else {
+      roundData.add({
+        'attemptedAnimal': rectangle.text,
+        'wasCorrect': false,
+        'timestamp': DateTime.now().toString(),
+      });
+      
       removeAnimalImage();
       await tts.speak("Try again! That's not the right animal.");
     }
   }
-  void onTaskCompleted() async {
-  
-  await tts.speak("Great job! Let's continue our journey.");
 
-  
-  Future.delayed(const Duration(seconds: 3), () {
-    Navigator.of(buildContext!).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => GameWidget(game: Afterforestlevel()),
-      ),
-    );
-  });
-}
+  void calculateFinalScore() {
+    // Score calculation with penalties for incorrect attempts
+    double accuracy = correctAnswers / maxRounds;
+    double efficiency = 1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
+    
+    currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
+    currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+    
+    print('Calculated Forest Level Score: $currentLevelScore/2');
+  }
+Future<void> _storeForestScore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null ) {
+        print('User not authenticated or no child selected');
+        return;
+      }
+
+      final scoresDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('children')
+          .doc(currentSelectedChildId)
+          .collection('dyslexiascore')
+          .doc('game_scores');
+
+      await scoresDoc.set({
+        'forestLevelScore': currentLevelScore,
+      
+      }, SetOptions(merge: true));
+
+      print('🌲 Forest level results saved');
+      
+    } catch (e) {
+      print('🔥 Error storing forest score: $e');
+    }
+  }
 
 
   void showAnimalImage(String animalName) async {
@@ -262,6 +304,18 @@ class ForestLevel extends FlameGame {
   void onRemove() {
     super.onRemove();
     audioPlayer.dispose();
+  }
+  void onTaskCompleted() async {
+    // Show completion message with score
+    await tts.speak("Great job! Lets continue our jouney");
+    
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.of(buildContext!).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => GameWidget(game: Afterforestlevel()),
+        ),
+      );
+    });
   }
 }
 

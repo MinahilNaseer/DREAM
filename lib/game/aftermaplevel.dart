@@ -16,6 +16,9 @@ import 'package:dream/game/class/filledrecwithword.dart' as recwithword;
 import 'package:dream/game/class/filledroundreccomp.dart' as recstart;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:dream/game/class/togglebutton.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Aftermaplevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -386,49 +389,90 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   int correctResponses = 0;
   int incorrectResponses = 0;
 
-  void _onCorrectPronunciation() async {
-    correctResponses++;
-    correctProunicationCount++;
-    speechToText.stop();
-    isRecording = false;
+ int correctPronunciations = 0;
+int totalAttempts = 0;
+double pronunciationLevelScore = 0.0;
 
-    instructionBox.text = "✅ Great! You pronounced it correctly!";
-    print("🟢 Speaking: Great! You pronounced it correctly!");
+// Modify _onCorrectPronunciation to track scores
+void _onCorrectPronunciation() async {
+  correctResponses++;
+  correctPronunciations++; // Track correct pronunciations
+  totalAttempts++;
+  pronunciationLevelScore = (correctPronunciations / 3) * 2; // Max 2 points for 3 correct
+  
+  speechToText.stop();
+  isRecording = false;
 
-    await speakDialogue("Great! You pronounced it correctly!");
+  instructionBox.text = "✅ Great! You pronounced it correctly!";
+  print("🟢 Speaking: Great! You pronounced it correctly!");
 
-    if (correctProunicationCount >= 3) {
-      
+  await speakDialogue("Great! You pronounced it correctly!");
+
+  if (correctPronunciations >= 3) {
+    // Store score before proceeding
+    await _storePronunciationScore().then((_) {
       Future.delayed(Duration(seconds: 4), () {
         hideGateTaskOverlay();
         openGate();
         showKidOnCycleAfterGate();
       });
-    } else {
-      
-      Future.delayed(Duration(seconds: 4), () {
-        
-        displayedWord = getRandomWord();
-        wordBox.word = displayedWord;
-        recognizedTextDisplay.text = "Recognized: ";
-        instructionBox.text =
-            "To open the gate, say the word written correctly:";
-        addToggleButton(); 
-        speakPhonics(displayedWord); 
-      });
+    });
+  } else {
+    Future.delayed(Duration(seconds: 4), () {
+      displayedWord = getRandomWord();
+      wordBox.word = displayedWord;
+      recognizedTextDisplay.text = "Recognized: ";
+      instructionBox.text = "To open the gate, say the word written correctly:";
+      addToggleButton();
+      speakPhonics(displayedWord);
+    });
+  }
+}
+
+// Add this new method to store scores
+Future<void> _storePronunciationScore() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null ) {
+      print('User not authenticated or no child selected');
+      return;
     }
+
+    final scoresDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
+        .collection('dyslexiascore')
+        .doc('game_scores');
+
+    await scoresDoc.set({
+      'pronunciationLevelScore': pronunciationLevelScore,
+    }, SetOptions(merge: true));
+
+    print('🗣️ Pronunciation score stored: $pronunciationLevelScore/2');
+  } catch (e) {
+    print('🔥 Error storing pronunciation score: $e');
+    if (e is FirebaseException) {
+      print('Error code: ${e.code}');
+      print('Error message: ${e.message}');
+    }
+    rethrow; // Important to prevent progression if save fails
   }
+}
 
-  void _onIncorrectPronunciation() async {
-    incorrectResponses++;
-    speechToText.stop();
-    isRecording = false;
+// Modify _onIncorrectPronunciation to track attempts
+void _onIncorrectPronunciation() async {
+  incorrectResponses++;
+  totalAttempts++;
+  speechToText.stop();
+  isRecording = false;
 
-    instructionBox.text = "❌ Oops! Try again.";
-    print("🔴 Speaking: Oops! Try again.");
+  instructionBox.text = "❌ Oops! Try again.";
+  print("🔴 Speaking: Oops! Try again.");
 
-    await speakDialogue("Oops! Try again.");
-  }
+  await speakDialogue("Oops! Try again.");
+}
 
   void showPerformanceSummary() {
     final summary =

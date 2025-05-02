@@ -14,6 +14,9 @@ import 'package:dream/game/class/giftboxcomp.dart' as giftboxcomp;
 import 'package:dream/game/class/dialogueboxwithhighlight.dart'
     as dialoguehighlight;
 import 'package:dream/game/class/congratscomp.dart' as congratsdiacomp;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Fishinglevel extends FlameGame with TapCallbacks {
   final BuildContext context;
@@ -260,11 +263,48 @@ class Fishinglevel extends FlameGame with TapCallbacks {
       add(fishRectangle);
     }
   }
+  Future<void> _storeFishingScore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('⚠️ User not logged in - score not saved');
+        return;
+      }
 
+      // Calculate score (max 2 points)
+      double score = (correctSelections / occurrences) * 2;
+      score = score.clamp(0.0, 2.0).toDouble();
+
+      // Get reference to the scores document
+      final scoresDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('children')
+          .doc(currentSelectedChildId)
+          .collection('dyslexiascore')
+          .doc('game_scores');
+
+      // Store score immediately
+      await scoresDoc.set({
+        'fishingLevelScore': score,
+      }, SetOptions(merge: true));
+
+      print('🎣 Fishing score stored immediately for child $currentSelectedChildId: $score');
+    } catch (e) {
+      print('🔥 Error storing fishing score: $e');
+      if (e is FirebaseException) {
+        print('Firebase error details: ${e.code} - ${e.message}');
+        if (e.code == 'permission-denied') {
+          print('Check your Firestore security rules!');
+        }
+      }
+    }
+  }
   void checkIfUserCompleted(BuildContext context) async {
     if (correctSelectionsList.length == occurrences ||
         incorrectSelections.length >= 4 ||
         selectedWords.length == 9) {
+               await _storeFishingScore();
       final blurOverlay = blur.BlurOverlayComponent(size: size);
       add(blurOverlay);
 
