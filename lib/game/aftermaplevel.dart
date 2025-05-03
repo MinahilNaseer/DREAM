@@ -408,17 +408,13 @@ void _onCorrectPronunciation() async {
   print("🟢 Speaking: Great! You pronounced it correctly!");
 
   await speakDialogue("Great! You pronounced it correctly!");
-
-  if (correctPronunciations >= 3) {
-    // Store score before proceeding
-    await _storePronunciationScore().then((_) {
-      Future.delayed(Duration(seconds: 4), () {
-        hideGateTaskOverlay();
-        openGate();
-        showKidOnCycleAfterGate();
-      });
-    });
-  } else {
+if (correctPronunciations >= 3) {
+  await _storePronunciationScore(); // wait for score storage
+  await Future.delayed(Duration(seconds: 4)); // wait before continuing
+  hideGateTaskOverlay();
+  openGate();
+  showKidOnCycleAfterGate();
+} else {
     Future.delayed(Duration(seconds: 4), () {
       displayedWord = getRandomWord();
       wordBox.word = displayedWord;

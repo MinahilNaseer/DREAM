@@ -21,10 +21,10 @@ class DyslexiaReportService {
       'uid': user.uid,
       'child_id': currentSelectedChildId!,
       'scores': {
-        'fishing_level': scores['fishing_level'] ?? 0,
-        'audio_level': scores['audio_level'] ?? 0,
-        'color_letter_level': scores['color_letter_level'] ?? 0,
-        'reading_level': scores['reading_level'] ?? 0,
+        'fishingLevelScore': scores['fishingLevelScore'] ?? 0,
+        'forestLevelScore': scores['forestLevelScore'] ?? 0,
+        'colorLetterLevelScore': scores['colorLetterLevelScore'] ?? 0,
+        'pronunciationLevelScore': scores['pronunciationLevelScore'] ?? 0,
         'total_score': result['totalScore'],
         'percentage': result['percentage'],
         'risk': result['risk'],
@@ -61,26 +61,28 @@ class DyslexiaReportService {
   }
 
   Map<String, dynamic> _calculateDyslexiaRisk(Map<String, dynamic> scores) {
-    int fishing = scores['fishingLevelScore'] ?? 0;
-    int audio = scores['forestLevelScore'] ?? 0;
-    int colorLetter = scores['colorLetterLevelScore'] ?? 0;
-    int reading = scores['pronunciationLevelScore'] ?? 0;
-    int totalScore = fishing + audio + colorLetter + reading;
-    double percentage = (totalScore / 8) * 100;
-    String risk;
+  // Ensure scores are safely cast to double, then to int
+  int fishing = (scores['fishingLevelScore']?.toDouble() ?? 0.0).toInt();
+  int audio = (scores['forestLevelScore']?.toDouble() ?? 0.0).toInt();
+  int colorLetter = (scores['colorLetterLevelScore']?.toDouble() ?? 0.0).toInt();
+  int reading = (scores['pronunciationLevelScore']?.toDouble() ?? 0.0).toInt();
+  
+  int totalScore = fishing + audio + colorLetter + reading;
+  double percentage = (totalScore / 8) * 100;
+  String risk;
 
-    if (percentage <= 50) {
-      risk = 'High Risk of Dyslexia';
-    } else if (percentage <= 75) {
-      risk = 'Moderate Risk of Dyslexia';
-    } else {
-      risk = 'Low Risk of Dyslexia';
-    }
-
-    return {
-      'totalScore': totalScore,
-      'percentage': percentage.toStringAsFixed(1),
-      'risk': risk,
-    };
+  if (percentage <= 50) {
+    risk = 'High Risk of Dyslexia';
+  } else if (percentage <= 75) {
+    risk = 'Moderate Risk of Dyslexia';
+  } else {
+    risk = 'Low Risk of Dyslexia';
   }
+
+  return {
+    'totalScore': totalScore,
+    'percentage': percentage.toStringAsFixed(1),
+    'risk': risk,
+  };
+}
 }
