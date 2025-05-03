@@ -393,6 +393,78 @@ Return the output strictly following the above format.
     except Exception as e:
         print(f"❌ Error generating handwriting summary report: {e}")
 
+@app.route('/generate_dyslexia_report', methods=['POST'])
+def generate_dyslexia_report():
+    try:
+        # Get the request data
+        data = request.get_json()
+
+        # Extract the relevant data
+        uid = data.get('uid')
+        child_id = data.get('child_id')
+        scores = data.get('scores')
+
+        if not uid or not child_id or not scores:
+            return jsonify({"error": "Missing required data"}), 400
+
+        # Fetch the child's name from Firebase
+        child_ref = db.collection('users').document(uid).collection('children').document(child_id)
+        child_doc = child_ref.get()
+        child_name = child_doc.get('name')  # Assuming 'name' is a field in Firestore
+
+        if not child_name:
+            return jsonify({"error": "Child's name not found"}), 400
+
+        # Calculate the dyslexia risk (example logic)
+        total_score = scores['total_score']
+        percentage = scores['percentage']
+        risk = scores['risk']
+
+        # Build a more aesthetic and friendly prompt for Gemini
+        prompt = f"""
+Generate a professional and parent-friendly summary report for dyslexia screening for {child_name} following this format:
+
+📌 **Child’s Name**: {child_name}
+
+📊 **Test Overview**:
+- **Fishing Level**: {scores['fishingLevelScore']}
+- **Audio Level**: {scores['forestLevelScore']}
+- **Color and Letter Level**: {scores['colorLetterLevelScore']}
+- **Reading Level**: {scores['pronunciationLevelScore']}
+- **Total Score**: {total_score} / 9 ({percentage}%)
+
+🧠 **Interpretation**:
+- Based on the results, the diagnosis is: **{risk}**.
+- If the risk is high or moderate, reassure parents that further evaluation could help in understanding the child’s learning needs.
+
+📌 **Suggested Next Steps**:
+- Encourage practicing tasks that strengthen reading and writing skills.
+- Suggest consulting a specialist or educational professional if the results indicate a need for further assessment.
+- Keep the tone warm and supportive, ensuring the parents feel encouraged to take positive steps forward.
+
+Please generate a clear, encouraging, and supportive report following this format. Do not use harsh or clinical language.
+"""
+
+        # Send the prompt to the Gemini model to generate the report
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        response = model.generate_content(prompt)
+
+        if response:
+            report = response.text  # The generated report
+
+            # Save the report to Firebase Firestore
+            child_ref.update({
+                'dyslexia_report': report,  # Store the generated report
+                'report_generated_at': firestore.SERVER_TIMESTAMP  # Optionally, track the time when the report was generated
+            })
+
+            return jsonify({"report": report}), 200
+        else:
+            return jsonify({"error": "Failed to generate a report from Gemini."}), 500
+
+    except Exception as e:
+        print(f"Failed to generate dyslexia report: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
 if __name__ == '__main__':

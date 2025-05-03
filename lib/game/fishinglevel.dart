@@ -14,6 +14,9 @@ import 'package:dream/game/class/giftboxcomp.dart' as giftboxcomp;
 import 'package:dream/game/class/dialogueboxwithhighlight.dart'
     as dialoguehighlight;
 import 'package:dream/game/class/congratscomp.dart' as congratsdiacomp;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Fishinglevel extends FlameGame with TapCallbacks {
   final BuildContext context;
@@ -259,12 +262,47 @@ class Fishinglevel extends FlameGame with TapCallbacks {
       fishRectangles.add(fishRectangle);
       add(fishRectangle);
     }
-  }
+  }Future<void> _storeFishingScore() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('⚠️ User not logged in - score not saved');
+      return;
+    }
 
+    // Simple scoring out of 2
+    int score = 0;
+    
+    if (correctSelections == occurrences && incorrectSelections.isEmpty) {
+      score = 2; // Perfect score - all correct with no mistakes
+    } 
+    else if (correctSelections >= (occurrences / 2).floor()) {
+      score = 1; // Half credit - at least half correct
+    }
+    // else score remains 0
+
+    final scoresDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
+        .collection('dyslexiascore')
+        .doc('game_scores');
+
+    await scoresDoc.set({
+      'fishingLevelScore': score,
+    }, SetOptions(merge: true));
+
+    print('🎣 Final Score: $score/2 (Correct: $correctSelections, Wrong: ${incorrectSelections.length})');
+  } catch (e) {
+    print('🔥 Error storing fishing score: $e');
+  }
+}
   void checkIfUserCompleted(BuildContext context) async {
     if (correctSelectionsList.length == occurrences ||
         incorrectSelections.length >= 4 ||
         selectedWords.length == 9) {
+               await _storeFishingScore();
       final blurOverlay = blur.BlurOverlayComponent(size: size);
       add(blurOverlay);
 

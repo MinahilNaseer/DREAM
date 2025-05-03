@@ -13,6 +13,9 @@ import 'forestlevel.dart';
 import 'dart:math';
 import 'package:dream/game/class/strokeroundreccompforest.dart' as recforest;
 import 'package:dream/game/class/draggableblocks.dart' as draggableblocks;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Afterforestlevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -378,29 +381,73 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     add(missingTileBucket);
   }
 
-  void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
-    final isCorrect = droppedTile.tileName.contains("Correct");
+  int correctAnswers = 0;
+int totalPuzzles = 2; // Since you have 2 puzzle stages
+double currentLevelScore = 0.0;
 
-    if (isCorrect) {
-      Future.delayed(const Duration(seconds: 3), () async {
-        remove(droppedTile);
-      });
-      await addSuccessFeedback();
-      Future.delayed(const Duration(seconds: 3), () {
-        if (puzzleStage == 1) {
-          showUpdatedMap();
-          puzzleStage++;
-        } else if (puzzleStage == 2) {
-          showUpdatedMapWithForest();
-        }
-      });
-    } else {
-      await addFailureFeedback();
-      await Future.delayed(const Duration(seconds: 2));
-      droppedTile.resetPosition();
-    }
+void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
+  final isCorrect = droppedTile.tileName.contains("Correct");
+
+  // Remove the tile immediately
+  remove(droppedTile);
+
+  if (isCorrect) {
+    correctAnswers++;
+    await addSuccessFeedback();
+  } else {
+    await addFailureFeedback();
   }
 
+  // Always proceed after feedback, regardless of correctness
+  Future.delayed(const Duration(seconds: 3), () {
+    if (puzzleStage == 1) {
+      showUpdatedMap();
+      puzzleStage++;
+    } else if (puzzleStage == 2) {
+      calculateFinalScore();
+      _storeColorLetterScore().then((_) {
+        showUpdatedMapWithForest();
+      });
+    }
+  });
+}
+
+// Add these new methods
+void calculateFinalScore() {
+  currentLevelScore = (correctAnswers / totalPuzzles) * 2; // Max 2 points
+  currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+  print('Color Letter Level Score: $currentLevelScore/2');
+}
+
+Future<void> _storeColorLetterScore() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null ) {
+      print('User not authenticated or no child selected');
+      return;
+    }
+
+    final scoresDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
+        .collection('dyslexiascore')
+        .doc('game_scores');
+
+    await scoresDoc.set({
+      'colorLetterLevelScore': currentLevelScore,
+    }, SetOptions(merge: true));
+
+    print('🎨 Color Letter score stored: $currentLevelScore/2');
+  } catch (e) {
+    print('🔥 Error storing color letter score: $e');
+    if (e is FirebaseException) {
+      print('Error code: ${e.code}');
+      print('Error message: ${e.message}');
+    }
+  }
+}
   void snapToPlaceholder(draggableblocks.DraggableTile tile) {
     remove(missingTileBucket);
     tile.position = missingTileBucket.position;

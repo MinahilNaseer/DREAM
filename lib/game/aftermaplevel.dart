@@ -16,6 +16,10 @@ import 'package:dream/game/class/filledrecwithword.dart' as recwithword;
 import 'package:dream/game/class/filledroundreccomp.dart' as recstart;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:dream/game/class/togglebutton.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dream/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dream/screens/createdyslexiareport.dart';
 
 class Aftermaplevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -385,50 +389,105 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
 
   int correctResponses = 0;
   int incorrectResponses = 0;
+int totalAttempts = 0;
+int maxRounds = 3; 
+int correctAnswers = 0;
+double currentLevelScore = 0.0;
+void _onCorrectPronunciation() async {
+  correctResponses++;
+  correctAnswers++; // Track correct answers
+  totalAttempts++;
+  
+  // Calculate score with penalty for incorrect attempts
+  calculateFinalScore();
+  
+  speechToText.stop();
+  isRecording = false;
 
-  void _onCorrectPronunciation() async {
-    correctResponses++;
-    correctProunicationCount++;
-    speechToText.stop();
-    isRecording = false;
+  instructionBox.text = "✅ Great! You pronounced it correctly!";
+  print("🟢 Speaking: Great! You pronounced it correctly!");
 
-    instructionBox.text = "✅ Great! You pronounced it correctly!";
-    print("🟢 Speaking: Great! You pronounced it correctly!");
+  await speakDialogue("Great! You pronounced it correctly!");
+  
+  if (correctAnswers >= maxRounds) {
+    await _storePronunciationScore(); // wait for score storage
+    await Future.delayed(Duration(seconds: 4)); // wait before continuing
+    hideGateTaskOverlay();
+    openGate();
+    showKidOnCycleAfterGate();
+  } else {
+    Future.delayed(Duration(seconds: 4), () {
+      displayedWord = getRandomWord();
+      wordBox.word = displayedWord;
+      recognizedTextDisplay.text = "Recognized: ";
+      instructionBox.text = "To open the gate, say the word written correctly:";
+      addToggleButton();
+      speakPhonics(displayedWord);
+    });
+  }
+}
 
-    await speakDialogue("Great! You pronounced it correctly!");
+void _onIncorrectPronunciation() async {
+  incorrectResponses++;
+  totalAttempts++; // Track all attempts (correct and incorrect)
+  
+  // Recalculate score after incorrect attempt
+  calculateFinalScore();
+  
+  speechToText.stop();
+  isRecording = false;
 
-    if (correctProunicationCount >= 3) {
-      
-      Future.delayed(Duration(seconds: 4), () {
-        hideGateTaskOverlay();
-        openGate();
-        showKidOnCycleAfterGate();
-      });
-    } else {
-      
-      Future.delayed(Duration(seconds: 4), () {
-        
-        displayedWord = getRandomWord();
-        wordBox.word = displayedWord;
-        recognizedTextDisplay.text = "Recognized: ";
-        instructionBox.text =
-            "To open the gate, say the word written correctly:";
-        addToggleButton(); 
-        speakPhonics(displayedWord); 
-      });
+  instructionBox.text = "❌ Oops! Try again.";
+  print("🔴 Speaking: Oops! Try again.");
+
+  await speakDialogue("Oops! Try again.");
+}
+
+void calculateFinalScore() {
+  // Score calculation with penalties for incorrect attempts
+  double accuracy = correctAnswers / maxRounds;
+  double efficiency = 1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
+  
+  // Clamp the score between 0 and 2 (since it's out of 2)
+  currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
+  currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+  
+  print('Calculated Pronunciation Score: $currentLevelScore/2');
+}
+
+// Add this new method to store scores
+Future<void> _storePronunciationScore() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null ) {
+      print('User not authenticated or no child selected');
+      return;
     }
+    calculateFinalScore();
+    
+    final scoresDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
+        .collection('dyslexiascore')
+        .doc('game_scores');
+
+    await scoresDoc.set({
+      'pronunciationLevelScore': currentLevelScore,
+    }, SetOptions(merge: true));
+await DyslexiaReportService().createAndSendPromptToBackend();
+    print('🗣️ Pronunciation score stored: $currentLevelScore/2');
+  } catch (e) {
+    print('🔥 Error storing pronunciation score: $e');
+    if (e is FirebaseException) {
+      print('Error code: ${e.code}');
+      print('Error message: ${e.message}');
+    }
+    rethrow; // Important to prevent progression if save fails
+    
   }
-
-  void _onIncorrectPronunciation() async {
-    incorrectResponses++;
-    speechToText.stop();
-    isRecording = false;
-
-    instructionBox.text = "❌ Oops! Try again.";
-    print("🔴 Speaking: Oops! Try again.");
-
-    await speakDialogue("Oops! Try again.");
-  }
+}
 
   void showPerformanceSummary() {
     final summary =

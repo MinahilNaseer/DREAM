@@ -52,9 +52,7 @@ class ReportSelectionPage extends StatelessWidget {
             _buildReportCard(
               context,
               title: "Dyslexia Report",
-              onTap: () {
-                // Future implementation
-              },
+              onTap: ()=> Navigator.pushNamed(context,'/dyslexia_report'),
             ),
           ],
         ),
