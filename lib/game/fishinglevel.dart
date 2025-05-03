@@ -262,44 +262,42 @@ class Fishinglevel extends FlameGame with TapCallbacks {
       fishRectangles.add(fishRectangle);
       add(fishRectangle);
     }
-  }
-  Future<void> _storeFishingScore() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print('⚠️ User not logged in - score not saved');
-        return;
-      }
-
-      // Calculate score (max 2 points)
-      double score = (correctSelections / occurrences) * 2;
-      score = score.clamp(0.0, 2.0).toDouble();
-
-      // Get reference to the scores document
-      final scoresDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('children')
-          .doc(currentSelectedChildId)
-          .collection('dyslexiascore')
-          .doc('game_scores');
-
-      // Store score immediately
-      await scoresDoc.set({
-        'fishingLevelScore': score,
-      }, SetOptions(merge: true));
-
-      print('🎣 Fishing score stored immediately for child $currentSelectedChildId: $score');
-    } catch (e) {
-      print('🔥 Error storing fishing score: $e');
-      if (e is FirebaseException) {
-        print('Firebase error details: ${e.code} - ${e.message}');
-        if (e.code == 'permission-denied') {
-          print('Check your Firestore security rules!');
-        }
-      }
+  }Future<void> _storeFishingScore() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      print('⚠️ User not logged in - score not saved');
+      return;
     }
+
+    // Simple scoring out of 2
+    int score = 0;
+    
+    if (correctSelections == occurrences && incorrectSelections.isEmpty) {
+      score = 2; // Perfect score - all correct with no mistakes
+    } 
+    else if (correctSelections >= (occurrences / 2).floor()) {
+      score = 1; // Half credit - at least half correct
+    }
+    // else score remains 0
+
+    final scoresDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('children')
+        .doc(currentSelectedChildId)
+        .collection('dyslexiascore')
+        .doc('game_scores');
+
+    await scoresDoc.set({
+      'fishingLevelScore': score,
+    }, SetOptions(merge: true));
+
+    print('🎣 Final Score: $score/2 (Correct: $correctSelections, Wrong: ${incorrectSelections.length})');
+  } catch (e) {
+    print('🔥 Error storing fishing score: $e');
   }
+}
   void checkIfUserCompleted(BuildContext context) async {
     if (correctSelectionsList.length == occurrences ||
         incorrectSelections.length >= 4 ||

@@ -431,7 +431,7 @@ Generate a professional and parent-friendly summary report for dyslexia screenin
 - **Audio Level**: {scores['forestLevelScore']}
 - **Color and Letter Level**: {scores['colorLetterLevelScore']}
 - **Reading Level**: {scores['pronunciationLevelScore']}
-- **Total Score**: {total_score} / 8 ({percentage}%)
+- **Total Score**: {total_score} / 9 ({percentage}%)
 
 🧠 **Interpretation**:
 - Based on the results, the diagnosis is: **{risk}**.

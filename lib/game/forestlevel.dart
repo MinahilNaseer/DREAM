@@ -10,11 +10,11 @@ import 'package:flame/events.dart';
 import 'dart:math';
 import 'package:dream/game/class/animalrectangle.dart' as animalrec;
 import 'package:dream/game/class/filledroundreccomp.dart' as roundrec;
-
 import 'package:dream/game/class/dialogueboxcomponent.dart' as diabox;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 class ForestLevel extends FlameGame {
   late SpriteComponent background;
   late roundrec.FilledRoundedRectangleComponent bottomRectangle;
@@ -25,9 +25,6 @@ class ForestLevel extends FlameGame {
   late FlutterTts tts;
   SpriteComponent? animalImage;
   bool isGameStarted = false;
-  bool firstAttemptMade = false;
-  String? firstAttemptAnimal;
-  int retryCount = 0;
   final List<Map<String, dynamic>> roundData = [];
 
   final Map<String, String> animalImageMap = {
@@ -61,9 +58,11 @@ class ForestLevel extends FlameGame {
   ];
   final Random random = Random();
   String? correctAnimal;
-  animalrec.AnimalRectangle? selectedRectangle;
   int roundCount = 0;
   final int maxRounds = 3;
+  int correctAnswers = 0;
+  double currentLevelScore = 0.0;
+  bool isSelectionDisabled = false;
 
   @override
   Future<void> onLoad() async {
@@ -95,8 +94,7 @@ class ForestLevel extends FlameGame {
     dialogueBox = diabox.DialogueBoxComponent(
       position: Vector2(130, 70),
       size: Vector2(size.x - 150, 120),
-      text:
-          "Listen to the sounds and tap the correct name to reveal them. Let's start!",
+      text: "Listen to the sounds and tap the correct name to reveal them. Let's start!",
     );
     add(dialogueBox);
 
@@ -113,7 +111,7 @@ class ForestLevel extends FlameGame {
   }
 
   Future<void> startGame() async {
-    
+    isSelectionDisabled = false;
     removeAnimalImage();
     clearAnimalRectangles();
 
@@ -150,7 +148,6 @@ class ForestLevel extends FlameGame {
   }
 
   void clearAnimalRectangles() {
-    
     for (var component in children.toList()) {
       if (component is animalrec.AnimalRectangle) {
         remove(component);
@@ -189,76 +186,46 @@ class ForestLevel extends FlameGame {
       ));
     }
   }
- int correctAnswers = 0;
-  int totalAttempts = 0;
-  double currentLevelScore = 0.0;
 
   void onRectangleTap(animalrec.AnimalRectangle rectangle) async {
-    totalAttempts++;
+    if (isSelectionDisabled) return;
     
-    if (!firstAttemptMade) {
-      firstAttemptMade = true;
-      firstAttemptAnimal = rectangle.text;
-    }
+    isSelectionDisabled = true;
     
-    retryCount++;
-    
-    if (selectedRectangle != null && selectedRectangle != rectangle) {
-      selectedRectangle!.unselect();
-    }
-
-    selectedRectangle = rectangle;
-    rectangle.select();
+    roundData.add({
+      'selectedAnimal': rectangle.text,
+      'correctAnimal': correctAnimal,
+      'wasCorrect': rectangle.text == correctAnimal,
+      'timestamp': DateTime.now().toString(),
+    });
 
     if (rectangle.text == correctAnimal) {
       correctAnswers++;
-      
-      roundData.add({
-        'correctAnimal': correctAnimal,
-        'firstAttempt': firstAttemptAnimal,
-        'retryCount': retryCount,
-        'wasCorrect': true,
-        'timestamp': DateTime.now().toString(),
-      });
-
-      retryCount = 0;
-      firstAttemptMade = false;
       showAnimalImage(correctAnimal!);
       await tts.speak("Congratulations! You found the $correctAnimal!");
-
-      roundCount++;
-
-      if (roundCount < maxRounds) {
-        await Future.delayed(Duration(seconds: 6));
-        startGame();
-      } else {
-        calculateFinalScore();
-        await _storeForestScore();
-        onTaskCompleted();
-      }
     } else {
-      roundData.add({
-        'attemptedAnimal': rectangle.text,
-        'wasCorrect': false,
-        'timestamp': DateTime.now().toString(),
-      });
-      
-      removeAnimalImage();
-      await tts.speak("Try again! That's not the right animal.");
+      await tts.speak("You selected the wrong animal");
+      roundCount++;
+    }
+
+    roundCount++;
+    if (roundCount < maxRounds) {
+      await Future.delayed(Duration(seconds: 6));
+      startGame();
+    } else {
+      calculateFinalScore();
+      await _storeForestScore();
+      onTaskCompleted();
     }
   }
 
   void calculateFinalScore() {
-    // Score calculation with penalties for incorrect attempts
-    double accuracy = correctAnswers / maxRounds;
-    double efficiency = 1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
-    
-    currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
-    currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
-    
-    print('Calculated Forest Level Score: $currentLevelScore/2');
+    // Simple scoring - 1 point per correct answer, max 3 points
+    currentLevelScore = correctAnswers.toDouble();
+    print('Calculated Forest Level Score: $currentLevelScore/3');
   }
-Future<void> _storeForestScore() async {
+
+  Future<void> _storeForestScore() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null ) {
@@ -276,16 +243,13 @@ Future<void> _storeForestScore() async {
 
       await scoresDoc.set({
         'forestLevelScore': currentLevelScore,
-      
       }, SetOptions(merge: true));
 
       print('🌲 Forest level results saved');
-      
     } catch (e) {
       print('🔥 Error storing forest score: $e');
     }
   }
-
 
   void showAnimalImage(String animalName) async {
     final animalPath = animalImageMap[animalName];
@@ -305,8 +269,8 @@ Future<void> _storeForestScore() async {
     super.onRemove();
     audioPlayer.dispose();
   }
+
   void onTaskCompleted() async {
-    // Show completion message with score
     await tts.speak("Great job! Lets continue our jouney");
     
     Future.delayed(const Duration(seconds: 3), () {
@@ -318,4 +282,3 @@ Future<void> _storeForestScore() async {
     });
   }
 }
-

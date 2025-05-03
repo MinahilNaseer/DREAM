@@ -68,7 +68,7 @@ class DyslexiaReportService {
   int reading = (scores['pronunciationLevelScore']?.toDouble() ?? 0.0).toInt();
   
   int totalScore = fishing + audio + colorLetter + reading;
-  double percentage = (totalScore / 8) * 100;
+  double percentage = (totalScore / 9) * 100;
   String risk;
 
   if (percentage <= 50) {

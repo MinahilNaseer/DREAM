@@ -385,36 +385,31 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
 int totalPuzzles = 2; // Since you have 2 puzzle stages
 double currentLevelScore = 0.0;
 
-// Modify the handleTileDropped method
 void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
   final isCorrect = droppedTile.tileName.contains("Correct");
 
+  // Remove the tile immediately
+  remove(droppedTile);
+
   if (isCorrect) {
     correctAnswers++;
-    
-    Future.delayed(const Duration(seconds: 3), () async {
-      remove(droppedTile);
-    });
-    
     await addSuccessFeedback();
-    
-    Future.delayed(const Duration(seconds: 3), () {
-      if (puzzleStage == 1) {
-        showUpdatedMap();
-        puzzleStage++;
-      } else if (puzzleStage == 2) {
-        // Calculate and store score before moving to next level
-        calculateFinalScore();
-        _storeColorLetterScore().then((_) {
-          showUpdatedMapWithForest();
-        });
-      }
-    });
   } else {
     await addFailureFeedback();
-    await Future.delayed(const Duration(seconds: 2));
-    droppedTile.resetPosition();
   }
+
+  // Always proceed after feedback, regardless of correctness
+  Future.delayed(const Duration(seconds: 3), () {
+    if (puzzleStage == 1) {
+      showUpdatedMap();
+      puzzleStage++;
+    } else if (puzzleStage == 2) {
+      calculateFinalScore();
+      _storeColorLetterScore().then((_) {
+        showUpdatedMapWithForest();
+      });
+    }
+  });
 }
 
 // Add these new methods

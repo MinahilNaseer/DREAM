@@ -389,17 +389,17 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
 
   int correctResponses = 0;
   int incorrectResponses = 0;
-
- int correctPronunciations = 0;
 int totalAttempts = 0;
-double pronunciationLevelScore = 0.0;
-
-// Modify _onCorrectPronunciation to track scores
+int maxRounds = 3; 
+int correctAnswers = 0;
+double currentLevelScore = 0.0;
 void _onCorrectPronunciation() async {
   correctResponses++;
-  correctPronunciations++; // Track correct pronunciations
+  correctAnswers++; // Track correct answers
   totalAttempts++;
-  pronunciationLevelScore = (correctPronunciations / 3) * 2; // Max 2 points for 3 correct
+  
+  // Calculate score with penalty for incorrect attempts
+  calculateFinalScore();
   
   speechToText.stop();
   isRecording = false;
@@ -408,13 +408,14 @@ void _onCorrectPronunciation() async {
   print("🟢 Speaking: Great! You pronounced it correctly!");
 
   await speakDialogue("Great! You pronounced it correctly!");
-if (correctPronunciations >= 3) {
-  await _storePronunciationScore(); // wait for score storage
-  await Future.delayed(Duration(seconds: 4)); // wait before continuing
-  hideGateTaskOverlay();
-  openGate();
-  showKidOnCycleAfterGate();
-} else {
+  
+  if (correctAnswers >= maxRounds) {
+    await _storePronunciationScore(); // wait for score storage
+    await Future.delayed(Duration(seconds: 4)); // wait before continuing
+    hideGateTaskOverlay();
+    openGate();
+    showKidOnCycleAfterGate();
+  } else {
     Future.delayed(Duration(seconds: 4), () {
       displayedWord = getRandomWord();
       wordBox.word = displayedWord;
@@ -426,6 +427,34 @@ if (correctPronunciations >= 3) {
   }
 }
 
+void _onIncorrectPronunciation() async {
+  incorrectResponses++;
+  totalAttempts++; // Track all attempts (correct and incorrect)
+  
+  // Recalculate score after incorrect attempt
+  calculateFinalScore();
+  
+  speechToText.stop();
+  isRecording = false;
+
+  instructionBox.text = "❌ Oops! Try again.";
+  print("🔴 Speaking: Oops! Try again.");
+
+  await speakDialogue("Oops! Try again.");
+}
+
+void calculateFinalScore() {
+  // Score calculation with penalties for incorrect attempts
+  double accuracy = correctAnswers / maxRounds;
+  double efficiency = 1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
+  
+  // Clamp the score between 0 and 2 (since it's out of 2)
+  currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
+  currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+  
+  print('Calculated Pronunciation Score: $currentLevelScore/2');
+}
+
 // Add this new method to store scores
 Future<void> _storePronunciationScore() async {
   try {
@@ -434,7 +463,8 @@ Future<void> _storePronunciationScore() async {
       print('User not authenticated or no child selected');
       return;
     }
-
+    calculateFinalScore();
+    
     final scoresDoc = FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
@@ -444,10 +474,10 @@ Future<void> _storePronunciationScore() async {
         .doc('game_scores');
 
     await scoresDoc.set({
-      'pronunciationLevelScore': pronunciationLevelScore,
+      'pronunciationLevelScore': currentLevelScore,
     }, SetOptions(merge: true));
 await DyslexiaReportService().createAndSendPromptToBackend();
-    print('🗣️ Pronunciation score stored: $pronunciationLevelScore/2');
+    print('🗣️ Pronunciation score stored: $currentLevelScore/2');
   } catch (e) {
     print('🔥 Error storing pronunciation score: $e');
     if (e is FirebaseException) {
@@ -457,19 +487,6 @@ await DyslexiaReportService().createAndSendPromptToBackend();
     rethrow; // Important to prevent progression if save fails
     
   }
-}
-
-// Modify _onIncorrectPronunciation to track attempts
-void _onIncorrectPronunciation() async {
-  incorrectResponses++;
-  totalAttempts++;
-  speechToText.stop();
-  isRecording = false;
-
-  instructionBox.text = "❌ Oops! Try again.";
-  print("🔴 Speaking: Oops! Try again.");
-
-  await speakDialogue("Oops! Try again.");
 }
 
   void showPerformanceSummary() {
