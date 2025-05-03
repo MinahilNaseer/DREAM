@@ -14,6 +14,7 @@ import 'package:dream/screens/editpage.dart';
 import 'package:dream/game/gamemainscreen.dart';
 import 'package:dream/screens/dyscalculia_report.dart';
 import 'package:dream/screens/reportpage.dart';
+import 'package:dream/screens/dyslexia_report.dart';
 
 
 void main() async {
@@ -54,7 +55,9 @@ class MyApp extends StatelessWidget {
           '/reports': (context) => const ReportSelectionPage(),
         '/dyscalculia_report': (context) => const DyscalculiaReportPage(),
         '/dysgraphia_report':(context) => const DysgraphiaReportPage(),
+        '/dyslexia_report' :(context) => const DyslexiaReportPage(),
       },
+
     );
   }
 }

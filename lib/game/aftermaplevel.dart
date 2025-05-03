@@ -19,6 +19,7 @@ import 'package:dream/game/class/togglebutton.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dream/screens/createdyslexiareport.dart';
 
 class Aftermaplevel extends FlameGame with TapCallbacks {
   late SpriteComponent kidOnCycle;
@@ -449,7 +450,7 @@ Future<void> _storePronunciationScore() async {
     await scoresDoc.set({
       'pronunciationLevelScore': pronunciationLevelScore,
     }, SetOptions(merge: true));
-
+await DyslexiaReportService().createAndSendPromptToBackend();
     print('🗣️ Pronunciation score stored: $pronunciationLevelScore/2');
   } catch (e) {
     print('🔥 Error storing pronunciation score: $e');
@@ -458,6 +459,7 @@ Future<void> _storePronunciationScore() async {
       print('Error message: ${e.message}');
     }
     rethrow; // Important to prevent progression if save fails
+    
   }
 }
 
