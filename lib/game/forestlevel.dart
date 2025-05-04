@@ -186,38 +186,57 @@ class ForestLevel extends FlameGame {
       ));
     }
   }
+  int attempts = 0;
 
   void onRectangleTap(animalrec.AnimalRectangle rectangle) async {
-    if (isSelectionDisabled) return;
-    
-    isSelectionDisabled = true;
-    
-    roundData.add({
-      'selectedAnimal': rectangle.text,
-      'correctAnimal': correctAnimal,
-      'wasCorrect': rectangle.text == correctAnimal,
-      'timestamp': DateTime.now().toString(),
-    });
+  if (isSelectionDisabled) return;
 
-    if (rectangle.text == correctAnimal) {
-      correctAnswers++;
-      showAnimalImage(correctAnimal!);
-      await tts.speak("Congratulations! You found the $correctAnimal!");
-    } else {
-      await tts.speak("You selected the wrong animal");
-      roundCount++;
-    }
+  isSelectionDisabled = true;
 
+  roundData.add({
+    'selectedAnimal': rectangle.text,
+    'correctAnimal': correctAnimal,
+    'wasCorrect': rectangle.text == correctAnimal,
+    'timestamp': DateTime.now().toString(),
+  });
+
+  if (rectangle.text == correctAnimal) {
+    correctAnswers++;
+    showAnimalImage(correctAnimal!);
+    await tts.speak("Congratulations! You found the $correctAnimal!");
     roundCount++;
+    attempts = 0;
+    await Future.delayed(Duration(seconds: 6));
     if (roundCount < maxRounds) {
-      await Future.delayed(Duration(seconds: 6));
       startGame();
     } else {
       calculateFinalScore();
       await _storeForestScore();
+      await tts.speak("We made it through the forest adventure!");
       onTaskCompleted();
     }
+  } else {
+    attempts++;
+    if (attempts < 2) {
+      await tts.speak("That's not the right one. Try again carefully.");
+      isSelectionDisabled = false;
+    } else {
+      await tts.speak("🔄 Oops! That animal is still hiding. Let's try a different sound.");
+      roundCount++;
+      attempts = 0;
+      await Future.delayed(Duration(seconds: 6));
+      if (roundCount < maxRounds) {
+        startGame();
+      } else {
+        calculateFinalScore();
+        await _storeForestScore();
+        await tts.speak("We made it through the forest adventure!");
+        onTaskCompleted();
+      }
+    }
   }
+}
+
 
   void calculateFinalScore() {
     // Simple scoring - 1 point per correct answer, max 3 points
@@ -273,7 +292,7 @@ class ForestLevel extends FlameGame {
   void onTaskCompleted() async {
     await tts.speak("Great job! Lets continue our jouney");
     
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 1), () {
       Navigator.of(buildContext!).pushReplacement(
         MaterialPageRoute(
           builder: (context) => GameWidget(game: Afterforestlevel()),

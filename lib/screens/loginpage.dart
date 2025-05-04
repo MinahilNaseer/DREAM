@@ -236,8 +236,6 @@ class _LoginPageState extends State<LoginPage> {
             .get();
 
         List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
-
-// Ensure each child document has its own 'childId' field
         for (var doc in children) {
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
           if (data['childId'] == null) {
@@ -262,10 +260,12 @@ class _LoginPageState extends State<LoginPage> {
           _showChildSelectionDialog(children);
         }
       } else {
+        Navigator.of(context).pop();
         _showError("Login failed. Please check your credentials.");
       }
     } catch (e) {
       print("Login error: $e");
+      Navigator.of(context).pop();
       _showError("Incorrect email or password. Please try again.");
     }
   }
