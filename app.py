@@ -11,8 +11,12 @@ from PIL import Image, ExifTags
 from google.cloud import firestore
 import google.generativeai as genai
 
+from dotenv import load_dotenv
+load_dotenv()
+
+
 # Configure the SDK with your hardcoded API key
-genai.configure(api_key="AIzaSyB6Mm0NiURGi5atvpmiPucwCKaRHRIF22A")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\GTS\\Downloads\\service-account-key.json"
 db = firestore.Client()

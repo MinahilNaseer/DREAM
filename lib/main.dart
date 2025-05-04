@@ -15,7 +15,10 @@ import 'package:dream/game/gamemainscreen.dart';
 import 'package:dream/screens/dyscalculia_report.dart';
 import 'package:dream/screens/reportpage.dart';
 import 'package:dream/screens/dyslexia_report.dart';
-
+import 'dart:ui';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_performance/firebase_performance.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -25,6 +28,15 @@ void main() async {
     print("Error loading .env file: $e");  
   }
   await Firebase.initializeApp(); 
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  
+    return true;
+  };
+  FirebasePerformance performance = FirebasePerformance.instance;
+  performance.setPerformanceCollectionEnabled(true);
+  
   runApp(const MyApp());
 }
 
