@@ -1,0 +1,2 @@
+F:/DREAM/DREAM/android/app/.cxx/Debug/c6n3q341/arm64-v8a/CMakeFiles/edit_cache.dir
+F:/DREAM/DREAM/android/app/.cxx/Debug/c6n3q341/arm64-v8a/CMakeFiles/rebuild_cache.dir
