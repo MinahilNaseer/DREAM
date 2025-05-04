@@ -12,13 +12,13 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-class _LoginPageState extends State<LoginPage> {
 
+class _LoginPageState extends State<LoginPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
- @override
+  @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
@@ -28,21 +28,21 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, 
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView( 
+        child: SingleChildScrollView(
           child: Column(
             children: [
               SizedBox(
-                height: 300, 
-                width: MediaQuery.of(context).size.width, 
+                height: 300,
+                width: MediaQuery.of(context).size.width,
                 child: Stack(
                   children: [
                     Positioned(
                       right: 0,
                       top: 30,
                       child: Image.asset(
-                        'assets/images/—Pngtree—hand-painted cartoon images of children_4346171.png', 
+                        'assets/images/—Pngtree—hand-painted cartoon images of children_4346171.png',
                         height: 250,
                         fit: BoxFit.contain,
                       ),
@@ -75,8 +75,6 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-
-              
               IntrinsicHeight(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -84,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Container(
                       padding: const EdgeInsets.all(16.0),
                       decoration: BoxDecoration(
-                        color: Colors.white, 
+                        color: Colors.white,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(30),
                           topRight: Radius.circular(30),
@@ -96,42 +94,54 @@ class _LoginPageState extends State<LoginPage> {
                             color: Colors.grey.withOpacity(0.5),
                             spreadRadius: 5,
                             blurRadius: 7,
-                            offset: const Offset(0, 3), 
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start, 
-                        crossAxisAlignment: CrossAxisAlignment.center, 
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 30), 
-                          
+                          const SizedBox(height: 30),
                           TextFormField(
                             controller: emailController,
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              prefixIcon: const Icon(Icons.email), 
+                              prefixIcon: const Icon(Icons.email),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 25), 
-                          
+                          const SizedBox(height: 25),
                           TextFormField(
                             controller: passwordController,
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock), 
-                              suffixIcon: const Icon(Icons.visibility), 
+                              prefixIcon: const Icon(Icons.lock),
+                              suffixIcon: const Icon(Icons.visibility),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
                             ),
-                            obscureText: true, 
+                            obscureText: true,
                           ),
-                          const SizedBox(height: 24), 
-                          
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                _showForgotPasswordDialog();
+                              },
+                              child: const Text(
+                                "Forgot Password?",
+                                style: TextStyle(
+                                    color: Colors.purple,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    decoration: TextDecoration.underline),
+                              ),
+                            ),
+                          ),
                           SizedBox(
                             width: 150,
                             height: 50,
@@ -142,7 +152,7 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: _logIn ,
+                              onPressed: _logIn,
                               child: const Text(
                                 'LOG IN',
                                 style: TextStyle(
@@ -152,12 +162,12 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 10), 
-                          
+                          const SizedBox(height: 10),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+                              const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20)),
                               const Text(
                                 "Not Registered Yet? ",
                                 style: TextStyle(fontSize: 16),
@@ -167,173 +177,274 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.push(
                                     context,
                                     _createRoute(const RegisterPage()),
-                                    )
+                                  )
                                 },
-                                child:const Text(
+                                child: const Text(
                                   "Register",
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.purple,
-                                    decoration: TextDecoration.underline
-                                  ),
+                                      fontSize: 16,
+                                      color: Colors.purple,
+                                      decoration: TextDecoration.underline),
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      
                     ),
                   ),
                 ),
               ),
-              
               Image.asset(
                 "assets/images/writing-dy.png",
                 height: 150,
                 width: 600,
-                )
+              )
             ],
           ),
         ),
       ),
     );
   }
+
   void _logIn() async {
-  String email = emailController.text.trim();
-  String password = passwordController.text;
+    String email = emailController.text.trim();
+    String password = passwordController.text;
 
-  if (email.isEmpty || password.isEmpty) {
-    _showError("Please fill in both email and password.");
-    return;
-  }
-
-  try {
-    User? user = await _auth.signInWithEmailAndPassword(email, password);
-    if (user != null) {
-      print("User successfully Logged In");
-
-      // Fetch children from Firestore
-      QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('children')
-        .get();
-
-      List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
-
-      if (children.isEmpty) {
-        _showError("No child found under this account. Please register at least one.");
-        return;
-      } else {
-        // Multiple children — show selection dialog
-        _showChildSelectionDialog(children);
-      }
-    } else {
-      _showError("Login failed. Please check your credentials.");
+    if (email.isEmpty || password.isEmpty) {
+      _showError("Please fill in both email and password.");
+      return;
     }
-  } catch (e) {
-    print("Login error: $e");
-    _showError("Incorrect email or password. Please try again.");
-  }
-}
 
-void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("Select a Child"),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Child List
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: children.length,
-                itemBuilder: (context, index) {
-                  var child = children[index].data() as Map<String, dynamic>;
-                  String id = children[index].id;
-                  return ListTile(
-                    leading: const Icon(Icons.child_care, color: Colors.purple),
-                    title: Text(child['name']),
-                    subtitle: Text("Birthdate: ${child['birthdate']}"),
-                    onTap: () {
-                      currentSelectedChildId = id; 
-                      Navigator.pop(context); // Close dialog
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MainMenu(childData: child),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-            // Add New Child Button
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text("Add Another Child"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+    try {
+      User? user = await _auth.signInWithEmailAndPassword(email, password);
+      if (user != null) {
+        print("User successfully Logged In");
+
+        // Fetch children from Firestore
+        QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('children')
+            .get();
+
+        List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
+
+        if (children.isEmpty) {
+          _showError(
+              "No child found under this account. Please register at least one.");
+          return;
+        } else {
+          // Multiple children — show selection dialog
+          _showChildSelectionDialog(children);
+        }
+      } else {
+        _showError("Login failed. Please check your credentials.");
+      }
+    } catch (e) {
+      print("Login error: $e");
+      _showError("Incorrect email or password. Please try again.");
+    }
+  }
+
+  void _showForgotPasswordDialog() {
+    final TextEditingController emailResetController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  "Forgot Password?",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              onPressed: () async {
-  Navigator.pop(context); // Close dialog
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const AddChildPage()),
-  );
+                const SizedBox(height: 16),
+                const Text(
+                  "Enter your registered email address to receive a password reset link.",
+                  style: TextStyle(fontSize: 15, color: Colors.black87),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: emailResetController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    prefixIcon: const Icon(Icons.email, color: Colors.purple),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text("Cancel"),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                      onPressed: () async {
+                        String email = emailResetController.text.trim();
+                        //Navigator.of(context).pop();
 
-  // Refresh dialog if child was added
-  if (result == 'child_added') {
-    _logIn(); // Triggers refetch and opens dialog again
-  }
-},
-            )
-          ],
-        ),
-      ),
-    ),
-  );
-}
+                        if (email.isEmpty) {
+                          _showError("Please enter your email.");
+                          return;
+                        }
 
-
-
-void _showError(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.redAccent,
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
-
-}
-
-Route _createRoute(Widget page) {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(1.0, 0.0); 
-        const end = Offset.zero; 
-        const curve = Curves.easeInOut;
-
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var offsetAnimation = animation.drive(tween);
-
-        return SlideTransition(
-          position: offsetAnimation,
-          child: child,
+                        try {
+                          await FirebaseAuth.instance
+                              .sendPasswordResetEmail(email: email);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Password reset email sent."),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          Navigator.of(context).pop();
+                        } catch (e) {
+                          _showError(
+                              "Failed to send reset email. Please check the email.");
+                        }
+                      },
+                      child: const Text(
+                        "Send",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
         );
       },
     );
   }
+
+  void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Select a Child"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Child List
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: children.length,
+                  itemBuilder: (context, index) {
+                    var child = children[index].data() as Map<String, dynamic>;
+                    String id = children[index].id;
+                    return ListTile(
+                      leading:
+                          const Icon(Icons.child_care, color: Colors.purple),
+                      title: Text(child['name']),
+                      subtitle: Text("Birthdate: ${child['birthdate']}"),
+                      onTap: () {
+                        currentSelectedChildId = id;
+                        Navigator.pop(context); // Close dialog
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MainMenu(childData: child),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Add New Child Button
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text("Add Another Child"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context); // Close dialog
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AddChildPage()),
+                  );
+
+                  // Refresh dialog if child was added
+                  if (result == 'child_added') {
+                    _logIn(); // Triggers refetch and opens dialog again
+                  }
+                },
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+Route _createRoute(Widget page) {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOut;
+
+      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+      var offsetAnimation = animation.drive(tween);
+
+      return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+      );
+    },
+  );
+}
