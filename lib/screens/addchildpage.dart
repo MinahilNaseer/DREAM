@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:dream/screens/loginpage.dart';
 
 class AddChildPage extends StatefulWidget {
   const AddChildPage({super.key});
@@ -26,7 +27,7 @@ class _AddChildPageState extends State<AddChildPage> {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        await _firestore
+        DocumentReference childRef = await _firestore
             .collection('users')
             .doc(user.uid)
             .collection('children')
@@ -37,7 +38,16 @@ class _AddChildPageState extends State<AddChildPage> {
           'createdAt': Timestamp.now(),
         });
 
-        Navigator.pop(context, 'child_added');
+// Add childId field
+        await childRef.update({
+          'childId': childRef.id,
+        });
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (Route<dynamic> route) => false, // Removes all previous routes
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -55,7 +65,7 @@ class _AddChildPageState extends State<AddChildPage> {
     DateTime now = DateTime.now();
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime(now.year - 5, now.month, now.day), 
+      initialDate: DateTime(now.year - 5, now.month, now.day),
       firstDate: DateTime(1900),
       lastDate: now,
     );
@@ -124,8 +134,9 @@ class _AddChildPageState extends State<AddChildPage> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'Please enter child name' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please enter child name'
+                        : null,
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
@@ -163,7 +174,8 @@ class _AddChildPageState extends State<AddChildPage> {
                       DropdownMenuItem(value: 'Male', child: Text('Male')),
                       DropdownMenuItem(value: 'Female', child: Text('Female')),
                     ],
-                    onChanged: (value) => setState(() => selectedGender = value),
+                    onChanged: (value) =>
+                        setState(() => selectedGender = value),
                     validator: (value) =>
                         value == null ? 'Please select a gender' : null,
                   ),

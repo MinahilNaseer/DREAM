@@ -217,11 +217,18 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: Colors.purple),
+        ),
+      );
+
       User? user = await _auth.signInWithEmailAndPassword(email, password);
       if (user != null) {
         print("User successfully Logged In");
 
-        // Fetch children from Firestore
         QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -230,12 +237,28 @@ class _LoginPageState extends State<LoginPage> {
 
         List<QueryDocumentSnapshot> children = childrenSnapshot.docs;
 
+// Ensure each child document has its own 'childId' field
+        for (var doc in children) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          if (data['childId'] == null) {
+            await doc.reference.update({'childId': doc.id});
+          }
+        }
+
         if (children.isEmpty) {
+          Navigator.of(context).pop();
           _showError(
               "No child found under this account. Please register at least one.");
+          Future.delayed(const Duration(milliseconds: 300), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AddChildPage()),
+            );
+          });
           return;
         } else {
-          // Multiple children — show selection dialog
+          Navigator.of(context).pop();
+
           _showChildSelectionDialog(children);
         }
       } else {
@@ -313,7 +336,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       onPressed: () async {
                         String email = emailResetController.text.trim();
-                        //Navigator.of(context).pop();
 
                         if (email.isEmpty) {
                           _showError("Please enter your email.");
@@ -353,68 +375,211 @@ class _LoginPageState extends State<LoginPage> {
   void _showChildSelectionDialog(List<QueryDocumentSnapshot> children) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Select a Child"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Child List
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: children.length,
-                  itemBuilder: (context, index) {
-                    var child = children[index].data() as Map<String, dynamic>;
-                    String id = children[index].id;
-                    return ListTile(
-                      leading:
-                          const Icon(Icons.child_care, color: Colors.purple),
-                      title: Text(child['name']),
-                      subtitle: Text("Birthdate: ${child['birthdate']}"),
-                      onTap: () {
-                        currentSelectedChildId = id;
-                        Navigator.pop(context); // Close dialog
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MainMenu(childData: child),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              // Add New Child Button
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text("Add Another Child"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                onPressed: () async {
-                  Navigator.pop(context); // Close dialog
-                  final result = await Navigator.push(
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          bool isDeleting = false;
+
+          Future<void> deleteChild(String childId) async {
+            setStateDialog(() => isDeleting = true);
+            try {
+              User? user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('children')
+                    .doc(childId)
+                    .delete();
+
+                QuerySnapshot updatedSnapshot = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('children')
+                    .get();
+
+                List<QueryDocumentSnapshot> updatedChildren =
+                    updatedSnapshot.docs;
+
+                if (updatedChildren.isEmpty) {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const AddChildPage()),
                   );
+                } else {
+                  setStateDialog(() {
+                    children.clear();
+                    children.addAll(updatedChildren);
+                    isDeleting = false;
+                  });
+                }
+              }
+            } catch (e) {
+              setStateDialog(() => isDeleting = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Error deleting child"),
+                  backgroundColor: Colors.redAccent,
+                ),
+              );
+            }
+          }
 
-                  // Refresh dialog if child was added
-                  if (result == 'child_added') {
-                    _logIn(); // Triggers refetch and opens dialog again
-                  }
-                },
-              )
-            ],
-          ),
-        ),
+          return Dialog(
+            backgroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Select a Child",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  isDeleting
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child:
+                              CircularProgressIndicator(color: Colors.purple),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemCount: children.length,
+                          itemBuilder: (context, index) {
+                            var child =
+                                children[index].data() as Map<String, dynamic>;
+                            String childId = children[index].id;
+                            child['id'] = childId;
+
+                            return Card(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: Colors.purple[50],
+                              elevation: 3,
+                              child: ListTile(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                leading: CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.purple.shade300,
+                                  child: const Icon(Icons.child_care,
+                                      color: Colors.white),
+                                ),
+                                title: Text(
+                                  child['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  "Birthdate: ${child['birthdate']}",
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.redAccent),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        title: const Text("Confirm Deletion"),
+                                        content: Text(
+                                          "Are you sure you want to delete ${child['name']}?",
+                                          style: const TextStyle(fontSize: 15),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text("Cancel"),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                          ),
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.redAccent,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              deleteChild(childId);
+                                            },
+                                            child: const Text("Delete",
+                                                style: TextStyle(
+                                                    color: Colors.white)),
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          MainMenu(childData: child),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddChildPage()),
+                        );
+                        if (result == 'child_added') {
+                          _logIn();
+                        }
+                      },
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        "Add Another Child",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
