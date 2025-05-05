@@ -14,11 +14,6 @@ class FirebaseAuthService {
     required String childGender,
   }) async {
     try {
-<<<<<<< HEAD
-
-=======
-      
->>>>>>> 2917c4e (everything)
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -26,20 +21,12 @@ class FirebaseAuthService {
       User? user = credential.user;
 
       if (user != null) {
-<<<<<<< HEAD
- 
-=======
->>>>>>> 2917c4e (everything)
         await _firestore.collection('users').doc(user.uid).set({
           'email': email,
           'relation': relation,
           'uid': user.uid,
           'createdAt': Timestamp.now(),
         });
-<<<<<<< HEAD
-=======
-
->>>>>>> 2917c4e (everything)
         DocumentReference childRef = await _firestore
             .collection('users')
             .doc(user.uid)
@@ -50,11 +37,6 @@ class FirebaseAuthService {
           'gender': childGender,
           'createdAt': Timestamp.now(),
         });
-<<<<<<< HEAD
-=======
-
-        
->>>>>>> 2917c4e (everything)
         await childRef.update({
           'childId': childRef.id,
         });
@@ -66,14 +48,9 @@ class FirebaseAuthService {
       return null;
     }
   }
-
-<<<<<<< HEAD
   Future<User?> signInWithEmailAndPassword(
       String email, String password) async {
-=======
 
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
->>>>>>> 2917c4e (everything)
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
