@@ -6,6 +6,9 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.0' // Use appropriate Android Gradle plugin version
         classpath 'com.google.gms:google-services:4.3.14' // Correct plugin version
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.7'
+        classpath 'com.google.firebase:perf-plugin:1.4.2'
+
     }
 }
 

@@ -4,6 +4,11 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
     id "com.google.gms.google-services"
+    id "com.google.firebase.crashlytics"
+    //id "com.google.firebase:perf-plugin"
+
+
+
 }
 
 android {
@@ -36,10 +41,18 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
+            firebaseCrashlytics {
+            nativeSymbolUploadEnabled true
+        }
+        
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation 'com.google.firebase:firebase-perf:21.0.5' // ✅ Add this here
 }

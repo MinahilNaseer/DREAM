@@ -5,7 +5,6 @@ class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Registers a parent and adds a child profile
   Future<User?> signUpWithEmailAndChild({
     required String email,
     required String password,
@@ -15,7 +14,7 @@ class FirebaseAuthService {
     required String childGender,
   }) async {
     try {
-      // Create the parent account
+
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -23,16 +22,13 @@ class FirebaseAuthService {
       User? user = credential.user;
 
       if (user != null) {
-        // Store parent info (excluding parent gender)
+ 
         await _firestore.collection('users').doc(user.uid).set({
           'email': email,
           'relation': relation,
-          'password': password,
           'uid': user.uid,
           'createdAt': Timestamp.now(),
         });
-
-        // Add child info and capture the DocumentReference
         DocumentReference childRef = await _firestore
             .collection('users')
             .doc(user.uid)
@@ -43,8 +39,6 @@ class FirebaseAuthService {
           'gender': childGender,
           'createdAt': Timestamp.now(),
         });
-
-        // Update the child document with its own ID as 'childId'
         await childRef.update({
           'childId': childRef.id,
         });
@@ -57,8 +51,8 @@ class FirebaseAuthService {
     }
   }
 
-  /// Signs in the user using email and password
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(
+      String email, String password) async {
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
         email: email,
