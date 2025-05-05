@@ -75,6 +75,7 @@ class _SimpleVideoPlayerScreenState extends State<SimpleVideoPlayerScreen> {
             right: 20,
             child: ElevatedButton(
                 onPressed: () {
+                   _controller.pause();
                   if (widget.onVideoEnd != null) {
                     widget.onVideoEnd!();
                   } else if (widget.nextRoute != null) {

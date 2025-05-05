@@ -1,2 +1,0 @@
-C:/Users/GTS/Desktop/DREAM/DREAM/android/app/.cxx/Debug/4j2f1s2x/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/GTS/Desktop/DREAM/DREAM/android/app/.cxx/Debug/4j2f1s2x/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -2,54 +2,27 @@ C/C++ Structured Log}
 {
 yC:\Users\pak\Downloads\flutter_windows_3.29.3-stable\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
-<<<<<<< HEAD
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	¨ÒÃßé2§ »£ÑÔé2S
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ì—öê2§ »£ÑÔé2S
 Q
-OF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\additional_project_files.txt	¨ÒÃßé2 è´¼Öé2P
+OF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\additional_project_files.txt	ì—öê2 ºŠÒê2P
 N
-LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build.json	¨ÒÃßé2¦ ê´¼Öé2U
+LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build.json	ì—öê2¦ ¼ŠÒê2U
 S
-QF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build_mini.json	¨ÒÃßé2… ú´¼Öé2B
+QF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build_mini.json	ì—öê2… ÉŠÒê2B
 @
->F:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja	¨ÒÃßé2Ñ í³¼Öé2F
+>F:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja	ì—öê2Ñ ˜‰Òê2F
 D
-BF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja.txt	¨ÒÃßé2K
+BF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja.txt	ì—öê2K
 I
-GF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build_file_index.txt	¨ÒÃßé2y ü´¼Öé2L
+GF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build_file_index.txt	ì—öê2y ËŠÒê2L
 J
-HF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json	¨ÒÃßé2	P
+HF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json	ì—öê2	P
 N
-LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json.bin	¨ÒÃßé2
+LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json.bin	ì—öê2
 V
 T
-RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\metadata_generation_command.txt	¨ÒÃßé2• û´¼Öé2I
+RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\metadata_generation_command.txt	ì—öê2• ÊŠÒê2I
 G
-EF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\prefab_config.json	¨ÒÃßé2( û´¼Öé2N
+EF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\prefab_config.json	ì—öê2( ÊŠÒê2N
 L
-JF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\symbol_folder_index.txt	¨ÒÃßé2A û´¼Öé2
-=======
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	‹˜‘€ê2§ »£ÑÔé2S
-Q
-OF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\additional_project_files.txt	‹˜‘€ê2 è´¼Öé2P
-N
-LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build.json	‹˜‘€ê2¦ ê´¼Öé2U
-S
-QF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build_mini.json	‹˜‘€ê2… ú´¼Öé2B
-@
->F:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja	‹˜‘€ê2Ñ í³¼Öé2F
-D
-BF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja.txt	‹˜‘€ê2K
-I
-GF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build_file_index.txt	‹˜‘€ê2y ü´¼Öé2L
-J
-HF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json	‹˜‘€ê2	P
-N
-LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json.bin	‹˜‘€ê2
-V
-T
-RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\metadata_generation_command.txt	‹˜‘€ê2• û´¼Öé2I
-G
-EF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\prefab_config.json	‹˜‘€ê2( û´¼Öé2N
-L
-JF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\symbol_folder_index.txt	‹˜‘€ê2A û´¼Öé2
->>>>>>> 2917c4e (everything)
+JF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\symbol_folder_index.txt	ì—öê2A ÊŠÒê2

@@ -10,15 +10,9 @@ from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image, ExifTags
 from google.cloud import firestore
 import google.generativeai as genai
-
-<<<<<<< HEAD
 from dotenv import load_dotenv
 load_dotenv()
 
-
-# Configure the SDK with your hardcoded API key
-=======
->>>>>>> 2917c4e (everything)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "c:\\Users\\pak\\Downloads\\service-account-key.json"
