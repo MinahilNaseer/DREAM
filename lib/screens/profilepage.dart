@@ -3,6 +3,7 @@ import '../widgets/listwidgetprofile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/screens/editpage.dart';
+import 'package:dream/screens/reportpage.dart';
 
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic> childData;
@@ -123,7 +124,14 @@ class _ProfilePageState extends State<ProfilePage> {
                               icon: Icons.insert_chart_outlined,
                               title: "Reports / Results",
                               onTap: () {
-                                Navigator.pushNamed(context, "/reports");
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ReportSelectionPage(
+                                        childData: widget.childData
+                                        ),
+                                  ),
+                                );
                               },
                             ),
                             const Divider(),
@@ -181,10 +189,10 @@ class _ProfilePageState extends State<ProfilePage> {
               Navigator.pop(context);
               _deleteGuardianAccount();
             },
-            child: const Text("Delete",
-            style: TextStyle(
-              color: Colors.white
-            ),),
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -214,8 +222,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
         await user.delete();
 
-        Navigator.pushNamedAndRemoveUntil(
-            context, "/", (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, "/", (route) => false);
       }
     } catch (e) {
       setState(() {

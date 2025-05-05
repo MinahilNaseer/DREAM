@@ -8,6 +8,7 @@ import '../widgets/menu-widget.dart';
 import 'package:flame/game.dart';
 import '../game/scenicgame.dart';
 import '../screens/videoplayerscreen.dart';
+import 'package:dream/screens/dyscalculia.dart';
 
 class MainMenu extends StatefulWidget {
   final Map<String, dynamic> childData;
@@ -43,7 +44,6 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
       MaterialPageRoute(builder: (context) => ProfilePage(childData: widget.childData)),
     );
 
-    // If user came back and asked to reset to home
     if (result == 'backToHome') {
       setState(() {
         _selectedIndex = 0;
@@ -191,9 +191,18 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const SimpleVideoPlayerScreen(
-                                  videoPath: "assets/videos/dyscal-instruction-vid.mp4", 
-                                  nextRoute: '/dyscalculia', 
+                                builder: (context) => SimpleVideoPlayerScreen(
+                                  videoPath:
+                                      "assets/videos/dyscal-instruction-vid.mp4",
+                                  onVideoEnd: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DyscalculiaLevel(
+                                            childData: widget.childData),
+                                      )
+                                    );
+                                  }
                                 ),
                               ),
                             );

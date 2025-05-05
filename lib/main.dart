@@ -15,10 +15,12 @@ import 'package:dream/game/gamemainscreen.dart';
 import 'package:dream/screens/dyscalculia_report.dart';
 import 'package:dream/screens/reportpage.dart';
 import 'package:dream/screens/dyslexia_report.dart';
-import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:ui';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -28,15 +30,16 @@ void main() async {
     print("Error loading .env file: $e");  
   }
   await Firebase.initializeApp(); 
+   
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-  
     return true;
   };
-  FirebasePerformance performance = FirebasePerformance.instance;
-  performance.setPerformanceCollectionEnabled(true);
+
   
+  FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+
   runApp(const MyApp());
 }
 
@@ -56,19 +59,19 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const InitialPage(), 
-        //'/mainmenu': (context) => MainMenu(), 
-        //'/profile': (context) => ProfilePage(), 
+        
+        
         '/register': (context) => const RegisterPage(), 
         '/login': (context) => const LoginPage(), 
         '/help': (context) => const HelpPage(), 
-        //'/edit': (context) => const EditProfilePage(),
-        '/dyscalculia': (context) => DyscalculiaLevel(),
+        
+        
         '/dysgraphia': (context) => DysgraphiaScreen(),
         '/gameMainScreen': (context) => GameMainScreen(),
           '/reports': (context) => const ReportSelectionPage(),
-        '/dyscalculia_report': (context) => const DyscalculiaReportPage(),
-        '/dysgraphia_report':(context) => const DysgraphiaReportPage(),
-        '/dyslexia_report' :(context) => const DyslexiaReportPage(),
+        
+        
+        
       },
 
     );

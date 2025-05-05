@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:dream/screens/dyscalculia_report.dart';
+import 'package:dream/screens/dysgraphia_report.dart';
+import 'package:dream/screens/dyslexia_report.dart';
+
 
 class ReportSelectionPage extends StatelessWidget {
-    final String? selectedChildId;
-  const ReportSelectionPage({super.key, this.selectedChildId});
+  final Map<String, dynamic>? childData;
+  const ReportSelectionPage({super.key, this.childData});
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +44,61 @@ class ReportSelectionPage extends StatelessWidget {
             _buildReportCard(
               context,
               title: "Dyscalculia Report",
-              onTap: () => Navigator.pushNamed(context,'/dyscalculia_report'),
+              onTap: () {
+                if (childData != null && childData!['childId'] != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DyscalculiaReportPage(
+                        childData: childData!,
+                        childId: childData!['childId'],
+                      ),
+                    ),
+                  );
+                } else {
+                  _showErrorDialog(context, "Child data is missing!");
+                }
+              },
             ),
             const SizedBox(height: 16),
             _buildReportCard(
               context,
               title: "Dysgraphia Report",
-              onTap: () => Navigator.pushNamed(context,'/dysgraphia_report'),
+              onTap: () {
+                if (childData != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DysgraphiaReportPage(
+                        childData: childData!,
+                        childId: childData!['childId'],
+                      ),
+                    ),
+                  );
+                } else {
+                  _showErrorDialog(context, "Child data is missing!");
+                }
+              },
             ),
             const SizedBox(height: 16),
             _buildReportCard(
               context,
               title: "Dyslexia Report",
-              onTap: ()=> Navigator.pushNamed(context,'/dyslexia_report'),
+              onTap: () {
+                if (childData != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DyslexiaReportPage(
+                        childData: childData!,
+                        childId: childData!['childId'],
+                      ),
+                    ),
+                  );
+                } else {
+                  _showErrorDialog(context, "Child data is missing!");
+                }
+              },
             ),
           ],
         ),
@@ -93,6 +139,22 @@ class ReportSelectionPage extends StatelessWidget {
             const Icon(Icons.arrow_forward_ios, color: Colors.purple),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          )
+        ],
       ),
     );
   }

@@ -26,6 +26,7 @@ class ForestLevel extends FlameGame {
   SpriteComponent? animalImage;
   bool isGameStarted = false;
   final List<Map<String, dynamic>> roundData = [];
+  int attempts = 0;
 
   final Map<String, String> animalImageMap = {
     'Cat': 'cat.png',
@@ -203,7 +204,11 @@ class ForestLevel extends FlameGame {
   if (rectangle.text == correctAnimal) {
     correctAnswers++;
     showAnimalImage(correctAnimal!);
+<<<<<<< HEAD
     await tts.speak("Congratulations! You found the $correctAnimal!");
+=======
+    await tts.speak("🎉 Congratulations! You found the $correctAnimal!");
+>>>>>>> 2917c4e (everything)
     roundCount++;
     attempts = 0;
     await Future.delayed(Duration(seconds: 6));
@@ -212,13 +217,21 @@ class ForestLevel extends FlameGame {
     } else {
       calculateFinalScore();
       await _storeForestScore();
+<<<<<<< HEAD
       await tts.speak("We made it through the forest adventure!");
+=======
+      await tts.speak("🎊 We made it through the forest adventure!");
+>>>>>>> 2917c4e (everything)
       onTaskCompleted();
     }
   } else {
     attempts++;
     if (attempts < 2) {
+<<<<<<< HEAD
       await tts.speak("That's not the right one. Try again carefully.");
+=======
+      await tts.speak("❌ That's not the right one. Try again carefully.");
+>>>>>>> 2917c4e (everything)
       isSelectionDisabled = false;
     } else {
       await tts.speak("🔄 Oops! That animal is still hiding. Let's try a different sound.");
@@ -230,7 +243,11 @@ class ForestLevel extends FlameGame {
       } else {
         calculateFinalScore();
         await _storeForestScore();
+<<<<<<< HEAD
         await tts.speak("We made it through the forest adventure!");
+=======
+        await tts.speak("🎊 We made it through the forest adventure!");
+>>>>>>> 2917c4e (everything)
         onTaskCompleted();
       }
     }
@@ -239,7 +256,7 @@ class ForestLevel extends FlameGame {
 
 
   void calculateFinalScore() {
-    // Simple scoring - 1 point per correct answer, max 3 points
+    
     currentLevelScore = correctAnswers.toDouble();
     print('Calculated Forest Level Score: $currentLevelScore/3');
   }

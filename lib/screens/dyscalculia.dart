@@ -12,6 +12,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 class DyscalculiaLevel extends StatefulWidget {
+  final Map<String, dynamic> childData;
+   const DyscalculiaLevel({Key? key, required this.childData}) : super(key: key);
   @override
   _DyscalculiaLevelState createState() => _DyscalculiaLevelState();
 }
@@ -326,11 +328,11 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
 
 Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
   try {
-    // Get the current user (parent)
+    
     User? user = FirebaseAuth.instance.currentUser;
     String uid = user?.uid ?? 'no_uid_found';
 
-    // Fetch all children under the current user
+    
     QuerySnapshot childrenSnapshot = await FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
@@ -346,7 +348,7 @@ Future<void> sendDataToBackend(Map<String, dynamic> dataPayload) async {
         dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
     final Uri url = Uri.parse(urlString);
 
-    // Loop through each child
+    
     for (var childDoc in childrenSnapshot.docs) {
             selectedChildId = childDoc.id;
 

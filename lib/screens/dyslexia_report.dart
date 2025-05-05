@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dream/global.dart'; // includes currentSelectedChildId
+import 'package:dream/global.dart'; 
 
 class DyslexiaReportPage extends StatelessWidget {
-  const DyslexiaReportPage({super.key});
+  final Map<String, dynamic> childData;
+  final String childId;
+  const DyslexiaReportPage({super.key,required this.childData,
+    required this.childId,});
 
   Future<String?> _fetchReportFromFirestore() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not logged in.');
-    if (currentSelectedChildId == null) throw Exception('No child selected.');
+ 
 
     final childDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('children')
-        .doc(currentSelectedChildId)
+        .doc(childId)
         .get();
 
     if (!childDoc.exists) {
       throw Exception('Child document not found.');
     }
-
-    // Get the report directly from Firestore
     final existingReport = childDoc.data()?['dyslexia_report'];
     if (existingReport != null) {
       return existingReport;

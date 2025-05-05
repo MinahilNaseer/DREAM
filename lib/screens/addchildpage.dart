@@ -37,17 +37,20 @@ class _AddChildPageState extends State<AddChildPage> {
           'gender': selectedGender ?? 'Unknown',
           'createdAt': Timestamp.now(),
         });
+        
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Child added successfully!"),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
 
-// Add childId field
-        await childRef.update({
-          'childId': childRef.id,
-        });
+      
+      await Future.delayed(const Duration(seconds: 2));
 
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-          (Route<dynamic> route) => false, // Removes all previous routes
-        );
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +103,8 @@ class _AddChildPageState extends State<AddChildPage> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context, 'cancelled'),
+
         ),
       ),
       body: Padding(

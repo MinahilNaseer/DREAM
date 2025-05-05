@@ -93,10 +93,11 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
       request.files
           .add(await http.MultipartFile.fromPath('image', resizedImage.path));
       request.fields['word'] = _selectedWord!;
-      request.fields['uid'] = FirebaseAuth.instance.currentUser?.uid ?? "default_uid"; // Dynamically get UID
-    request.fields['childId'] = currentSelectedChildId!; 
-    print("Sending UID: ${FirebaseAuth.instance.currentUser?.uid}");
-    print("Sending Child ID: $currentSelectedChildId");
+      request.fields['uid'] = FirebaseAuth.instance.currentUser?.uid ??
+          "default_uid"; 
+      request.fields['childId'] = currentSelectedChildId!;
+      print("Sending UID: ${FirebaseAuth.instance.currentUser?.uid}");
+      print("Sending Child ID: $currentSelectedChildId");
 
       var response = await request.send();
       if (response.statusCode == 200) {
@@ -106,6 +107,20 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
           _uploadCount++;
           _selectedImage = null;
           _selectedWord = null;
+
+          if (_uploadCount >= 5) {
+            _showCompletionDialog(); 
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content:
+                    Text("Upload successful. Select another word and image."),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
         });
       } else {
         setState(() {
@@ -164,14 +179,14 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
             SizedBox(height: 10),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white, 
-                borderRadius: BorderRadius.circular(12), 
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2), 
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 6,
                     spreadRadius: 2,
-                    offset: Offset(0, 3), 
+                    offset: Offset(0, 3),
                   ),
                 ],
               ),
@@ -288,26 +303,44 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
                   ),
                 ],
               )
-            else if (_result != null)
-              Card(
-                elevation: 5,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                margin: EdgeInsets.only(top: 20),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Result: $_result',
-                    style: TextStyle(
-                        fontSize: 5,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("All Completed!"),
+          content: const Text("You've uploaded all 5 handwriting samples."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _generateReport();
+              },
+              child: const Text("Generate Report"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _generateReport() async {
+    await Future.delayed(Duration(seconds: 2));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            Text("Report generated. Navigate to profile to view the results."),
+        backgroundColor: Colors.indigo,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 4),
       ),
     );
   }

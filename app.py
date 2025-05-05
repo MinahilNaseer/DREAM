@@ -11,14 +11,17 @@ from PIL import Image, ExifTags
 from google.cloud import firestore
 import google.generativeai as genai
 
+<<<<<<< HEAD
 from dotenv import load_dotenv
 load_dotenv()
 
 
 # Configure the SDK with your hardcoded API key
+=======
+>>>>>>> 2917c4e (everything)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:\\Users\\GTS\\Downloads\\service-account-key.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "c:\\Users\\pak\\Downloads\\service-account-key.json"
 db = firestore.Client()
 
 model = joblib.load("DyscalD.pkl")
@@ -184,7 +187,7 @@ def predict():
         features = np.array(features).reshape(1, -1)
         prediction = model.predict(features)[0]
 
-        # Store prediction under specific child
+        
         store_prediction_in_firestore(uid, child_id, features.tolist(), int(prediction))
 
         return jsonify({'prediction': int(prediction)})
@@ -222,7 +225,7 @@ def store_prediction_in_firestore(uid, child_id, features, prediction):
 
 def generate_and_store_summary_report(uid, child_id):
     try:
-        # Fetch last 5 predictions
+        
         predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('predictions')
         predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
         prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
@@ -231,7 +234,7 @@ def generate_and_store_summary_report(uid, child_id):
             print("Not enough predictions to generate a report.")
             return
 
-        # Fetch child name
+        
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
@@ -239,7 +242,7 @@ def generate_and_store_summary_report(uid, child_id):
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        # Prompt for Gemini
+        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dyscalculia screening following this format:
 
@@ -266,7 +269,7 @@ Return the output exactly in the format above.
         response = model.generate_content(prompt)
         summary = response.text
 
-        # Store report under the child document
+        
         db.collection('users').document(uid).collection('children').document(child_id).update({
             'dyscalculia_report': summary,
             'report_generated_at': firestore.SERVER_TIMESTAMP
@@ -303,7 +306,7 @@ def analyze_handwriting():
         cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
         final_result = "Dysgraphia" if cnn_result == "Dysgraphia" else "Non-Dysgraphia"
 
-        # 🧠 Store this prediction in Firestore
+        
         store_handwriting_prediction_in_firestore(uid, child_id, float(prediction), final_result)
 
         response = {
@@ -330,7 +333,7 @@ def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, f
 
         print(f"Handwriting prediction stored for UID: {uid}, Child ID: {child_id}")
 
-        # Check if 5 predictions are stored
+        
         all_predictions = handwriting_predictions_ref.stream()
         prediction_count = sum(1 for _ in all_predictions)
 
@@ -351,7 +354,6 @@ def generate_and_store_handwriting_summary(uid, child_id):
             print("Not enough handwriting predictions to generate a report.")
             return
 
-        # Fetch child's name
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
@@ -359,7 +361,7 @@ def generate_and_store_handwriting_summary(uid, child_id):
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        # Build prompt for Gemini
+        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dysgraphia screening following this format:
 
@@ -386,7 +388,7 @@ Return the output strictly following the above format.
         response = model.generate_content(prompt)
         summary = response.text
 
-        # Store report under the child document
+        
         db.collection('users').document(uid).collection('children').document(child_id).update({
             'dysgraphia_report': summary,
             'dysgraphia_report_generated_at': firestore.SERVER_TIMESTAMP
@@ -400,10 +402,10 @@ Return the output strictly following the above format.
 @app.route('/generate_dyslexia_report', methods=['POST'])
 def generate_dyslexia_report():
     try:
-        # Get the request data
+       
         data = request.get_json()
 
-        # Extract the relevant data
+        
         uid = data.get('uid')
         child_id = data.get('child_id')
         scores = data.get('scores')
@@ -411,20 +413,20 @@ def generate_dyslexia_report():
         if not uid or not child_id or not scores:
             return jsonify({"error": "Missing required data"}), 400
 
-        # Fetch the child's name from Firebase
+        
         child_ref = db.collection('users').document(uid).collection('children').document(child_id)
         child_doc = child_ref.get()
-        child_name = child_doc.get('name')  # Assuming 'name' is a field in Firestore
+        child_name = child_doc.get('name')  
 
         if not child_name:
             return jsonify({"error": "Child's name not found"}), 400
 
-        # Calculate the dyslexia risk (example logic)
+        
         total_score = scores['total_score']
         percentage = scores['percentage']
         risk = scores['risk']
 
-        # Build a more aesthetic and friendly prompt for Gemini
+        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dyslexia screening for {child_name} following this format:
 
@@ -449,17 +451,17 @@ Generate a professional and parent-friendly summary report for dyslexia screenin
 Please generate a clear, encouraging, and supportive report following this format. Do not use harsh or clinical language.
 """
 
-        # Send the prompt to the Gemini model to generate the report
+        
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
 
         if response:
-            report = response.text  # The generated report
+            report = response.text  
 
-            # Save the report to Firebase Firestore
+            
             child_ref.update({
-                'dyslexia_report': report,  # Store the generated report
-                'report_generated_at': firestore.SERVER_TIMESTAMP  # Optionally, track the time when the report was generated
+                'dyslexia_report': report,  
+                'report_generated_at': firestore.SERVER_TIMESTAMP  
             })
 
             return jsonify({"report": report}), 200

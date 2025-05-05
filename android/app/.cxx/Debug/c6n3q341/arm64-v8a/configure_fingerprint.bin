@@ -2,6 +2,7 @@ C/C++ Structured Log}
 {
 yC:\Users\pak\Downloads\flutter_windows_3.29.3-stable\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÛÑÃßé2§ »£ÑÔé2Y
 W
 UF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\additional_project_files.txt	ÛÑÃßé2 ŠŠ¼Öé2V
@@ -26,3 +27,29 @@ M
 KF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\prefab_config.json	ÛÑÃßé2( ¿Š¼Öé2T
 R
 PF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\symbol_folder_index.txt	ÛÑÃßé2G ÀŠ¼Öé2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	™’‘€ê2§ »£ÑÔé2Y
+W
+UF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\additional_project_files.txt	™’‘€ê2 ŠŠ¼Öé2V
+T
+RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\android_gradle_build.json	™’‘€ê2² ˜Š¼Öé2[
+Y
+WF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\android_gradle_build_mini.json	™’‘€ê2‘ »Š¼Öé2H
+F
+DF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\build.ninja	™’‘€ê2®Ñ ¾ˆ¼Öé2L
+J
+HF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\build.ninja.txt	š’‘€ê2Q
+O
+MF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\build_file_index.txt	š’‘€ê2y ÀŠ¼Öé2R
+P
+NF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\compile_commands.json	š’‘€ê2	V
+T
+RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\compile_commands.json.bin	š’‘€ê2
+\
+Z
+XF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\metadata_generation_command.txt	š’‘€ê2³ ¿Š¼Öé2O
+M
+KF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\prefab_config.json	š’‘€ê2( ¿Š¼Öé2T
+R
+PF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\arm64-v8a\symbol_folder_index.txt	š’‘€ê2G ÀŠ¼Öé2
+>>>>>>> 2917c4e (everything)

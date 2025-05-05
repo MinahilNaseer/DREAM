@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dream/global.dart'; // make sure this has currentSelectedChildId
+import 'package:dream/global.dart'; 
 
 class DysgraphiaReportPage extends StatelessWidget {
-  const DysgraphiaReportPage({super.key});
+  final Map<String, dynamic> childData;
+  final String childId;
+  const DysgraphiaReportPage({super.key,required this.childData,
+    required this.childId,});
 
   Future<String?> _fetchReport() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -12,15 +15,13 @@ class DysgraphiaReportPage extends StatelessWidget {
     if (user == null) {
       throw Exception('User not logged in.');
     }
-    if (currentSelectedChildId == null) {
-      throw Exception('No child selected.');
-    }
+    
 
     DocumentSnapshot childDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid)
         .collection('children')
-        .doc(currentSelectedChildId)
+        .doc(childId)
         .get();
 
     if (!childDoc.exists) {

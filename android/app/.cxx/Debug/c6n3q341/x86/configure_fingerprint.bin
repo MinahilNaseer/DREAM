@@ -2,6 +2,7 @@ C/C++ Structured Log}
 {
 yC:\Users\pak\Downloads\flutter_windows_3.29.3-stable\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	¨ÒÃßé2§ »£ÑÔé2S
 Q
 OF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\additional_project_files.txt	¨ÒÃßé2 è´¼Öé2P
@@ -26,3 +27,29 @@ G
 EF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\prefab_config.json	¨ÒÃßé2( û´¼Öé2N
 L
 JF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\symbol_folder_index.txt	¨ÒÃßé2A û´¼Öé2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	‹˜‘€ê2§ »£ÑÔé2S
+Q
+OF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\additional_project_files.txt	‹˜‘€ê2 è´¼Öé2P
+N
+LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build.json	‹˜‘€ê2¦ ê´¼Öé2U
+S
+QF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\android_gradle_build_mini.json	‹˜‘€ê2… ú´¼Öé2B
+@
+>F:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja	‹˜‘€ê2Ñ í³¼Öé2F
+D
+BF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build.ninja.txt	‹˜‘€ê2K
+I
+GF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\build_file_index.txt	‹˜‘€ê2y ü´¼Öé2L
+J
+HF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json	‹˜‘€ê2	P
+N
+LF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\compile_commands.json.bin	‹˜‘€ê2
+V
+T
+RF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\metadata_generation_command.txt	‹˜‘€ê2• û´¼Öé2I
+G
+EF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\prefab_config.json	‹˜‘€ê2( û´¼Öé2N
+L
+JF:\DREAM\DREAM\android\app\.cxx\Debug\c6n3q341\x86\symbol_folder_index.txt	‹˜‘€ê2A û´¼Öé2
+>>>>>>> 2917c4e (everything)
