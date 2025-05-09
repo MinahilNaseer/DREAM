@@ -200,35 +200,29 @@ def store_prediction_in_firestore(uid, child_id, features, prediction):
         predictions_ref.add({
             **features_dict,
             'prediction': prediction,
-            'timestamp': firestore.SERVER_TIMESTAMP
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'usedInReport': False
         })
 
         print(f"Prediction stored for UID: {uid}, Child ID: {child_id}")
 
-        all_predictions = predictions_ref.stream()
-        prediction_count = sum(1 for _ in all_predictions)
+        unused_predictions_query = predictions_ref.where('usedInReport', '==', False)
+        unused_predictions = list(unused_predictions_query.stream())
 
-        print(f"Total predictions so far for this child: {prediction_count}")
+        print(f"Unused predictions for child {child_id}: {len(unused_predictions)}")
 
-        if prediction_count == 5:
-            generate_and_store_summary_report(uid, child_id)
+        if len(unused_predictions) >= 5:
+            generate_and_store_summary_report(uid, child_id, unused_predictions[:5])
 
     except Exception as e:
         print(f"Error storing data in Firestore: {e}")
 
 
-def generate_and_store_summary_report(uid, child_id):
+
+def generate_and_store_summary_report(uid, child_id, prediction_docs):
     try:
-        
-        predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('predictions')
-        predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
-        prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
+        prediction_values = [doc.to_dict().get('prediction') for doc in prediction_docs]
 
-        if len(prediction_values) < 5:
-            print("Not enough predictions to generate a report.")
-            return
-
-        
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
@@ -236,12 +230,10 @@ def generate_and_store_summary_report(uid, child_id):
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dyscalculia screening following this format:
 
 📌 Child’s Name: {name}
-
 📊 Test Overview:
 - Total Screenings Taken: 5
 - Prediction Outcomes: {prediction_values}
@@ -258,21 +250,25 @@ Generate a professional and parent-friendly summary report for dyscalculia scree
 Avoid adding closing phrases like “please contact us” or mentioning any organizations.
 Return the output exactly in the format above.
 """
-
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
         summary = response.text
 
-        
-        db.collection('users').document(uid).collection('children').document(child_id).update({
-            'dyscalculia_report': summary,
-            'report_generated_at': firestore.SERVER_TIMESTAMP
+        report_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('dyscalculia_reports')
+        report_ref.add({
+            'report': summary,
+            'predictions': prediction_values,
+            'timestamp': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"✅ Summary report generated and stored for UID: {uid}, Child ID: {child_id}")
+        print(f"Report stored for child {child_id}.")
+
+        for doc in prediction_docs:
+            doc.reference.update({'usedInReport': True})
 
     except Exception as e:
-        print(f"❌ Error generating summary report: {e}")
+        print(f"Error generating summary report: {e}")
+
 
 
 @app.route('/analyze-handwriting', methods=['POST'])
@@ -314,6 +310,8 @@ def analyze_handwriting():
         os.remove(file_path)
 
     return jsonify(response)
+
+
 def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result):
     try:
         child_ref = db.collection('users').document(uid).collection('children').document(child_id)
@@ -322,40 +320,37 @@ def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, f
         handwriting_predictions_ref.add({
             'confidence': confidence_score,
             'result': final_result,
-            'timestamp': firestore.SERVER_TIMESTAMP
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'usedInReport': False
         })
 
         print(f"Handwriting prediction stored for UID: {uid}, Child ID: {child_id}")
 
-        
-        all_predictions = handwriting_predictions_ref.stream()
-        prediction_count = sum(1 for _ in all_predictions)
 
-        print(f"Total handwriting predictions so far: {prediction_count}")
+        unused_predictions_query = handwriting_predictions_ref.where('usedInReport', '==', False)
+        unused_predictions = list(unused_predictions_query.stream())
 
-        if prediction_count == 5:
-            generate_and_store_handwriting_summary(uid, child_id)
+        print(f"Unused predictions: {len(unused_predictions)}")
+
+        if len(unused_predictions) >= 5:
+            generate_and_store_handwriting_summary(uid, child_id, unused_predictions[:5])
 
     except Exception as e:
         print(f"Error storing handwriting prediction: {e}")
-def generate_and_store_handwriting_summary(uid, child_id):
-    try:
-        handwriting_predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('handwriting_predictions')
-        predictions = handwriting_predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
-        prediction_results = [doc.to_dict().get('result') for doc in predictions]
 
-        if len(prediction_results) < 5:
-            print("Not enough handwriting predictions to generate a report.")
-            return
+
+def generate_and_store_handwriting_summary(uid, child_id, prediction_docs):
+    try:
+        prediction_results = [doc.to_dict().get('result') for doc in prediction_docs]
 
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
             return
+
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dysgraphia screening following this format:
 
@@ -382,16 +377,20 @@ Return the output strictly following the above format.
         response = model.generate_content(prompt)
         summary = response.text
 
-        
-        db.collection('users').document(uid).collection('children').document(child_id).update({
-            'dysgraphia_report': summary,
-            'dysgraphia_report_generated_at': firestore.SERVER_TIMESTAMP
+        db.collection('users').document(uid).collection('children').document(child_id).collection('dysgraphia_reports').add({
+            'report': summary,
+            'predictions': prediction_results,
+            'timestamp': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"✅ Handwriting summary report generated and stored for UID: {uid}, Child ID: {child_id}")
+        print(f"Handwriting summary report stored for UID: {uid}, Child ID: {child_id}")
+
+        for doc in prediction_docs:
+            doc.reference.update({'usedInReport': True})
 
     except Exception as e:
-        print(f"❌ Error generating handwriting summary report: {e}")
+        print(f" Error generating dysgraphia summary report: {e}")
+
 
 @app.route('/generate_dyslexia_report', methods=['POST'])
 def generate_dyslexia_report():
