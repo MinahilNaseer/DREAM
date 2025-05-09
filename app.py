@@ -452,10 +452,11 @@ Please generate a clear, encouraging, and supportive report following this forma
             report = response.text  
 
             
-            child_ref.update({
-                'dyslexia_report': report,  
-                'report_generated_at': firestore.SERVER_TIMESTAMP  
+            child_ref.collection('dyslexia_reports').add({
+                'report_text': report,
+                'createdAt': firestore.SERVER_TIMESTAMP
             })
+
 
             return jsonify({"report": report}), 200
         else:

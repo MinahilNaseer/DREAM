@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dream/global.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -9,6 +10,9 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../game/fishinglevel.dart';
 
 class ScenicGame extends FlameGame with TapCallbacks {
+  final Map<String, dynamic> childData;
+  ScenicGame({required this.childData});
+
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
@@ -186,7 +190,7 @@ class ScenicGame extends FlameGame with TapCallbacks {
   void switchToNewScene(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: Fishinglevel(context)),
+        builder: (context) => GameWidget(game: Fishinglevel(context,childData)),
       ),
     );
   }
@@ -261,17 +265,22 @@ class ScenicGame extends FlameGame with TapCallbacks {
 
    void _initializeBicycleSound() {
     _bicycleSoundPlayer = AudioPlayer();
+    _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
   void playBicycleSound() async {
     if (!isBicycleSoundPlaying) {
-      await _bicycleSoundPlayer.setSource(AssetSource('audio/cycling-noise.mp3'));
+    try {
+      await _bicycleSoundPlayer.stop(); 
+      await _bicycleSoundPlayer.setSourceAsset('audio/cycling-noise.mp3');
       await _bicycleSoundPlayer.setVolume(1.0);
-      await _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
       await _bicycleSoundPlayer.resume();
       isBicycleSoundPlaying = true;
+    } catch (e) {
+      print("🚨 Error playing bicycle sound: $e");
     }
   }
+}
 
   void stopBicycleSound() async {
     if (isBicycleSoundPlaying) {

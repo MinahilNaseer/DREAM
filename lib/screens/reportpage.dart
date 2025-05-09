@@ -3,6 +3,7 @@ import 'package:dream/screens/DyscalculiaReportList.dart';
 import 'package:dream/screens/dysgraphia_report.dart';
 import 'package:dream/screens/dyslexia_report.dart';
 import 'DysgraphiaReportList.dart';
+import 'DyslexiaReportsList.dart';
 
 class ReportSelectionPage extends StatelessWidget {
   final Map<String, dynamic>? childData;
@@ -89,7 +90,7 @@ class ReportSelectionPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DyslexiaReportPage(
+                      builder: (context) => DyslexiaReportsListPage(
                         childData: childData!,
                         childId: childData!['childId'],
                       ),

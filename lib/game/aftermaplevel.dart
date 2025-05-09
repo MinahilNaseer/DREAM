@@ -20,8 +20,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dream/screens/createdyslexiareport.dart';
+import 'package:dream/screens/dyslexia_report.dart';
 
 class Aftermaplevel extends FlameGame with TapCallbacks {
+  Aftermaplevel({required this.childId, required this.childData});
+
+  late final String childId;
+  late final Map<String, dynamic> childData;
+
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
@@ -190,7 +196,7 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
         isBicycleSoundPlaying = true;
       }
     } catch (e) {
-      print("🚨 Error playing bicycle sound: $e");
+      print("Error playing bicycle sound: $e");
     }
   }
 
@@ -201,7 +207,7 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
         isBicycleSoundPlaying = false;
       }
     } catch (e) {
-      print("🚨 Error stopping bicycle sound: $e");
+      print("Error stopping bicycle sound: $e");
     }
   }
 
@@ -221,12 +227,12 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
     speechToText = stt.SpeechToText();
     await speechToText.initialize(
       onStatus: (status) {
-        print("🟡 SpeechToText status: $status");
+        print("SpeechToText status: $status");
         if (status == 'done' && recognizedText.isNotEmpty) {
-          print("🛑 Speech recognition completed.");
+          print("Speech recognition completed.");
         }
       },
-      onError: (error) => print("❌ SpeechToText error: $error"),
+      onError: (error) => print("SpeechToText error: $error"),
     );
   }
 
@@ -332,7 +338,7 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
 
   void _startSpeechRecognition(TextComponent buttonText) async {
     if (speechToText.isAvailable) {
-      print("🎤 Speech recognition started...");
+      print("Speech recognition started...");
       isRecording = true;
       recognizedText = "";
 
@@ -342,14 +348,14 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
           recognizedTextDisplay.text = "Recognized: $recognizedText";
 
           if (result.finalResult) {
-            print("🎤 Final recognition result: ${result.recognizedWords}");
+            print("Final recognition result: ${result.recognizedWords}");
             isRecording = false;
             buttonText.text = "Press to Start";
 
             if (recognizedText.isNotEmpty) {
               _analyzeRecordedWord();
             } else {
-              print("⚠️ No valid word detected in final result.");
+              print("No valid word detected in final result.");
             }
           }
         },
@@ -357,14 +363,14 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
         pauseFor: Duration(seconds: 2),
       );
     } else {
-      print("❌ Speech recognition is not available.");
+      print("Speech recognition is not available.");
       buttonText.text = "Press to Start";
     }
   }
 
   void _analyzeRecordedWord() {
     if (recognizedText.isEmpty || recognizedText.trim().isEmpty) {
-      print("⚠️ No valid word recognized, skipping analysis.");
+      print("No valid word recognized, skipping analysis.");
       return;
     }
 
@@ -373,121 +379,110 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
         displayedWord.toLowerCase().trim();
 
     if (isCorrect) {
-      print("✅ Correct word: $recognizedText");
+      print("Correct word: $recognizedText");
       _onCorrectPronunciation();
     } else {
-      print("❌ Incorrect word: $recognizedText");
+      print("Incorrect word: $recognizedText");
       _onIncorrectPronunciation();
     }
   }
 
-  bool _doWordsRhyme(String word1, String word2) {
-    if (word1.length < 2 || word2.length < 2) return false;
-    return word1.substring(word1.length - 2) ==
-        word2.substring(word2.length - 2);
-  }
-
   int correctResponses = 0;
   int incorrectResponses = 0;
-int totalAttempts = 0;
-int maxRounds = 3; 
-int correctAnswers = 0;
-double currentLevelScore = 0.0;
-void _onCorrectPronunciation() async {
-  correctResponses++;
-  correctAnswers++; // Track correct answers
-  totalAttempts++;
-  
-  // Calculate score with penalty for incorrect attempts
-  calculateFinalScore();
-  
-  speechToText.stop();
-  isRecording = false;
+  int totalAttempts = 0;
+  int maxRounds = 3;
+  int correctAnswers = 0;
+  double currentLevelScore = 0.0;
+  void _onCorrectPronunciation() async {
+    correctResponses++;
+    correctAnswers++;
+    totalAttempts++;
 
-  instructionBox.text = "✅ Great! You pronounced it correctly!";
-  print("🟢 Speaking: Great! You pronounced it correctly!");
-
-  await speakDialogue("Great! You pronounced it correctly!");
-  
-  if (correctAnswers >= maxRounds) {
-    await _storePronunciationScore(); // wait for score storage
-    await Future.delayed(Duration(seconds: 4)); // wait before continuing
-    hideGateTaskOverlay();
-    openGate();
-    showKidOnCycleAfterGate();
-  } else {
-    Future.delayed(Duration(seconds: 4), () {
-      displayedWord = getRandomWord();
-      wordBox.word = displayedWord;
-      recognizedTextDisplay.text = "Recognized: ";
-      instructionBox.text = "To open the gate, say the word written correctly:";
-      addToggleButton();
-      speakPhonics(displayedWord);
-    });
-  }
-}
-
-void _onIncorrectPronunciation() async {
-  incorrectResponses++;
-  totalAttempts++; // Track all attempts (correct and incorrect)
-  
-  // Recalculate score after incorrect attempt
-  calculateFinalScore();
-  
-  speechToText.stop();
-  isRecording = false;
-
-  instructionBox.text = "❌ Oops! Try again.";
-  print("🔴 Speaking: Oops! Try again.");
-
-  await speakDialogue("Oops! Try again.");
-}
-
-void calculateFinalScore() {
-  // Score calculation with penalties for incorrect attempts
-  double accuracy = correctAnswers / maxRounds;
-  double efficiency = 1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
-  
-  // Clamp the score between 0 and 2 (since it's out of 2)
-  currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
-  currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
-  
-  print('Calculated Pronunciation Score: $currentLevelScore/2');
-}
-
-// Add this new method to store scores
-Future<void> _storePronunciationScore() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null ) {
-      print('User not authenticated or no child selected');
-      return;
-    }
     calculateFinalScore();
-    
-    final scoresDoc = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('children')
-        .doc(currentSelectedChildId)
-        .collection('dyslexiascore')
-        .doc('game_scores');
 
-    await scoresDoc.set({
-      'pronunciationLevelScore': currentLevelScore,
-    }, SetOptions(merge: true));
-await DyslexiaReportService().createAndSendPromptToBackend();
-    print('🗣️ Pronunciation score stored: $currentLevelScore/2');
-  } catch (e) {
-    print('🔥 Error storing pronunciation score: $e');
-    if (e is FirebaseException) {
-      print('Error code: ${e.code}');
-      print('Error message: ${e.message}');
+    speechToText.stop();
+    isRecording = false;
+
+    instructionBox.text = " Great! You pronounced it correctly!";
+    print("Speaking: Great! You pronounced it correctly!");
+
+    await speakDialogue("Great! You pronounced it correctly!");
+
+    if (correctAnswers >= maxRounds) {
+      await _storePronunciationScore();
+      await Future.delayed(Duration(seconds: 4));
+      hideGateTaskOverlay();
+      openGate();
+      showKidOnCycleAfterGate();
+    } else {
+      Future.delayed(Duration(seconds: 4), () {
+        displayedWord = getRandomWord();
+        wordBox.word = displayedWord;
+        recognizedTextDisplay.text = "Recognized: ";
+        instructionBox.text =
+            "To open the gate, say the word written correctly:";
+        addToggleButton();
+        speakPhonics(displayedWord);
+      });
     }
-    rethrow; // Important to prevent progression if save fails
-    
   }
-}
+
+  void _onIncorrectPronunciation() async {
+    incorrectResponses++;
+    totalAttempts++;
+
+    calculateFinalScore();
+
+    speechToText.stop();
+    isRecording = false;
+
+    instructionBox.text = "Oops! Try again.";
+    print("Speaking: Oops! Try again.");
+
+    await speakDialogue("Oops! Try again.");
+  }
+
+  void calculateFinalScore() {
+    double accuracy = correctAnswers / maxRounds;
+    double efficiency =
+        1 - (totalAttempts - correctAnswers) / (maxRounds * 2.0);
+
+    currentLevelScore = (accuracy * efficiency * 2).clamp(0.0, 2.0);
+    currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+
+    print('Calculated Pronunciation Score: $currentLevelScore/2');
+  }
+
+  Future<void> _storePronunciationScore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('User not authenticated or no child selected');
+        return;
+      }
+      calculateFinalScore();
+
+      final scoresDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('children')
+          .doc(currentSelectedChildId)
+          .collection('dyslexiascore')
+          .doc('game_scores');
+
+      await scoresDoc.set({
+        'pronunciationLevelScore': currentLevelScore,
+      }, SetOptions(merge: true));
+      print('Pronunciation score stored: $currentLevelScore/2');
+    } catch (e) {
+      print('Error storing pronunciation score: $e');
+      if (e is FirebaseException) {
+        print('Error code: ${e.code}');
+        print('Error message: ${e.message}');
+      }
+      rethrow;
+    }
+  }
 
   void showPerformanceSummary() {
     final summary =
@@ -672,11 +667,82 @@ await DyslexiaReportService().createAndSendPromptToBackend();
     foundTreasureBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.35, size.y * 0.1),
       size: Vector2(size.x * 0.6, size.y * 0.15),
-      text: "🎉 Wow! We finally found the treasure! 🎉",
+      text: "Wow! We finally found the treasure!",
     );
     add(foundTreasureBox);
 
     await speakDialogue("Wow! We finally found the treasure! ");
+    Future.delayed(Duration(seconds: 3), () {
+      showDialog(
+        context: buildContext!,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text("Generate Report"),
+          content: const Text(
+            "You've completed all dyslexia levels. Would you like to generate the report now?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            // ✅ Updated logic for Aftermaplevel to show latest report in DyslexiaReportPage
+
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+
+                // 1. Generate new report (calls Gemini backend)
+                await DyslexiaReportService().createAndSendPromptToBackend();
+
+                // 2. Save generated report text to main child doc for preview
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  final latestReportSnapshot = await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .collection('children')
+                      .doc(childId)
+                      .collection('dyslexia_reports')
+                      .orderBy('createdAt', descending: true)
+                      .limit(1)
+                      .get();
+
+                  if (latestReportSnapshot.docs.isNotEmpty) {
+                    final latestReport =
+                        latestReportSnapshot.docs.first.data()['report_text'];
+
+                    // Optionally save it to the main document for quick preview access
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(user.uid)
+                        .collection('children')
+                        .doc(childId)
+                        .update({
+                      'dyslexia_report': latestReport,
+                    });
+                  }
+                }
+
+                // 3. Navigate to DyslexiaReportPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DyslexiaReportPage(
+                      childData: childData,
+                      childId: childId,
+                    ),
+                  ),
+                );
+              },
+              child: const Text("Generate Report"),
+            )
+          ],
+        ),
+      );
+    });
   }
 
   void moveComponent(SpriteComponent component1, SpriteComponent component2,
@@ -695,7 +761,7 @@ await DyslexiaReportService().createAndSendPromptToBackend();
   void switchToAfterMapLevel(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: ForestLevel()),
+        builder: (context) => GameWidget(game: ForestLevel(childData: childData)),
       ),
     );
   }

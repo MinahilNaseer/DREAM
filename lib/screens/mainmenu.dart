@@ -1,4 +1,5 @@
 import 'package:dream/game/gamemainscreen.dart';
+import 'package:dream/global.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../screens/mainmenu.dart';
@@ -225,20 +226,19 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    SimpleVideoPlayerScreen(
-                                        videoPath:
-                                            "assets/videos/dysgraphia-video.mp4",
-                                        onVideoEnd: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    DysgraphiaScreen(
-                                                        childData:
-                                                            widget.childData),
-                                              ));
-                                        }),
+                                builder: (context) => SimpleVideoPlayerScreen(
+                                    videoPath:
+                                        "assets/videos/dysgraphia-video.mp4",
+                                    onVideoEnd: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                DysgraphiaScreen(
+                                                    childData:
+                                                        widget.childData),
+                                          ));
+                                    }),
                               ),
                             );
                           },
@@ -257,14 +257,20 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
-                              context,
-                              MaterialPageRoute(
+                                context,
+                                MaterialPageRoute(
                                   builder: (context) => SimpleVideoPlayerScreen(
-                                        videoPath:
-                                            'assets/videos/Dyslexia-game-vid.mp4',
-                                        nextRoute: '/gameMainScreen',
-                                      )),
-                            );
+                                      videoPath:
+                                          'assets/videos/Dyslexia-game-vid.mp4',
+                                      onVideoEnd: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                 GameMainScreen(childData: widget.childData),
+                                            ));
+                                      }),
+                                ));
                           },
                           child: LevelCard(
                             level: "Level 3",
