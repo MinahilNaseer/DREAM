@@ -1,4 +1,3 @@
-// A cleaner and well-structured version of the ForestLevel Flame Game
 
 import 'dart:math';
 import 'dart:io';
@@ -18,6 +17,9 @@ import 'package:dream/game/class/dialogueboxcomponent.dart' as diabox;
 import 'package:dream/game/afterforestlevel.dart';
 
 class ForestLevel extends FlameGame {
+  final Map<String, dynamic> childData;
+  ForestLevel({required this.childData});
+
   late SpriteComponent background;
   late roundrec.FilledRoundedRectangleComponent bottomRectangle;
   late diabox.DialogueBoxComponent dialogueBox;
@@ -241,7 +243,7 @@ class ForestLevel extends FlameGame {
     await tts.speak("Great job! Let's continue our journey.");
     Future.delayed(Duration(seconds: 1), () {
       Navigator.of(buildContext!).pushReplacement(
-        MaterialPageRoute(builder: (context) => GameWidget(game: Afterforestlevel())),
+        MaterialPageRoute(builder: (context) => GameWidget(game: Afterforestlevel(childData:childData))),
       );
     });
   }

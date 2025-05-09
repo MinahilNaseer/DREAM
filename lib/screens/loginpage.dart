@@ -533,6 +533,7 @@ class _LoginPageState extends State<LoginPage> {
                                   },
                                 ),
                                 onTap: () {
+                                  currentSelectedChildId = child['id'];
                                   Navigator.pop(context);
                                   Navigator.push(
                                     context,

@@ -18,6 +18,10 @@ import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Afterforestlevel extends FlameGame with TapCallbacks {
+  final Map<String, dynamic> childData;
+
+  Afterforestlevel({required this.childData});
+
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
@@ -590,7 +594,7 @@ Future<void> _storeColorLetterScore() async {
   void switchToAfterMapLevel(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: Aftermaplevel()),
+        builder: (context) => GameWidget(game: Aftermaplevel(childData:childData ,childId: currentSelectedChildId!)),
       ),
     );
   }

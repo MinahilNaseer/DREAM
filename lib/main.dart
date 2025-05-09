@@ -64,11 +64,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterPage(), 
         '/login': (context) => const LoginPage(), 
         '/help': (context) => const HelpPage(), 
-        
-        
-        '/dysgraphia': (context) => DysgraphiaScreen(),
-        '/gameMainScreen': (context) => GameMainScreen(),
-          '/reports': (context) => const ReportSelectionPage(),
+        '/reports': (context) => const ReportSelectionPage(),
         
         
         
