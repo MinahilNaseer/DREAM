@@ -24,10 +24,14 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "service_account_key.json"
 
 db = firestore.Client()
 
-model = joblib.load("DyscalD.pkl")
-dysgraphia_model = tf.keras.models.load_model("dysgraphia_cnn_model.h5")
+model_path = os.path.join("flask_backend", "DyscalD.pkl")
+model = joblib.load(model_path)
 
+dysgraphia_path = os.path.join("flask_backend", "dysgraphia_cnn_model.h5")
+dysgraphia_model = tf.keras.models.load_model(dysgraphia_path)
 
+print("Current directory:", os.getcwd())
+print("Files in flask_backend:", os.listdir("flask_backend"))
 
 app = Flask(__name__)
 
@@ -482,5 +486,5 @@ Please generate a warm, encouraging, and supportive report in paragraph form bas
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
-#if __name__ == '__main__':
- #   app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__':
+    app.run()
