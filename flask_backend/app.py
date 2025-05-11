@@ -15,7 +15,12 @@ load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+import json
+creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+with open("service_account_key.json", "w") as f:
+    f.write(creds_json)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "service_account_key.json"
+
 
 db = firestore.Client()
 
