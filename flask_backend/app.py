@@ -45,7 +45,8 @@ model = joblib.load(model_path)
 dysgraphia_model = tf.keras.models.load_model(dysgraphia_path)
 
 print("Current directory:", os.getcwd())
-print("Files in flask_backend:", os.listdir("flask_backend"))
+print("Files in current directory:", os.listdir())
+
 
 app = Flask(__name__)
 
