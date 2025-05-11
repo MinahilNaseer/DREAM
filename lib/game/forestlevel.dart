@@ -1,10 +1,8 @@
-// A cleaner and well-structured version of the ForestLevel Flame Game
 
 import 'dart:math';
-import 'dart:io';
+import 'package:dream/main.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:just_audio/just_audio.dart';
@@ -18,6 +16,9 @@ import 'package:dream/game/class/dialogueboxcomponent.dart' as diabox;
 import 'package:dream/game/afterforestlevel.dart';
 
 class ForestLevel extends FlameGame {
+  final Map<String, dynamic> childData;
+  ForestLevel({required this.childData});
+
   late SpriteComponent background;
   late roundrec.FilledRoundedRectangleComponent bottomRectangle;
   late diabox.DialogueBoxComponent dialogueBox;
@@ -163,7 +164,7 @@ class ForestLevel extends FlameGame {
       await tts.speak("Congratulations! You found the $correctAnimal!");
       roundCount++;
       attempts = 0;
-      await Future.delayed(Duration(seconds: 6));
+      await Future.delayed(const Duration(seconds: 6));
     } else {
       attempts++;
       if (attempts < 2) {
@@ -174,7 +175,7 @@ class ForestLevel extends FlameGame {
         await tts.speak("Oops! That animal is still hiding. Let's try a different sound.");
         roundCount++;
         attempts = 0;
-        await Future.delayed(Duration(seconds: 6));
+        await Future.delayed(const Duration(seconds: 6));
       }
     }
 
@@ -235,13 +236,14 @@ class ForestLevel extends FlameGame {
   void onRemove() {
     super.onRemove();
     audioPlayer.dispose();
+    //tts.stop();
   }
 
   void onTaskCompleted() async {
     await tts.speak("Great job! Let's continue our journey.");
-    Future.delayed(Duration(seconds: 1), () {
-      Navigator.of(buildContext!).pushReplacement(
-        MaterialPageRoute(builder: (context) => GameWidget(game: Afterforestlevel())),
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.of(navigatorKey.currentContext!).pushReplacement(
+        MaterialPageRoute(builder: (context) => GameWidget(game: Afterforestlevel(childData:childData))),
       );
     });
   }

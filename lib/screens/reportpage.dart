@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:dream/screens/dyscalculia_report.dart';
-import 'package:dream/screens/dysgraphia_report.dart';
-import 'package:dream/screens/dyslexia_report.dart';
-
+import 'package:dream/screens/DyscalculiaReportList.dart';
+import 'package:dream/screens/DysgraphiaReportList.dart';
+import 'package:dream/screens/DyslexiaReportsList.dart';
+import 'package:dream/widgets/ReportCard.dart';
+import 'package:dream/utils/DialogUtils.dart';
 
 class ReportSelectionPage extends StatelessWidget {
   final Map<String, dynamic>? childData;
@@ -41,120 +42,64 @@ class ReportSelectionPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 16),
-            _buildReportCard(
-              context,
+            ReportCard(
               title: "Dyscalculia Report",
               onTap: () {
                 if (childData != null && childData!['childId'] != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DyscalculiaReportPage(
+                      builder: (context) => DyscalculiaReportListPage(
                         childData: childData!,
                         childId: childData!['childId'],
                       ),
                     ),
                   );
                 } else {
-                  _showErrorDialog(context, "Child data is missing!");
+                  DialogUtils.showError(context, "Child data is missing!");
                 }
               },
             ),
             const SizedBox(height: 16),
-            _buildReportCard(
-              context,
+            ReportCard(
               title: "Dysgraphia Report",
               onTap: () {
-                if (childData != null) {
+                if (childData != null && childData!['childId'] != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DysgraphiaReportPage(
+                      builder: (context) => DysgraphiaReportListPage(
                         childData: childData!,
                         childId: childData!['childId'],
                       ),
                     ),
                   );
                 } else {
-                  _showErrorDialog(context, "Child data is missing!");
+                  DialogUtils.showError(context, "Child data is missing!");
                 }
               },
             ),
             const SizedBox(height: 16),
-            _buildReportCard(
-              context,
+            ReportCard(
               title: "Dyslexia Report",
               onTap: () {
-                if (childData != null) {
+                if (childData != null && childData!['childId'] != null) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DyslexiaReportPage(
+                      builder: (context) => DyslexiaReportsListPage(
                         childData: childData!,
                         childId: childData!['childId'],
                       ),
                     ),
                   );
                 } else {
-                  _showErrorDialog(context, "Child data is missing!");
+                  DialogUtils.showError(context, "Child data is missing!");
                 }
               },
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildReportCard(BuildContext context,
-      {required String title, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.purple.shade50,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade300,
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.purple,
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.purple),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Error"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          )
-        ],
       ),
     );
   }

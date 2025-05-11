@@ -10,28 +10,31 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-
   final FirebaseAuthService _auth = FirebaseAuthService();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController birthdateController = TextEditingController();
   final TextEditingController relationController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>(); 
+  final _formKey = GlobalKey<FormState>();
 
-  String? selectedGender; 
-
+  String? selectedGender;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xfffeeed7), 
-        elevation: 0, 
+        backgroundColor: const Color(0xfffeeed7),
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.purple, size: 30,), 
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.purple,
+            size: 30,
+          ),
           onPressed: () {
-            Navigator.pop(context); 
+            Navigator.pop(context);
           },
         ),
       ),
@@ -47,7 +50,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
-                child: Form( 
+                child: Form(
                   key: _formKey,
                   child: Container(
                     padding: const EdgeInsets.all(16.0),
@@ -94,57 +97,57 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
-  controller: birthdateController,
-  readOnly: true, 
-  onTap: () async {
-    FocusScope.of(context).requestFocus(FocusNode()); 
+                          controller: birthdateController,
+                          readOnly: true,
+                          onTap: () async {
+                            FocusScope.of(context).requestFocus(FocusNode());
 
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.purple, 
-              onPrimary: Colors.white, 
-              onSurface: Colors.black, 
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.purple, 
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now()
+                                  .subtract(const Duration(days: 365 * 5)),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.light(
+                                      primary: Colors.purple,
+                                      onPrimary: Colors.white,
+                                      onSurface: Colors.black,
+                                    ),
+                                    textButtonTheme: TextButtonThemeData(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.purple,
+                                      ),
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
 
-    if (pickedDate != null) {
-      setState(() {
-        birthdateController.text =
-            "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
-      });
-    }
-  },
-  decoration: InputDecoration(
-    labelText: 'Birthdate',
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(30),
-    ),
-    prefixIcon: const Icon(Icons.calendar_today),
-  ),
-  validator: (value) {
-    if (value == null || value.isEmpty) {
-      return 'Please select the birthdate';
-    }
-    return null;
-  },
-),
-
+                            if (pickedDate != null) {
+                              setState(() {
+                                birthdateController.text =
+                                    "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
+                              });
+                            }
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Birthdate',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            prefixIcon: const Icon(Icons.calendar_today),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select the birthdate';
+                            }
+                            return null;
+                          },
+                        ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: relationController,
@@ -233,11 +236,14 @@ class _RegisterPageState extends State<RegisterPage> {
                               return 'Please enter your password';
                             } else if (value.length < 8) {
                               return 'Password must be at least 8 characters';
-                            } else if (!RegExp(r'(?=.*?[A-Z])').hasMatch(value)) {
+                            } else if (!RegExp(r'(?=.*?[A-Z])')
+                                .hasMatch(value)) {
                               return 'Password must contain at least one capital letter';
-                            } else if (!RegExp(r'(?=.*?[0-9])').hasMatch(value)) {
+                            } else if (!RegExp(r'(?=.*?[0-9])')
+                                .hasMatch(value)) {
                               return 'Password must contain at least one number';
-                            } else if (!RegExp(r'(?=.*?[!@#\$&*~])').hasMatch(value)) {
+                            } else if (!RegExp(r'(?=.*?[!@#\$&*~])')
+                                .hasMatch(value)) {
                               return 'Password must contain at least one symbol';
                             }
                             return null;
@@ -255,19 +261,25 @@ class _RegisterPageState extends State<RegisterPage> {
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-                              onPressed: () async{
-                                if (_formKey.currentState!.validate()) {
-                                  // If the form is valid, display a message
-                                  _signUp();
-                                }
-                              },
-                              child: const Text(
-                                'REGISTER',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () async {
+                                      if (_formKey.currentState!.validate()) {
+                                        _signUp();
+                                      }
+                                    },
+                              child: _isLoading
+                                  ? const CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    )
+                                  : const Text(
+                                      'REGISTER',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),
@@ -283,60 +295,72 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-void _signUp() async {
-  String childName = nameController.text;
-  String childBirthdate = birthdateController.text;
-  String relation = relationController.text;
-  String email = emailController.text;
-  String password = passwordController.text;
-  String childGender = selectedGender ?? ''; 
+  void _signUp() async {
+    setState((){
+      _isLoading = true;
+    });
+    String childName = nameController.text;
+    String childBirthdate = birthdateController.text;
+    String relation = relationController.text;
+    String email = emailController.text;
+    String password = passwordController.text;
+    String childGender = selectedGender ?? '';
 
-  try {
-    DateTime enteredBirthdate = DateTime.parse(
-      childBirthdate.split('/').reversed.join('-'),
-    );
-    DateTime today = DateTime.now();
-    int age = today.year - enteredBirthdate.year;
-    if (today.month < enteredBirthdate.month || (today.month == enteredBirthdate.month && today.day < enteredBirthdate.day)) {
-      age--;
+    try {
+      DateTime enteredBirthdate = DateTime.parse(
+        childBirthdate.split('/').reversed.join('-'),
+      );
+      DateTime today = DateTime.now();
+      int age = today.year - enteredBirthdate.year;
+      if (today.month < enteredBirthdate.month ||
+          (today.month == enteredBirthdate.month &&
+              today.day < enteredBirthdate.day)) {
+        age--;
+      }
+
+      if (age < 5) {
+        _showErrorSnackBar("Child must be at least 5 years old to register.");
+        setState((){
+          _isLoading = false;
+        });
+        return;
+      }
+
+      User? user = await _auth.signUpWithEmailAndChild(
+        email: email,
+        password: password,
+        relation: relation,
+        childName: childName,
+        childBirthdate: childBirthdate,
+        childGender: childGender,
+      );
+
+      setState((){
+        _isLoading = false;
+      });
+
+      if (user != null) {
+        print("User and child registered successfully.");
+        Navigator.pushNamed(context, "/login");
+      } else {
+        _showErrorSnackBar("Registration failed. Please try again.");
+      }
+    } catch (e) {
+      print("Registration exception: $e");
+      _showErrorSnackBar("An error occurred during registration.");
+      setState(() {
+        _isLoading = false;
+      });
     }
-
-    
-    if (age < 5) {
-      _showErrorSnackBar("Child must be at least 5 years old to register.");
-      return; 
-    }
-
-    User? user = await _auth.signUpWithEmailAndChild(
-      email: email,
-      password: password,
-      relation: relation,
-      childName: childName,
-      childBirthdate: childBirthdate,
-      childGender: childGender, 
-    );
-
-    if (user != null) {
-      print("User and child registered successfully.");
-      Navigator.pushNamed(context, "/login");
-    } else {
-      _showErrorSnackBar("Registration failed. Please try again.");
-    }
-  } catch (e) {
-    print("Registration exception: $e");
-    _showErrorSnackBar("An error occurred during registration.");
   }
-}
-void _showErrorSnackBar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.redAccent,
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
 
-
-
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }

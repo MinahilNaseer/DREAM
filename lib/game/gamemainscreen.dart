@@ -4,6 +4,10 @@ import 'package:flame/game.dart';
 import '../game/scenicgame.dart';
 
 class GameMainScreen extends StatefulWidget {
+  final Map<String, dynamic> childData;
+
+  const GameMainScreen({Key? key, required this.childData}) : super(key: key);
+
   @override
   _GameMainScreenState createState() => _GameMainScreenState();
 }
@@ -116,7 +120,7 @@ class _GameMainScreenState extends State<GameMainScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => GameWidget(game: ScenicGame()),
+                        builder: (context) => GameWidget(game: ScenicGame(childData: widget.childData)),
                       ),
                     );
                   },

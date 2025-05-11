@@ -11,6 +11,9 @@ import 'package:dream/game/class/dialogueboxcomponent.dart' as speechbox;
 import 'forestlevel.dart';
 
 class Afterfishlevel extends FlameGame with TapCallbacks {
+  late final Map<String, dynamic> childData;
+  Afterfishlevel({required this.childData});
+
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
@@ -250,7 +253,7 @@ class Afterfishlevel extends FlameGame with TapCallbacks {
   void switchToNewScene(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: ForestLevel()),
+        builder: (context) => GameWidget(game: ForestLevel(childData:childData)),
       ),
     );
   }

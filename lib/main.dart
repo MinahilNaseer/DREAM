@@ -1,26 +1,16 @@
-import 'package:dream/screens/dysgraphia_report.dart';
 import 'package:dream/screens/initialpage.dart';
-import 'package:dream/screens/mainmenu.dart';
-import 'package:dream/screens/profilepage.dart';
 import 'package:dream/screens/registerpage.dart'; 
 import 'package:firebase_core/firebase_core.dart'; 
 import 'package:flutter/material.dart';
-import 'package:dream/screens/dyscalculia.dart';
-import 'package:dream/screens/dysgraphia.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dream/screens/loginpage.dart'; 
 import 'package:dream/screens/helppage.dart';
-import 'package:dream/screens/editpage.dart';
-import 'package:dream/game/gamemainscreen.dart';
-import 'package:dream/screens/dyscalculia_report.dart';
 import 'package:dream/screens/reportpage.dart';
-import 'package:dream/screens/dyslexia_report.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -51,6 +41,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'DREAM APP',
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         scaffoldBackgroundColor: const Color.fromARGB(255, 240, 225, 225),
         useMaterial3: true,
@@ -59,19 +50,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const InitialPage(), 
-        
-        
         '/register': (context) => const RegisterPage(), 
         '/login': (context) => const LoginPage(), 
         '/help': (context) => const HelpPage(), 
-        
-        
-        '/dysgraphia': (context) => DysgraphiaScreen(),
-        '/gameMainScreen': (context) => GameMainScreen(),
-          '/reports': (context) => const ReportSelectionPage(),
-        
-        
-        
+        '/reports': (context) => const ReportSelectionPage(),
+
       },
 
     );

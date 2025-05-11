@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:dream/game/aftermaplevel.dart';
+import 'package:dream/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -18,6 +19,10 @@ import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Afterforestlevel extends FlameGame with TapCallbacks {
+  final Map<String, dynamic> childData;
+
+  Afterforestlevel({required this.childData});
+
   late SpriteComponent kidOnCycle;
   late ParallaxComponent parallaxComponent;
   late SpriteComponent road1, road2;
@@ -40,7 +45,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   bool isDialogueBoxDisplayed = false;
   bool isMollyDisplayed = false;
   List<draggableblocks.DraggableTile> currentBlocks = [];
-  int puzzleStage = 1; 
+  int puzzleStage = 1;
   late AudioPlayer _bicycleSoundPlayer;
   bool isBicycleSoundPlaying = false;
 
@@ -143,13 +148,15 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     await _flutterTts.setPitch(1.5);
     await _flutterTts.setSpeechRate(0.4);
   }
+
   void _initializeBicycleSound() {
     _bicycleSoundPlayer = AudioPlayer();
   }
 
   void playBicycleSound() async {
     if (!isBicycleSoundPlaying) {
-      await _bicycleSoundPlayer.setSource(AssetSource('audio/cycling-noise.mp3'));
+      await _bicycleSoundPlayer
+          .setSource(AssetSource('audio/cycling-noise.mp3'));
       await _bicycleSoundPlayer.setVolume(1.0);
       await _bicycleSoundPlayer.setReleaseMode(ReleaseMode.loop);
       await _bicycleSoundPlayer.resume();
@@ -190,11 +197,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
               mapScrool = SpriteComponent()
                 ..sprite = await loadSprite('map-scroll.png')
                 ..size = Vector2(200, 200)
-                ..position = Vector2(
-                    size.x,
-                    size.y -
-                        size.y * 0.28 -
-                        70); 
+                ..position = Vector2(size.x, size.y - size.y * 0.28 - 70);
               add(mapScrool!);
             }
           });
@@ -203,15 +206,13 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
       if (mapScrool != null) {
         mapScrool!.position.x -= speed * dt;
         if ((mapScrool!.position.x - kidOnCycle.position.x).abs() < 80) {
-          
           isMoving = false;
-          stopBicycleSound(); 
+          stopBicycleSound();
           parallaxComponent.parallax!.baseVelocity = Vector2.zero();
           if (!isMapDisplayed) {
             molly.sprite = await loadSprite('animated-shocked-girl.png');
-            molly.position = Vector2(
-                10, size.y * 0.1); 
-            molly.size = Vector2(120, 120); 
+            molly.position = Vector2(10, size.y * 0.1);
+            molly.size = Vector2(120, 120);
             add(molly);
 
             dialogueBox = speechbox.DialogueBoxComponent(
@@ -232,28 +233,21 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
               if (dialogueBox.parent != null) {
                 remove(dialogueBox);
               }
-              isMollyDisplayed = false; 
+              isMollyDisplayed = false;
 
               if (!isMapDisplayed) {
                 isMapDisplayed = true;
-                
+
                 final overlay = RectangleComponent(
                   size: Vector2(size.x, size.y),
-                  paint: Paint()
-                    ..color = const Color(0xAA000000), 
+                  paint: Paint()..color = const Color(0xAA000000),
                 );
                 add(overlay);
 
                 final wholeMap = SpriteComponent()
-                  ..sprite = await loadSprite(
-                      'whole-map.png') 
-                  ..size = Vector2(
-                      size.x, size.y * 0.4) 
-                  ..position = Vector2(
-                      0,
-                      size.y -
-                          size.y *
-                              0.4); 
+                  ..sprite = await loadSprite('whole-map.png')
+                  ..size = Vector2(size.x, size.y * 0.4)
+                  ..position = Vector2(0, size.y - size.y * 0.4);
                 add(wholeMap);
 
                 Future.delayed(const Duration(seconds: 1), () async {
@@ -272,7 +266,6 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
                         "This is a treasure map, but some parts are missing! To complete the map, we need to solve puzzles by selecting the correct blocks. Look at the hints on the missing parts, and let’s solve them to find the treasure!");
 
                     Future.delayed(const Duration(seconds: 15), () {
-                      
                       if (explanationBox.parent != null) remove(explanationBox);
                       if (wholeMap.parent != null) remove(wholeMap);
 
@@ -288,12 +281,11 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
           if (mapScrool!.parent != null) remove(mapScrool!);
         }
       }
-    }else{
+    } else {
       stopBicycleSound();
     }
   }
 
-  
   String generateRandomQuestion() {
     final random = Random();
     final color =
@@ -303,11 +295,10 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   }
 
   void startPuzzleGameplay() async {
-    if (isQuestionAnswered)
-      return; 
+    if (isQuestionAnswered) return;
 
     isQuestionAnswered = true;
-    
+
     final questionText = generateRandomQuestion();
     final questionBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
@@ -326,21 +317,21 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
     final List<draggableblocks.DraggableTile> tileOptions = [];
     final random = Random();
 
-    final color = questionText.split(' ')[5]; 
+    final color = questionText.split(' ')[5];
     final letter = questionText.split(' ').last.replaceAll("'", "");
-    
+
     final correctTile = draggableblocks.DraggableTile(
       tileName: "Correct-$color-Tile",
       sprite: await loadSprite('correct_tiles/correct-$color-tile.png'),
       size: Vector2(70, 70),
       position: Vector2(size.x * 0.1, size.y * 0.6),
-      missingTilePlaceholder: missingTileBucket, 
+      missingTilePlaceholder: missingTileBucket,
       onDropOnPlaceholder: (droppedTile) {
         handleTileDropped(droppedTile);
       },
     );
     tileOptions.add(correctTile);
-    
+
     currentBlocks.add(correctTile);
     const incorrectTileNames = [
       "blue-with-D-tile.png",
@@ -367,7 +358,7 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
             'incorrect_tiles/${incorrectTileNames[random.nextInt(incorrectTileNames.length)]}'),
         size: Vector2(70, 70),
         position: Vector2(size.x * (0.3 + (i * 0.2)), size.y * 0.6),
-        missingTilePlaceholder: missingTileBucket, 
+        missingTilePlaceholder: missingTileBucket,
         onDropOnPlaceholder: (droppedTile) {
           handleTileDropped(droppedTile);
         },
@@ -382,72 +373,70 @@ class Afterforestlevel extends FlameGame with TapCallbacks {
   }
 
   int correctAnswers = 0;
-int totalPuzzles = 2; // Since you have 2 puzzle stages
-double currentLevelScore = 0.0;
+  int totalPuzzles = 2;
+  double currentLevelScore = 0.0;
 
-void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
-  final isCorrect = droppedTile.tileName.contains("Correct");
+  void handleTileDropped(draggableblocks.DraggableTile droppedTile) async {
+    final isCorrect = droppedTile.tileName.contains("Correct");
 
-  // Remove the tile immediately
-  remove(droppedTile);
+    remove(droppedTile);
 
-  if (isCorrect) {
-    correctAnswers++;
-    await addSuccessFeedback();
-  } else {
-    await addFailureFeedback();
+    if (isCorrect) {
+      correctAnswers++;
+      await addSuccessFeedback();
+    } else {
+      await addFailureFeedback();
+    }
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (puzzleStage == 1) {
+        showUpdatedMap();
+        puzzleStage++;
+      } else if (puzzleStage == 2) {
+        calculateFinalScore();
+        _storeColorLetterScore().then((_) {
+          showUpdatedMapWithForest();
+        });
+      }
+    });
   }
 
-  // Always proceed after feedback, regardless of correctness
-  Future.delayed(const Duration(seconds: 3), () {
-    if (puzzleStage == 1) {
-      showUpdatedMap();
-      puzzleStage++;
-    } else if (puzzleStage == 2) {
-      calculateFinalScore();
-      _storeColorLetterScore().then((_) {
-        showUpdatedMapWithForest();
-      });
-    }
-  });
-}
+  void calculateFinalScore() {
+    currentLevelScore = (correctAnswers / totalPuzzles) * 2;
+    currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
+    print('Color Letter Level Score: $currentLevelScore/2');
+  }
 
-// Add these new methods
-void calculateFinalScore() {
-  currentLevelScore = (correctAnswers / totalPuzzles) * 2; // Max 2 points
-  currentLevelScore = double.parse(currentLevelScore.toStringAsFixed(2));
-  print('Color Letter Level Score: $currentLevelScore/2');
-}
+  Future<void> _storeColorLetterScore() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('User not authenticated or no child selected');
+        return;
+      }
 
-Future<void> _storeColorLetterScore() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null ) {
-      print('User not authenticated or no child selected');
-      return;
-    }
+      final scoresDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('children')
+          .doc(currentSelectedChildId)
+          .collection('dyslexiascore')
+          .doc('game_scores');
 
-    final scoresDoc = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .collection('children')
-        .doc(currentSelectedChildId)
-        .collection('dyslexiascore')
-        .doc('game_scores');
+      await scoresDoc.set({
+        'colorLetterLevelScore': currentLevelScore,
+      }, SetOptions(merge: true));
 
-    await scoresDoc.set({
-      'colorLetterLevelScore': currentLevelScore,
-    }, SetOptions(merge: true));
-
-    print('🎨 Color Letter score stored: $currentLevelScore/2');
-  } catch (e) {
-    print('🔥 Error storing color letter score: $e');
-    if (e is FirebaseException) {
-      print('Error code: ${e.code}');
-      print('Error message: ${e.message}');
+      print('Color Letter score stored: $currentLevelScore/2');
+    } catch (e) {
+      print('Error storing color letter score: $e');
+      if (e is FirebaseException) {
+        print('Error code: ${e.code}');
+        print('Error message: ${e.message}');
+      }
     }
   }
-}
+
   void snapToPlaceholder(draggableblocks.DraggableTile tile) {
     remove(missingTileBucket);
     tile.position = missingTileBucket.position;
@@ -473,10 +462,10 @@ Future<void> _storeColorLetterScore() async {
     final failureBox = speechbox.DialogueBoxComponent(
       position: Vector2(size.x * 0.1, size.y * 0.1),
       size: Vector2(size.x * 0.8, size.y * 0.15),
-      text: "Not quite! Try again!",
+      text: "Not quite! Let's move on",
     );
     add(failureBox);
-    await _flutterTts.speak("Not quite! Try again!");
+    await _flutterTts.speak("Not quite! Let's move on");
 
     Future.delayed(const Duration(seconds: 5), () {
       if (failureBox.parent != null) remove(failureBox);
@@ -492,16 +481,14 @@ Future<void> _storeColorLetterScore() async {
   void showUpdatedMap() async {
     final overlay = RectangleComponent(
       size: Vector2(size.x, size.y),
-      paint: Paint()..color = const Color(0xAA000000), 
+      paint: Paint()..color = const Color(0xAA000000),
     );
     add(overlay);
 
     final updatedMap = SpriteComponent()
-      ..sprite =
-          await loadSprite('whole-map-with-pond.png') 
-      ..size = Vector2(size.x, size.y * 0.4) 
-      ..position =
-          Vector2(0, size.y - size.y * 0.4); 
+      ..sprite = await loadSprite('whole-map-with-pond.png')
+      ..size = Vector2(size.x, size.y * 0.4)
+      ..position = Vector2(0, size.y - size.y * 0.4);
     add(updatedMap);
 
     final dialogueBox = speechbox.DialogueBoxComponent(
@@ -511,10 +498,10 @@ Future<void> _storeColorLetterScore() async {
           "Look! After completing the puzzle, we have found the missing part: the pond! Now, let's move to the next one.",
     );
     add(dialogueBox);
-    
+
     await _flutterTts.speak(
         "Look! After completing the puzzle, we have found the missing part, the pond! Now, let's move on to the next part.");
-    
+
     Future.delayed(const Duration(seconds: 10), () {
       if (dialogueBox.parent != null) remove(dialogueBox);
       if (updatedMap.parent != null) remove(updatedMap);
@@ -525,19 +512,16 @@ Future<void> _storeColorLetterScore() async {
   }
 
   void showUpdatedMapWithForest() async {
-    
     final overlay = RectangleComponent(
       size: Vector2(size.x, size.y),
-      paint: Paint()..color = const Color(0xAA000000), 
+      paint: Paint()..color = const Color(0xAA000000),
     );
     add(overlay);
 
     final updatedMapWithForest = SpriteComponent()
-      ..sprite =
-          await loadSprite('whole-map-with-forest.png') 
-      ..size = Vector2(size.x, size.y * 0.4) 
-      ..position =
-          Vector2(0, size.y - size.y * 0.4); 
+      ..sprite = await loadSprite('whole-map-with-forest.png')
+      ..size = Vector2(size.x, size.y * 0.4)
+      ..position = Vector2(0, size.y - size.y * 0.4);
     add(updatedMapWithForest);
 
     final dialogueBox = speechbox.DialogueBoxComponent(
@@ -551,15 +535,12 @@ Future<void> _storeColorLetterScore() async {
     await _flutterTts.speak(
         "Look! After completing the next puzzle, we have found the missing part: the forest! Now, we can find the treasure.");
 
-    
     Future.delayed(const Duration(seconds: 10), () {
       if (dialogueBox.parent != null) remove(dialogueBox);
       if (updatedMapWithForest.parent != null) remove(updatedMapWithForest);
       remove(overlay);
 
-      
-    switchToAfterMapLevel(buildContext!);
-      
+      switchToAfterMapLevel(navigatorKey.currentContext!);
     });
   }
 
@@ -590,7 +571,9 @@ Future<void> _storeColorLetterScore() async {
   void switchToAfterMapLevel(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: Aftermaplevel()),
+        builder: (context) => GameWidget(
+            game: Aftermaplevel(
+                childData: childData, childId: currentSelectedChildId!)),
       ),
     );
   }
@@ -601,8 +584,3 @@ Future<void> _storeColorLetterScore() async {
     isMoving = true;
   }
 }
-
-
-
-
-
