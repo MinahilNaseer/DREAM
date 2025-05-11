@@ -1,18 +1,16 @@
 import 'package:dream/game/gamemainscreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
-import 'package:flame/game.dart';
-import '../game/scenicgame.dart';
 import '../screens/videoplayerscreen.dart';
 import 'package:dream/screens/dyscalculia.dart';
+import 'package:dream/screens/dysgraphia.dart';
 
 class MainMenu extends StatefulWidget {
   final Map<String, dynamic> childData;
-  const MainMenu({super.key,required this.childData});
+  const MainMenu({super.key, required this.childData});
 
   @override
   _MainMenuState createState() => _MainMenuState();
@@ -34,24 +32,24 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) async {
-  if (index == 0) {
-    setState(() {
-      _selectedIndex = 0;
-    });
-  } else if (index == 1) {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ProfilePage(childData: widget.childData)),
-    );
-
-    if (result == 'backToHome') {
+    if (index == 0) {
       setState(() {
         _selectedIndex = 0;
       });
+    } else if (index == 1) {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProfilePage(childData: widget.childData)),
+      );
+
+      if (result == 'backToHome') {
+        setState(() {
+          _selectedIndex = 0;
+        });
+      }
     }
   }
-}
-
 
   @override
   void dispose() {
@@ -192,18 +190,18 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SimpleVideoPlayerScreen(
-                                  videoPath:
-                                      "assets/videos/dyscal-instruction-vid.mp4",
-                                  onVideoEnd: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => DyscalculiaLevel(
-                                            childData: widget.childData),
-                                      )
-                                    );
-                                  }
-                                ),
+                                    videoPath:
+                                        "assets/videos/dyscal-instruction-vid.mp4",
+                                    onVideoEnd: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                DyscalculiaLevel(
+                                                    childData:
+                                                        widget.childData),
+                                          ));
+                                    }),
                               ),
                             );
                           },
@@ -224,10 +222,19 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const SimpleVideoPlayerScreen(
-                                  videoPath: "assets/videos/dysgraphia-video.mp4", 
-                                 nextRoute: '/dysgraphia', 
-                                ),
+                                builder: (context) => SimpleVideoPlayerScreen(
+                                    videoPath:
+                                        "assets/videos/dysgraphia-video.mp4",
+                                    onVideoEnd: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                DysgraphiaScreen(
+                                                    childData:
+                                                        widget.childData),
+                                          ));
+                                    }),
                               ),
                             );
                           },
@@ -246,16 +253,24 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
-                              context,
-                              MaterialPageRoute(
+                                context,
+                                MaterialPageRoute(
                                   builder: (context) => SimpleVideoPlayerScreen(
-                                    videoPath: 'assets/videos/Dyslexia-game-vid.mp4',
-                                    nextRoute: '/gameMainScreen',
-                                  )
-                                   ),
-                            );
+                                      videoPath:
+                                          'assets/videos/Dyslexia-game-vid.mp4',
+                                      onVideoEnd: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  GameMainScreen(
+                                                      childData:
+                                                          widget.childData),
+                                            ));
+                                      }),
+                                ));
                           },
-                          child: LevelCard(
+                          child: const LevelCard(
                             level: "Level 3",
                             title: "Dyslexia Detection: ",
                             subtitle: "Interactive Game",

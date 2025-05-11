@@ -1,4 +1,5 @@
 import 'package:dream/game/scenicgame.dart';
+import 'package:dream/main.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -20,8 +21,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class Fishinglevel extends FlameGame with TapCallbacks {
   final BuildContext context;
+  final Map<String, dynamic> childData;
 
-  Fishinglevel(this.context);
+  Fishinglevel(this.context,this.childData);
   late SpriteComponent underwater;
   late SpriteComponent background;
   late SpriteComponent island;
@@ -266,20 +268,17 @@ class Fishinglevel extends FlameGame with TapCallbacks {
   try {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      print('⚠️ User not logged in - score not saved');
+      print('User not logged in - score not saved');
       return;
     }
-
-    // Simple scoring out of 2
     int score = 0;
     
     if (correctSelections == occurrences && incorrectSelections.isEmpty) {
-      score = 2; // Perfect score - all correct with no mistakes
+      score = 2;
     } 
     else if (correctSelections >= (occurrences / 2).floor()) {
-      score = 1; // Half credit - at least half correct
+      score = 1;
     }
-    // else score remains 0
 
     final scoresDoc = FirebaseFirestore.instance
         .collection('users')
@@ -293,9 +292,9 @@ class Fishinglevel extends FlameGame with TapCallbacks {
       'fishingLevelScore': score,
     }, SetOptions(merge: true));
 
-    print('🎣 Final Score: $score/2 (Correct: $correctSelections, Wrong: ${incorrectSelections.length})');
+    print('Final Score: $score/2 (Correct: $correctSelections, Wrong: ${incorrectSelections.length})');
   } catch (e) {
-    print('🔥 Error storing fishing score: $e');
+    print('Error storing fishing score: $e');
   }
 }
   void checkIfUserCompleted(BuildContext context) async {
@@ -328,7 +327,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
         newHyperlinkText: "Next level",
         
         newHyperlinkCallback: () {
-          GameNavigator.switchToInitialScene(context, this);
+          GameNavigator.switchToInitialScene(navigatorKey.currentContext!, childData);
         },
         
       );

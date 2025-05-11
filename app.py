@@ -200,35 +200,29 @@ def store_prediction_in_firestore(uid, child_id, features, prediction):
         predictions_ref.add({
             **features_dict,
             'prediction': prediction,
-            'timestamp': firestore.SERVER_TIMESTAMP
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'usedInReport': False
         })
 
         print(f"Prediction stored for UID: {uid}, Child ID: {child_id}")
 
-        all_predictions = predictions_ref.stream()
-        prediction_count = sum(1 for _ in all_predictions)
+        unused_predictions_query = predictions_ref.where('usedInReport', '==', False)
+        unused_predictions = list(unused_predictions_query.stream())
 
-        print(f"Total predictions so far for this child: {prediction_count}")
+        print(f"Unused predictions for child {child_id}: {len(unused_predictions)}")
 
-        if prediction_count == 5:
-            generate_and_store_summary_report(uid, child_id)
+        if len(unused_predictions) >= 5:
+            generate_and_store_summary_report(uid, child_id, unused_predictions[:5])
 
     except Exception as e:
         print(f"Error storing data in Firestore: {e}")
 
 
-def generate_and_store_summary_report(uid, child_id):
+
+def generate_and_store_summary_report(uid, child_id, prediction_docs):
     try:
-        
-        predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('predictions')
-        predictions = predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
-        prediction_values = [doc.to_dict().get('prediction') for doc in predictions]
+        prediction_values = [doc.to_dict().get('prediction') for doc in prediction_docs]
 
-        if len(prediction_values) < 5:
-            print("Not enough predictions to generate a report.")
-            return
-
-        
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
@@ -236,12 +230,10 @@ def generate_and_store_summary_report(uid, child_id):
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        
         prompt = f"""
 Generate a professional and parent-friendly summary report for dyscalculia screening following this format:
 
 📌 Child’s Name: {name}
-
 📊 Test Overview:
 - Total Screenings Taken: 5
 - Prediction Outcomes: {prediction_values}
@@ -258,21 +250,25 @@ Generate a professional and parent-friendly summary report for dyscalculia scree
 Avoid adding closing phrases like “please contact us” or mentioning any organizations.
 Return the output exactly in the format above.
 """
-
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
         summary = response.text
 
-        
-        db.collection('users').document(uid).collection('children').document(child_id).update({
-            'dyscalculia_report': summary,
-            'report_generated_at': firestore.SERVER_TIMESTAMP
+        report_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('dyscalculia_reports')
+        report_ref.add({
+            'report': summary,
+            'predictions': prediction_values,
+            'timestamp': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"✅ Summary report generated and stored for UID: {uid}, Child ID: {child_id}")
+        print(f"Report stored for child {child_id}.")
+
+        for doc in prediction_docs:
+            doc.reference.update({'usedInReport': True})
 
     except Exception as e:
-        print(f"❌ Error generating summary report: {e}")
+        print(f"Error generating summary report: {e}")
+
 
 
 @app.route('/analyze-handwriting', methods=['POST'])
@@ -314,6 +310,8 @@ def analyze_handwriting():
         os.remove(file_path)
 
     return jsonify(response)
+
+
 def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result):
     try:
         child_ref = db.collection('users').document(uid).collection('children').document(child_id)
@@ -322,76 +320,95 @@ def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, f
         handwriting_predictions_ref.add({
             'confidence': confidence_score,
             'result': final_result,
-            'timestamp': firestore.SERVER_TIMESTAMP
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'usedInReport': False
         })
 
         print(f"Handwriting prediction stored for UID: {uid}, Child ID: {child_id}")
 
-        
-        all_predictions = handwriting_predictions_ref.stream()
-        prediction_count = sum(1 for _ in all_predictions)
 
-        print(f"Total handwriting predictions so far: {prediction_count}")
+        unused_predictions_query = handwriting_predictions_ref.where('usedInReport', '==', False)
+        unused_predictions = list(unused_predictions_query.stream())
 
-        if prediction_count == 5:
-            generate_and_store_handwriting_summary(uid, child_id)
+        print(f"Unused predictions: {len(unused_predictions)}")
+
+        if len(unused_predictions) >= 5:
+            generate_and_store_handwriting_summary(uid, child_id, unused_predictions[:5])
 
     except Exception as e:
         print(f"Error storing handwriting prediction: {e}")
-def generate_and_store_handwriting_summary(uid, child_id):
-    try:
-        handwriting_predictions_ref = db.collection('users').document(uid).collection('children').document(child_id).collection('handwriting_predictions')
-        predictions = handwriting_predictions_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).limit(5).stream()
-        prediction_results = [doc.to_dict().get('result') for doc in predictions]
 
-        if len(prediction_results) < 5:
-            print("Not enough handwriting predictions to generate a report.")
-            return
+
+def generate_and_store_handwriting_summary(uid, child_id, prediction_docs):
+    try:
+        prediction_results = [doc.to_dict().get('result') for doc in prediction_docs]
 
         child_doc = db.collection('users').document(uid).collection('children').document(child_id).get()
         if not child_doc.exists:
             print("Child document not found.")
             return
+
         child_data = child_doc.to_dict()
         name = child_data.get("name", "The child")
 
-        
         prompt = f"""
-Generate a professional and parent-friendly summary report for dysgraphia screening following this format:
+You are acting as a child screening assistant. Generate a warm, professional, and parent-friendly summary report for a screening session based on the following results.
+
+✅Instructions:
+- Use **Markdown formatting** with **bold titles**, emojis, and bullets.
+- Clearly emphasize the **likelihood of risk** using boldness and emojis.
+- Keep the language **non-clinical**, supportive, and encouraging.
+- Do **not** include any external organization names, diagnosis claims, or contact suggestions.
 
 📌 Child’s Name: {name}
 
 📊 Test Overview:
-- Total Handwriting Screenings Taken: 5
+- Total Screenings Taken: 5
 - Prediction Results: {prediction_results}
 
 🧠 Interpretation:
-- If 2 or more results are "Dysgraphia", mention that the child may show signs of dysgraphia.
-- If 3 or more results are "Non-Dysgraphia", mention that the child is less likely to show signs.
-- Use a warm, supportive, and non-clinical tone without labeling the child harshly.
+Based on the results:
+- If 2 or more predictions are **"Dyslexia/Dysgraphia/Dyscalculia"**, state:
+  🔴 The child may be showing some signs of [condition]. Emphasize that this is not a diagnosis but a helpful observation.
+- If 3 or more predictions are **"Non-Dyslexia/Non-Dysgraphia/0", state:
+  🟢 The child is less likely to show signs of [condition].
+- Always remind that screenings are **just one piece of the puzzle** in understanding a child’s learning style.
 
 📌 Suggested Next Steps:
-- Suggest 2–3 supportive next actions for parents (e.g., practicing fine motor skills, consulting a specialist if concerned).
-- Keep the tone encouraging and friendly.
+Here are some supportive actions you can take:
+- ✨ Suggest 2–3 home-friendly, practical ideas (e.g., motor skills games, interactive math tasks, storytelling).
+- 🎯 Ensure suggestions feel empowering and easy to follow for parents.
+- Do not mention clinics, therapy, or assessments directly.
 
-Do not mention any external organizations or invite them to contact anyone.
-Return the output strictly following the above format.
+🎨 Style Guide:
+- Use **bold** for headings and important points.
+- Add **relevant emojis** to improve tone and engagement.
+- Make it feel **like a summary card** that’s quick and reassuring to read.
+- End on a warm, optimistic note — but no formal conclusion.
+
+⚠️ Return **only the formatted final report**. Do not include explanations or extra commentary.
 """
+
+
 
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
         summary = response.text
 
-        
-        db.collection('users').document(uid).collection('children').document(child_id).update({
-            'dysgraphia_report': summary,
-            'dysgraphia_report_generated_at': firestore.SERVER_TIMESTAMP
+        db.collection('users').document(uid).collection('children').document(child_id).collection('dysgraphia_reports').add({
+            'report': summary,
+            'predictions': prediction_results,
+            'timestamp': firestore.SERVER_TIMESTAMP
         })
 
-        print(f"✅ Handwriting summary report generated and stored for UID: {uid}, Child ID: {child_id}")
+        print(f"Handwriting summary report stored for UID: {uid}, Child ID: {child_id}")
+
+        for doc in prediction_docs:
+            doc.reference.update({'usedInReport': True})
 
     except Exception as e:
-        print(f"❌ Error generating handwriting summary report: {e}")
+        print(f" Error generating dysgraphia summary report: {e}")
+
 
 @app.route('/generate_dyslexia_report', methods=['POST'])
 def generate_dyslexia_report():
@@ -422,41 +439,33 @@ def generate_dyslexia_report():
 
         
         prompt = f"""
-Generate a professional and parent-friendly summary report for dyslexia screening for {child_name} following this format:
+Here's a dyslexia screening report for {child_name}, designed to be professional, parent-friendly, and encouraging.
 
-📌 **Child’s Name**: {child_name}
+📌 Child’s Name: {child_name}
 
-📊 **Test Overview**:
-- **Fishing Level**: {scores['fishingLevelScore']}
-- **Audio Level**: {scores['forestLevelScore']}
-- **Color and Letter Level**: {scores['colorLetterLevelScore']}
-- **Reading Level**: {scores['pronunciationLevelScore']}
-- **Total Score**: {total_score} / 9 ({percentage}%)
+📊 Test Overview:
+- Fishing Level: {scores['fishingLevelScore']} (This activity assesses the child's visual processing and letter recognition through a fun and engaging fishing game.)
+- Audio Level: {scores['forestLevelScore']} (This activity evaluates the child's ability to recognize and differentiate various sounds, helping assess auditory discrimination skills.)
+- Color and Letter Level: {scores['colorLetterLevelScore']} (This task focuses on identifying letters associated with specific colors, supporting knowledge of letter-sound correspondence.)
+- Reading Level: {scores['pronunciationLevelScore']} (This activity assesses the child’s early reading and phonetic pronunciation abilities by encouraging verbal repetition.)
+- Total Score: {total_score} / 9 ({percentage}%)
 
-🧠 **Interpretation**:
-- Based on the results, the diagnosis is: **{risk}**.
-- If the risk is high or moderate, reassure parents that further evaluation could help in understanding the child’s learning needs.
+🧠 Interpretation:
+Based on the results, the diagnosis is: {risk}.
+If the risk is high or moderate, parents are encouraged to consider further evaluation to better understand the child’s learning needs and support strategies.
 
-📌 **Suggested Next Steps**:
-- Encourage practicing tasks that strengthen reading and writing skills.
-- Suggest consulting a specialist or educational professional if the results indicate a need for further assessment.
-- Keep the tone warm and supportive, ensuring the parents feel encouraged to take positive steps forward.
+📌 Suggested Next Steps:
+- Encourage regular activities that strengthen reading, listening, and phonics skills in a supportive environment.
+- Provide opportunities for interactive learning such as reading aloud together, using phonics games, or exploring sound-matching tasks.
+- If needed, consult with an educational specialist to gain deeper insight into the child’s specific needs and development path.
 
-Please generate a clear, encouraging, and supportive report following this format. Do not use harsh or clinical language.
+Please generate a warm, encouraging, and supportive report in paragraph form based on the above structure. Avoid any harsh, overly clinical, or technical language, and ensure the tone is positive and reassuring.
 """
-
-        
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
 
         if response:
             report = response.text  
-
-            
-            child_ref.update({
-                'dyslexia_report': report,  
-                'report_generated_at': firestore.SERVER_TIMESTAMP  
-            })
 
             return jsonify({"report": report}), 200
         else:

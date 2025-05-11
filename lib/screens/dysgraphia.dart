@@ -8,6 +8,9 @@ import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DysgraphiaScreen extends StatefulWidget {
+  final Map<String, dynamic> childData;
+  const DysgraphiaScreen({super.key, required this.childData});
+
   @override
   _DysgraphiaScreenState createState() => _DysgraphiaScreenState();
 }
@@ -20,8 +23,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   String? _selectedWord;
   int _uploadCount = 0;
 
-  final String backendUrl =
-      dotenv.env['BACKEND_URL_DYSG'] ?? 'DEFAULT_FALLBACK_URL';
+  final String backendUrl = dotenv.env['BACKEND_URL_DYSG'] ?? 'DEFAULT_FALLBACK_URL';
 
   final List<String> words = [
     "dog",
@@ -80,6 +82,16 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   Future<void> _uploadImage() async {
     if (_selectedImage == null || _selectedWord == null) return;
 
+    final user = FirebaseAuth.instance.currentUser;
+    final childId = widget.childData['childId'];
+
+    if (user == null || childId == null) {
+      setState(() {
+        _result = 'Missing user or child ID';
+      });
+      return;
+    }
+
     setState(() {
       _isUploading = true;
       _result = null;
@@ -90,14 +102,13 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
       File resizedImage = await _resizeImage(_selectedImage!);
 
       var request = http.MultipartRequest('POST', Uri.parse(backendUrl));
-      request.files
-          .add(await http.MultipartFile.fromPath('image', resizedImage.path));
+      request.files.add(await http.MultipartFile.fromPath('image', resizedImage.path));
       request.fields['word'] = _selectedWord!;
-      request.fields['uid'] = FirebaseAuth.instance.currentUser?.uid ??
-          "default_uid"; 
-      request.fields['childId'] = currentSelectedChildId!;
-      print("Sending UID: ${FirebaseAuth.instance.currentUser?.uid}");
-      print("Sending Child ID: $currentSelectedChildId");
+      request.fields['word'] = _selectedWord!;
+      request.fields['uid'] = user.uid;
+      request.fields['childId'] = childId;
+
+      print("Sending to backend: UID=${user.uid}, ChildID=$childId");
 
       var response = await request.send();
       if (response.statusCode == 200) {
