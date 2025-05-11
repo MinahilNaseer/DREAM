@@ -461,9 +461,6 @@ If the risk is high or moderate, parents are encouraged to consider further eval
 
 Please generate a warm, encouraging, and supportive report in paragraph form based on the above structure. Avoid any harsh, overly clinical, or technical language, and ensure the tone is positive and reassuring.
 """
-
-
-        
         model = genai.GenerativeModel("gemini-2.0-flash")
         response = model.generate_content(prompt)
 
