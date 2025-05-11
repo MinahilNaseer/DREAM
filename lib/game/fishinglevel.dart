@@ -1,4 +1,5 @@
 import 'package:dream/game/scenicgame.dart';
+import 'package:dream/main.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -326,7 +327,7 @@ class Fishinglevel extends FlameGame with TapCallbacks {
         newHyperlinkText: "Next level",
         
         newHyperlinkCallback: () {
-          GameNavigator.switchToInitialScene(context, childData);
+          GameNavigator.switchToInitialScene(navigatorKey.currentContext!, childData);
         },
         
       );

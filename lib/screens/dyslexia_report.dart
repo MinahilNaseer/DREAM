@@ -1,3 +1,4 @@
+import 'package:dream/screens/mainmenu.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -41,7 +42,9 @@ class DyslexiaReportPage extends StatelessWidget {
         elevation: 2,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> MainMenu(childData: childData)));
+          },
         ),
         title: const Text(
           "Dyslexia Report",

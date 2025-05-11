@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dream/global.dart';
+import 'package:dream/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -188,9 +189,9 @@ class ScenicGame extends FlameGame with TapCallbacks {
   }
 
   void switchToNewScene(BuildContext context) {
-    Navigator.of(context).push(
+    navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: Fishinglevel(context,childData)),
+        builder: (_) => GameWidget(game: Fishinglevel(buildContext!,childData)),
       ),
     );
   }

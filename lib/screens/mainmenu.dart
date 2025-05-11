@@ -1,13 +1,9 @@
 import 'package:dream/game/gamemainscreen.dart';
-import 'package:dream/global.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../screens/mainmenu.dart';
 import '../screens/profilepage.dart';
 import '../widgets/bottomnavigation.dart';
 import '../widgets/menu-widget.dart';
-import 'package:flame/game.dart';
-import '../game/scenicgame.dart';
 import '../screens/videoplayerscreen.dart';
 import 'package:dream/screens/dyscalculia.dart';
 import 'package:dream/screens/dysgraphia.dart';
@@ -267,12 +263,14 @@ class _MainMenuState extends State<MainMenu> with TickerProviderStateMixin {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                 GameMainScreen(childData: widget.childData),
+                                                  GameMainScreen(
+                                                      childData:
+                                                          widget.childData),
                                             ));
                                       }),
                                 ));
                           },
-                          child: LevelCard(
+                          child: const LevelCard(
                             level: "Level 3",
                             title: "Dyslexia Detection: ",
                             subtitle: "Interactive Game",

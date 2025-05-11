@@ -4,7 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:dream/screens/screenclass/cardoption.dart' as cardoption;
+import 'package:dream/widgets/cardoption.dart' as cardoption;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import "package:dream/screens/dyscalculia_report.dart";

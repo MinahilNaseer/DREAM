@@ -1,4 +1,5 @@
 import 'dart:ui' as ui;
+import 'package:dream/main.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
@@ -21,6 +22,7 @@ import 'package:dream/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dream/screens/createdyslexiareport.dart';
 import 'package:dream/screens/dyslexia_report.dart';
+import 'package:dream/screens/mainmenu.dart';
 
 class Aftermaplevel extends FlameGame with TapCallbacks {
   Aftermaplevel({required this.childId, required this.childData});
@@ -95,6 +97,7 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   late AudioPlayer _bicycleSoundPlayer;
   bool isBicycleSoundPlaying = false;
   int correctProunicationCount = 0;
+  bool _isGeneratingReport = false;
 
   @override
   Future<void> onLoad() async {
@@ -162,7 +165,8 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
     );
     add(dialogueBox);
 
-    speakDialogue(dialogueBox.text);
+    await Future.delayed(const Duration(milliseconds: 500));
+    await speakDialogue(dialogueBox.text);
 
     gateTimer = Timer(3.0, onTick: () async {
       if (!gateAppeared) {
@@ -671,7 +675,13 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
     );
     add(foundTreasureBox);
 
+    await _flutterTts.stop();
+    await _bicycleSoundPlayer.stop();
+    isBicycleSoundPlaying = false;
+    isRecording = false;
+
     await speakDialogue("Wow! We finally found the treasure! ");
+
     Future.delayed(Duration(seconds: 3), () {
       showDialog(
         context: buildContext!,
@@ -688,52 +698,22 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
               },
               child: const Text("Cancel"),
             ),
-            // ✅ Updated logic for Aftermaplevel to show latest report in DyslexiaReportPage
-
             ElevatedButton(
               onPressed: () async {
+                if (_isGeneratingReport) return;
+                _isGeneratingReport = true;
+
                 Navigator.of(context).pop();
 
-                // 1. Generate new report (calls Gemini backend)
                 await DyslexiaReportService().createAndSendPromptToBackend();
+                await _bicycleSoundPlayer.stop();
+                await _flutterTts.stop();
+                await speechToText.stop();
 
-                // 2. Save generated report text to main child doc for preview
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  final latestReportSnapshot = await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(user.uid)
-                      .collection('children')
-                      .doc(childId)
-                      .collection('dyslexia_reports')
-                      .orderBy('createdAt', descending: true)
-                      .limit(1)
-                      .get();
-
-                  if (latestReportSnapshot.docs.isNotEmpty) {
-                    final latestReport =
-                        latestReportSnapshot.docs.first.data()['report_text'];
-
-                    // Optionally save it to the main document for quick preview access
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .collection('children')
-                        .doc(childId)
-                        .update({
-                      'dyslexia_report': latestReport,
-                    });
-                  }
-                }
-
-                // 3. Navigate to DyslexiaReportPage
-                Navigator.push(
-                  context,
+                _isGeneratingReport = false;
+                navigatorKey.currentState!.pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => DyslexiaReportPage(
-                      childData: childData,
-                      childId: childId,
-                    ),
+                    builder: (_) => MainMenu(childData: childData),
                   ),
                 );
               },
@@ -761,7 +741,8 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
   void switchToAfterMapLevel(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GameWidget(game: ForestLevel(childData: childData)),
+        builder: (context) =>
+            GameWidget(game: ForestLevel(childData: childData)),
       ),
     );
   }
@@ -777,5 +758,13 @@ class Aftermaplevel extends FlameGame with TapCallbacks {
       isMoving = true;
     }
     playBicycleSound();
+  }
+
+  @override
+  void onRemove() {
+    super.onRemove();
+    _bicycleSoundPlayer.dispose();
+    _flutterTts.stop();
+    speechToText.stop();
   }
 }
