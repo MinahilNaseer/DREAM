@@ -27,20 +27,17 @@ db = firestore.Client()
 import os
 from pathlib import Path
 
-# Get the absolute path to the current directory
 current_dir = Path(__file__).parent
 
-# Construct paths to model files
-model_path = current_dir / "DyscalD.pkl"  # Note exact capitalization
+
+model_path = current_dir / "DyscalD.pkl"  
 dysgraphia_path = current_dir / "dysgraphia_cnn_model.h5"
 
-# Verify files exist
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"Model file not found at {model_path}")
 if not os.path.exists(dysgraphia_path):
     raise FileNotFoundError(f"Dysgraphia model not found at {dysgraphia_path}")
 
-# Load models
 model = joblib.load(model_path)
 dysgraphia_model = tf.keras.models.load_model(dysgraphia_path)
 
@@ -189,7 +186,10 @@ def extract_features(image_path):
         'spacing': avg_spacing
     }
 
-    
+ @app.route('/')
+def home():
+    return "DREAM Flask backend is running!"
+   
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
