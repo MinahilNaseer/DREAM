@@ -558,8 +558,37 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialPageRoute(
                               builder: (context) => const AddChildPage()),
                         );
+
+// After adding a child, re-fetch updated children list
                         if (result == 'child_added') {
-                          _logIn();
+                          User? user = FirebaseAuth.instance.currentUser;
+                          if (user != null) {
+                            QuerySnapshot childrenSnapshot =
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .collection('children')
+                                    .get();
+
+                            List<QueryDocumentSnapshot> updatedChildren =
+                                childrenSnapshot.docs;
+
+                            if (updatedChildren.isNotEmpty) {
+                              var newChild =
+                                  updatedChildren.last; // Assuming latest added
+                              Map<String, dynamic> data =
+                                  newChild.data() as Map<String, dynamic>;
+                              data['id'] = newChild.id;
+
+                              currentSelectedChildId = newChild.id;
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainMenu(childData: data)),
+                              );
+                            }
+                          }
                         }
                       },
                       icon: const Icon(Icons.add, color: Colors.white),
