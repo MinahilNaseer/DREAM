@@ -23,7 +23,8 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   String? _selectedWord;
   int _uploadCount = 0;
 
-  final String backendUrl = 'https://dream-akyh.onrender.com/analyze-handwriting';
+  final String backendUrl =
+      'https://dream-akyh.onrender.com/analyze-handwriting';
 
   final List<String> words = [
     "dog",
@@ -102,7 +103,8 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
       File resizedImage = await _resizeImage(_selectedImage!);
 
       var request = http.MultipartRequest('POST', Uri.parse(backendUrl));
-      request.files.add(await http.MultipartFile.fromPath('image', resizedImage.path));
+      request.files
+          .add(await http.MultipartFile.fromPath('image', resizedImage.path));
       request.fields['word'] = _selectedWord!;
       request.fields['word'] = _selectedWord!;
       request.fields['uid'] = user.uid;
@@ -120,7 +122,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
           _selectedWord = null;
 
           if (_uploadCount >= 5) {
-            _showCompletionDialog(); 
+            _showCompletionDialog();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -150,16 +152,22 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   }
 
   Future<File> _resizeImage(File imageFile) async {
-    final imageBytes = imageFile.readAsBytesSync();
+    final imageBytes = await imageFile.readAsBytesSync();
     final decodedImage = img.decodeImage(imageBytes);
 
-    if (decodedImage == null) {
-      return imageFile;
-    }
+    if (decodedImage == null) return imageFile;
 
-    final resizedImage = img.copyResize(decodedImage, width: 128, height: 128);
-    final resizedFile = File(imageFile.path)
-      ..writeAsBytesSync(img.encodeJpg(resizedImage));
+    // Resize to max 800px on the longest side while maintaining aspect ratio
+    final resizedImage = img.copyResize(
+      decodedImage,
+      width: decodedImage.width > decodedImage.height ? 800 : null,
+      height: decodedImage.height > decodedImage.width ? 800 : null,
+    );
+
+    // Compress quality to 80%
+    final compressedBytes = img.encodeJpg(resizedImage, quality: 80);
+
+    final resizedFile = File(imageFile.path)..writeAsBytesSync(compressedBytes);
 
     return resizedFile;
   }

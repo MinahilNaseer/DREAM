@@ -48,7 +48,9 @@ print("Files in current directory:", os.listdir())
 app = Flask(__name__)
 
 UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# In your Flask app (app.py), add these configurations:
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # Limit uploads to 2MB
+app.config['UPLOAD_FOLDER'] = '/tmp/uploads'  # Use tmp directory which is faster
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -103,39 +105,23 @@ def convert_to_grayscale(image_path):
 
 def preprocess_image(image_path):
     try:
-        image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-        if image is None:
-            raise ValueError("Error: Unable to load image, file might be corrupted or unreadable.")
-
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, 30, 150)
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        if contours:
-            x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
-            padding = 10
-            x = max(x - padding, 0)
-            y = max(y - padding, 0)
-            w = min(w + (2 * padding), image.shape[1] - x)
-            h = min(h + (2 * padding), image.shape[0] - y)
-            cropped_image = image[y:y+h, x:x+w]
-            cropped_image = cv2.resize(cropped_image, (128, 128))
-            cv2.imwrite("cropped_image.jpg", cropped_image)
-            print("Saved Cropped Image: cropped_image.jpg")
-
-        else:
-            print("No handwriting detected! Using full image.")
-            cropped_image = cv2.resize(image, (128, 128))  
-
-        cropped_image = cropped_image / 255.0  
-        img_array = img_to_array(cropped_image)
-        img_array = np.expand_dims(img_array, axis=0)
+        # Read image directly in grayscale to save memory
+        gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if gray is None:
+            raise ValueError("Unable to load image")
+            
+        # Simple resize and normalization
+        resized = cv2.resize(gray, (128, 128))
+        normalized = resized / 255.0
+        
+        # Expand dimensions for model input
+        img_array = np.expand_dims(normalized, axis=-1)  # Add channel dimension
+        img_array = np.expand_dims(img_array, axis=0)    # Add batch dimension
+        
         return img_array
-
-    finally:
-        if 'cropped_imgage.jpg' in os.listdir():
-            os.remove('cropped_image.jpg')
+    except Exception as e:
+        print(f"Error in preprocessing: {e}")
+        raise
 
 
 
@@ -171,6 +157,14 @@ def extract_features(image_path):
 @app.route('/')
 def home():
     return "DREAM Flask backend is running!"
+
+@app.route('/health')
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "model_loaded": dysgraphia_model is not None,
+        "memory": psutil.virtual_memory().percent
+    })
    
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -280,44 +274,51 @@ Return the output exactly in the format above.
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
     try:
+        # Validate request
         if 'image' not in request.files:
+            app.logger.error("No image uploaded")
             return jsonify({"error": "No image uploaded"}), 400
 
-        required_fields = ['uid', 'childId', 'word']
-        missing = [field for field in required_fields if field not in request.form]
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+        # Get form data with defaults
+        uid = request.form.get('uid', '')
+        child_id = request.form.get('childId', '')
+        word = request.form.get('word', 'unknown')
 
+        if not uid or not child_id:
+            app.logger.error("Missing UID or childId")
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Process file
         file = request.files['image']
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
-        file.save(file_path)
+        _, ext = os.path.splitext(file.filename)
+        temp_path = os.path.join('/tmp', f"upload_{uuid.uuid4().hex}{ext}")
+        file.save(temp_path)
 
-        processed_img = preprocess_image(file_path)
-        prediction = dysgraphia_model.predict(processed_img)[0][0]
-        result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
-
-        storage_success = store_handwriting_prediction_in_firestore(
-            request.form['uid'],
-            request.form['childId'],
-            float(prediction),
-            result,
-            request.form['word']
-        )
-
-        if not storage_success:
-            return jsonify({"warning": "Analysis completed but storage failed"}), 200
-
-        return jsonify({
-            "result": result,
-            "confidence": float(prediction),
-            "word": request.form['word']
-        })
-
+        try:
+            # Process image
+            processed_img = preprocess_image(temp_path)
+            
+            # Make prediction
+            prediction = dysgraphia_model.predict(processed_img)[0][0]
+            result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
+            
+            # Store results
+            store_handwriting_prediction_in_firestore(uid, child_id, float(prediction), result, word)
+            
+            return jsonify({
+                "result": result,
+                "confidence": float(prediction),
+                "word": word
+            })
+            
+        finally:
+            # Clean up temp file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if 'file_path' in locals() and os.path.exists(file_path):
-            os.remove(file_path)
+        app.logger.error(f"Error in analyze_handwriting: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result, word=None):
