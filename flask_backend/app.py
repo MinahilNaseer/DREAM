@@ -11,6 +11,9 @@ from PIL import Image, ExifTags
 from google.cloud import firestore
 import google.generativeai as genai
 from dotenv import load_dotenv
+import uuid  # For generating unique filenames
+import psutil  # For memory monitoring in health check
+import logging  # For proper error logging
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -46,15 +49,15 @@ print("Files in current directory:", os.listdir())
 
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 
-UPLOAD_FOLDER = 'uploads'
-# In your Flask app (app.py), add these configurations:
+UPLOAD_FOLDER = '/tmp/uploads'  # Use tmp directory which is faster
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # Limit uploads to 2MB
-app.config['UPLOAD_FOLDER'] = '/tmp/uploads'  # Use tmp directory which is faster
 
+# Create upload folder if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
 
 def resize_image(image, size=(128, 128)):
     return cv2.resize(image, size)
@@ -290,20 +293,40 @@ def analyze_handwriting():
 
         # Process file
         file = request.files['image']
-        _, ext = os.path.splitext(file.filename)
-        temp_path = os.path.join('/tmp', f"upload_{uuid.uuid4().hex}{ext}")
-        file.save(temp_path)
-
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+            
+        # Create secure filename with UUID
+        ext = os.path.splitext(file.filename)[1]
+        filename = f"{uuid.uuid4().hex}{ext}"
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
         try:
+            file.save(temp_path)
+            
             # Process image
             processed_img = preprocess_image(temp_path)
             
-            # Make prediction
-            prediction = dysgraphia_model.predict(processed_img)[0][0]
-            result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
+            # Make prediction - limit to 10 seconds
+            try:
+                prediction = dysgraphia_model.predict(processed_img, verbose=0)[0][0]
+                result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
+            except Exception as predict_error:
+                app.logger.error(f"Prediction failed: {str(predict_error)}")
+                return jsonify({"error": "Prediction failed"}), 500
             
             # Store results
-            store_handwriting_prediction_in_firestore(uid, child_id, float(prediction), result, word)
+            storage_success = store_handwriting_prediction_in_firestore(
+                uid, child_id, float(prediction), result, word
+            )
+            
+            if not storage_success:
+                return jsonify({
+                    "result": result,
+                    "confidence": float(prediction),
+                    "word": word,
+                    "warning": "Results could not be saved to database"
+                })
             
             return jsonify({
                 "result": result,
@@ -311,10 +334,17 @@ def analyze_handwriting():
                 "word": word
             })
             
+        except Exception as processing_error:
+            app.logger.error(f"Image processing failed: {str(processing_error)}")
+            return jsonify({"error": "Image processing failed"}), 500
+            
         finally:
             # Clean up temp file
             if os.path.exists(temp_path):
-                os.remove(temp_path)
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
                 
     except Exception as e:
         app.logger.error(f"Error in analyze_handwriting: {str(e)}")
