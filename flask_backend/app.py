@@ -102,58 +102,40 @@ def convert_to_grayscale(image_path):
     return gray
 
 def preprocess_image(image_path):
-    
-    image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    if image is None:
-        raise ValueError("Error: Unable to load image, file might be corrupted or unreadable.")
+    try:
+        image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        if image is None:
+            raise ValueError("Error: Unable to load image, file might be corrupted or unreadable.")
 
-    
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        edges = cv2.Canny(blurred, 30, 150)
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        if contours:
+            x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
+            padding = 10
+            x = max(x - padding, 0)
+            y = max(y - padding, 0)
+            w = min(w + (2 * padding), image.shape[1] - x)
+            h = min(h + (2 * padding), image.shape[0] - y)
+            cropped_image = image[y:y+h, x:x+w]
+            cropped_image = cv2.resize(cropped_image, (128, 128))
+            cv2.imwrite("cropped_image.jpg", cropped_image)
+            print("Saved Cropped Image: cropped_image.jpg")
 
-    
-    edges = cv2.Canny(blurred, 30, 150)
+        else:
+            print("No handwriting detected! Using full image.")
+            cropped_image = cv2.resize(image, (128, 128))  
 
-    
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cropped_image = cropped_image / 255.0  
+        img_array = img_to_array(cropped_image)
+        img_array = np.expand_dims(img_array, axis=0)
+        return img_array
 
-    if contours:
-        
-        x, y, w, h = cv2.boundingRect(max(contours, key=cv2.contourArea))
-
-        
-        padding = 10
-        x = max(x - padding, 0)
-        y = max(y - padding, 0)
-        w = min(w + (2 * padding), image.shape[1] - x)
-        h = min(h + (2 * padding), image.shape[0] - y)
-
-        
-        cropped_image = image[y:y+h, x:x+w]
-
-        
-        cropped_image = cv2.resize(cropped_image, (128, 128))
-
-        
-        cv2.imwrite("cropped_image.jpg", cropped_image)
-        print("Saved Cropped Image: cropped_image.jpg")
-
-    else:
-        print("No handwriting detected! Using full image.")
-        cropped_image = cv2.resize(image, (128, 128))  
-
-    
-    cropped_image = cropped_image / 255.0  
-
-    
-    img_array = img_to_array(cropped_image)
-
-    
-    img_array = np.expand_dims(img_array, axis=0)
-
-    return img_array
+    finally:
+        if 'cropped_imgage.jpg' in os.listdir():
+            os.remove('cropped_image.jpg')
 
 
 
@@ -297,106 +279,91 @@ Return the output exactly in the format above.
 
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-
-    uid = request.form.get('uid')
-    child_id = request.form.get('childId')
-    word = request.form.get('word')
-
-    print(f"Received request - UID: {uid}, Child ID: {child_id}, Word: {word}")
-
-    if not uid or not child_id:
-        return jsonify({"error": "UID or childId is missing"}), 400
-
-    file = request.files['image']
-    if not file:
-        return jsonify({"error": "Empty file uploaded"}), 400
-
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
     try:
+        if 'image' not in request.files:
+            return jsonify({"error": "No image uploaded"}), 400
+
+        required_fields = ['uid', 'childId', 'word']
+        missing = [field for field in required_fields if field not in request.form]
+        if missing:
+            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+        file = request.files['image']
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
         file.save(file_path)
-        print(f"Image saved to {file_path}")
 
         processed_img = preprocess_image(file_path)
-        print("Processed Image Shape:", processed_img.shape)
-
         prediction = dysgraphia_model.predict(processed_img)[0][0]
-        print(f"Raw prediction score: {prediction}")
+        result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
 
-        cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
-        final_result = "Dysgraphia" if cnn_result == "Dysgraphia" else "Non-Dysgraphia"
-
-        print(f"Final classification: {final_result} with confidence {prediction}")
-        
-
-        store_handwriting_prediction_in_firestore(
-            uid, 
-            child_id, 
-            float(prediction), 
-            final_result,
-            word  
+        storage_success = store_handwriting_prediction_in_firestore(
+            request.form['uid'],
+            request.form['childId'],
+            float(prediction),
+            result,
+            request.form['word']
         )
 
-        response = {
-            "CNN Result": cnn_result,
-            "Final Result": final_result,
-            "Confidence": float(prediction),
-            "Word": word
-        }
+        if not storage_success:
+            return jsonify({"warning": "Analysis completed but storage failed"}), 200
+
+        return jsonify({
+            "result": result,
+            "confidence": float(prediction),
+            "word": request.form['word']
+        })
+
     except Exception as e:
-        print(f"Error processing image: {str(e)}")
-        return jsonify({"error": f"Processing error: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
     finally:
-        if os.path.exists(file_path):
+        if 'file_path' in locals() and os.path.exists(file_path):
             os.remove(file_path)
-            print(f"Removed temporary file {file_path}")
-
-    return jsonify(response)
 
 
-def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result):
+def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result, word=None):
     try:
-        print(f"Attempting to store prediction for UID: {uid}, Child ID: {child_id}")
-        print(f"Data to store - Confidence: {confidence_score}, Result: {final_result}")
+        print(f"Attempting to store for {uid}/{child_id}")
+        print(f"Data: {confidence_score}, {final_result}, {word}")
 
-        if db is None:
-            print("Firestore client not initialized!")
-            return
 
-        child_ref = db.collection('users').document(uid).collection('children').document(child_id)
-        
-        child_doc = child_ref.get()
-        if not child_doc.exists:
-            print(f"Child document {child_id} does not exist for user {uid}")
-            return
+        if not db:
+            raise Exception("Firestore client not initialized")
 
-        handwriting_predictions_ref = child_ref.collection('handwriting_predictions')
+        doc_ref = db.collection('users').document(uid)\
+                  .collection('children').document(child_id)\
+                  .collection('handwriting_predictions').document()
 
-        doc_ref = handwriting_predictions_ref.add({
+        data = {
             'confidence': float(confidence_score),
             'result': str(final_result),
             'timestamp': firestore.SERVER_TIMESTAMP,
-            'usedInReport': False
-        })
+            'usedInReport': False,
+            'word': word or 'unknown'
+        }
 
-        print(f"Successfully stored prediction with ID: {doc_ref.id}")
+        doc_ref.set(data)
+        print(f"Successfully stored prediction {doc_ref.id}")
 
-        unused_predictions_query = handwriting_predictions_ref.where('usedInReport', '==', False)
-        unused_predictions = list(unused_predictions_query.stream())
 
-        print(f"Found {len(unused_predictions)} unused predictions")
+        unused_query = db.collection('users').document(uid)\
+                      .collection('children').document(child_id)\
+                      .collection('handwriting_predictions')\
+                      .where('usedInReport', '==', False)
 
-        if len(unused_predictions) >= 5:
+        unused_count = len(list(unused_query.stream()))
+        print(f"Unused predictions: {unused_count}")
+
+        if unused_count >= 5:
             print("Generating summary report...")
-            generate_and_store_handwriting_summary(uid, child_id, unused_predictions[:5])
+            generate_and_store_handwriting_summary(uid, child_id)
+
+        return True
 
     except Exception as e:
-        print(f"Error storing handwriting prediction: {str(e)}")
+        print(f"Storage failed: {str(e)}")
         import traceback
         traceback.print_exc()
+        return False
 
 
 def generate_and_store_handwriting_summary(uid, child_id, prediction_docs):
