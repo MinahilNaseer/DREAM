@@ -324,8 +324,7 @@ class _DyscalculiaLevelState extends State<DyscalculiaLevel> {
         return;
       }
 
-      final String urlString =
-          dotenv.env['BACKEND_URL_DYSCAL'] ?? 'DEFAULT_FALLBACK_URL';
+      final String urlString = 'https://dream-akyh.onrender.com/predict';
       final Uri url = Uri.parse(urlString);
 
       for (var childDoc in childrenSnapshot.docs) {

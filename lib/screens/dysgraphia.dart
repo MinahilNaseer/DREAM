@@ -23,7 +23,7 @@ class _DysgraphiaScreenState extends State<DysgraphiaScreen> {
   String? _selectedWord;
   int _uploadCount = 0;
 
-  final String backendUrl = dotenv.env['BACKEND_URL_DYSG'] ?? 'DEFAULT_FALLBACK_URL';
+  final String backendUrl = 'https://dream-akyh.onrender.com/analyze-handwriting';
 
   final List<String> words = [
     "dog",
