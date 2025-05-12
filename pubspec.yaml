@@ -91,7 +91,6 @@ flutter:
       - assets/images/kids-playing-game.png
       - assets/images/math-problem.png
       - assets/images/writing-girl.png
-      - .env
       - assets/play/
       - assets/audio/
       - assets/images/correct_tiles/
