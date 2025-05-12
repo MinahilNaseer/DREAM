@@ -295,7 +295,6 @@ Return the output exactly in the format above.
         print(f"Error generating summary report: {e}")
 
 
-
 @app.route('/analyze-handwriting', methods=['POST'])
 def analyze_handwriting():
     if 'image' not in request.files:
@@ -303,65 +302,101 @@ def analyze_handwriting():
 
     uid = request.form.get('uid')
     child_id = request.form.get('childId')
+    word = request.form.get('word')
+
+    print(f"Received request - UID: {uid}, Child ID: {child_id}, Word: {word}")
 
     if not uid or not child_id:
         return jsonify({"error": "UID or childId is missing"}), 400
 
     file = request.files['image']
+    if not file:
+        return jsonify({"error": "Empty file uploaded"}), 400
+
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(file_path)
-
+    
     try:
+        file.save(file_path)
+        print(f"Image saved to {file_path}")
+
         processed_img = preprocess_image(file_path)
         print("Processed Image Shape:", processed_img.shape)
 
         prediction = dysgraphia_model.predict(processed_img)[0][0]
+        print(f"Raw prediction score: {prediction}")
 
         cnn_result = "Dysgraphia" if prediction > 0.7 else "Non-Dysgraphia"
         final_result = "Dysgraphia" if cnn_result == "Dysgraphia" else "Non-Dysgraphia"
 
+        print(f"Final classification: {final_result} with confidence {prediction}")
         
-        store_handwriting_prediction_in_firestore(uid, child_id, float(prediction), final_result)
+
+        store_handwriting_prediction_in_firestore(
+            uid, 
+            child_id, 
+            float(prediction), 
+            final_result,
+            word  
+        )
 
         response = {
             "CNN Result": cnn_result,
             "Final Result": final_result,
-            "Confidence": float(prediction)
+            "Confidence": float(prediction),
+            "Word": word
         }
     except Exception as e:
+        print(f"Error processing image: {str(e)}")
         return jsonify({"error": f"Processing error: {str(e)}"}), 500
     finally:
-        os.remove(file_path)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"Removed temporary file {file_path}")
 
     return jsonify(response)
 
 
 def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, final_result):
     try:
+        print(f"Attempting to store prediction for UID: {uid}, Child ID: {child_id}")
+        print(f"Data to store - Confidence: {confidence_score}, Result: {final_result}")
+
+        if db is None:
+            print("Firestore client not initialized!")
+            return
+
         child_ref = db.collection('users').document(uid).collection('children').document(child_id)
+        
+        child_doc = child_ref.get()
+        if not child_doc.exists:
+            print(f"Child document {child_id} does not exist for user {uid}")
+            return
+
         handwriting_predictions_ref = child_ref.collection('handwriting_predictions')
 
-        handwriting_predictions_ref.add({
-            'confidence': confidence_score,
-            'result': final_result,
+        doc_ref = handwriting_predictions_ref.add({
+            'confidence': float(confidence_score),
+            'result': str(final_result),
             'timestamp': firestore.SERVER_TIMESTAMP,
             'usedInReport': False
         })
 
-        print(f"Handwriting prediction stored for UID: {uid}, Child ID: {child_id}")
-
+        print(f"Successfully stored prediction with ID: {doc_ref.id}")
 
         unused_predictions_query = handwriting_predictions_ref.where('usedInReport', '==', False)
         unused_predictions = list(unused_predictions_query.stream())
 
-        print(f"Unused predictions: {len(unused_predictions)}")
+        print(f"Found {len(unused_predictions)} unused predictions")
 
         if len(unused_predictions) >= 5:
+            print("Generating summary report...")
             generate_and_store_handwriting_summary(uid, child_id, unused_predictions[:5])
 
     except Exception as e:
-        print(f"Error storing handwriting prediction: {e}")
+        print(f"Error storing handwriting prediction: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 
 def generate_and_store_handwriting_summary(uid, child_id, prediction_docs):

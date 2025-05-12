@@ -30,9 +30,8 @@ class DyslexiaReportService {
         'risk': result['risk'],
       }
     };
-    final String urlString =
-        dotenv.env['BACKEND_URL_DYS'] ?? 'DEFAULT_FALLBACK_URL';
-    final Uri url = Uri.parse(urlString);
+    
+    final Uri url = Uri.parse('https://dream-akyh.onrender.com/generate_dyslexia_report');
 
     final response = await http.post(
       url,
