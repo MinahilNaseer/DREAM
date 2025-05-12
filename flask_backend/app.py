@@ -186,7 +186,7 @@ def extract_features(image_path):
         'spacing': avg_spacing
     }
 
- @app.route('/')
+@app.route('/')
 def home():
     return "DREAM Flask backend is running!"
    
