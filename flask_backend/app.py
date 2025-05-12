@@ -44,6 +44,8 @@ if not os.path.exists(dysgraphia_path):
 model = joblib.load(model_path)
 dysgraphia_model = tf.keras.models.load_model(dysgraphia_path)
 
+print("Model input shape:", dysgraphia_model.input_shape)
+
 print("Current directory:", os.getcwd())
 print("Files in current directory:", os.listdir())
 
@@ -108,18 +110,20 @@ def convert_to_grayscale(image_path):
 
 def preprocess_image(image_path):
     try:
-        # Read image directly in grayscale to save memory
-        gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        if gray is None:
+        # Read image in color (3 channels)
+        image = cv2.imread(image_path, cv2.IMREAD_COLOR)
+        if image is None:
             raise ValueError("Unable to load image")
-            
+        
+        # Convert BGR to RGB (OpenCV loads as BGR by default)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
         # Simple resize and normalization
-        resized = cv2.resize(gray, (128, 128))
+        resized = cv2.resize(image, (128, 128))
         normalized = resized / 255.0
         
         # Expand dimensions for model input
-        img_array = np.expand_dims(normalized, axis=-1)  # Add channel dimension
-        img_array = np.expand_dims(img_array, axis=0)    # Add batch dimension
+        img_array = np.expand_dims(normalized, axis=0)  # Add batch dimension
         
         return img_array
     except Exception as e:
@@ -306,6 +310,9 @@ def analyze_handwriting():
             
             # Process image
             processed_img = preprocess_image(temp_path)
+            if processed_img.shape[-1] != 3:
+                app.logger.error(f"Invalid input shape: {processed_img.shape}")
+                return jsonify({"error": "Invalid image format"}), 400
             
             # Make prediction - limit to 10 seconds
             try:
