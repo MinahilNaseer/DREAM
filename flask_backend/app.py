@@ -392,7 +392,7 @@ def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, f
         unused_predictions = list(unused_query.stream())
         print(f"Unused predictions: {len(unused_predictions)}")
 
-        if unused_predictions >= 5:
+        if len(unused_predictions) >= 5:
             print("Generating summary report...")
             generate_and_store_handwriting_summary(uid, child_id,unused_predictions)
 
