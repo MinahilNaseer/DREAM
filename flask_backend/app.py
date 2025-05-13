@@ -389,12 +389,12 @@ def store_handwriting_prediction_in_firestore(uid, child_id, confidence_score, f
                       .collection('handwriting_predictions')\
                       .where('usedInReport', '==', False)
 
-        unused_count = len(list(unused_query.stream()))
-        print(f"Unused predictions: {unused_count}")
+        unused_predictions = list(unused_query.stream())
+        print(f"Unused predictions: {len(unused_predictions)}")
 
-        if unused_count >= 5:
+        if unused_predictions >= 5:
             print("Generating summary report...")
-            generate_and_store_handwriting_summary(uid, child_id)
+            generate_and_store_handwriting_summary(uid, child_id,unused_predictions)
 
         return True
 
@@ -543,4 +543,4 @@ Please generate a warm, encouraging, and supportive report in paragraph form bas
 
 
 port = int(os.environ.get("PORT", 10000))  # fallback to 10000 if PORT not set
-app.run(host='0.0.0.0', port=port)
+#app.run(host='0.0.0.0', port=port)
