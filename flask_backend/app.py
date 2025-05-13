@@ -42,7 +42,8 @@ if not os.path.exists(dysgraphia_path):
     raise FileNotFoundError(f"Dysgraphia model not found at {dysgraphia_path}")
 
 model = joblib.load(model_path)
-dysgraphia_model = tf.keras.models.load_model(dysgraphia_path)
+dysgraphia_model = tf.keras.models.load_model(dysgraphia_path, compile=False)
+
 
 print("Model input shape:", dysgraphia_model.input_shape)
 
@@ -541,5 +542,5 @@ Please generate a warm, encouraging, and supportive report in paragraph form bas
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 
-if __name__ == '__main__':
-    app.run()
+port = int(os.environ.get("PORT", 10000))  # fallback to 10000 if PORT not set
+app.run(host='0.0.0.0', port=port)
